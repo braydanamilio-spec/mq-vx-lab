@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -69,11 +70,49 @@ _LUC = [0.0]
 NHIP = float(os.environ.get("WIKI_NHIP") or 1.1)
 
 
-def _goi(url: str, timeout: int = 25) -> dict:
+# ── VÀ NHỊP PHẢI LÀ CỦA MÁY, KHÔNG CỦA TIẾN TRÌNH  (8/9/2026) ──────────────────────────
+# Chú thích ngay trên đã viết đúng câu luật rồi dừng sớm MỘT NẤC: `_LUC` là biến MODULE, nên
+# nó chỉ ghìm được các lời gọi trong CÙNG một tiến trình. Đêm nay có HAI tiến trình cùng gọi
+# Wikipedia — bộ sàng chạy nền và lượt dựng bộ 1:3 — mỗi bên giữ đồng hồ riêng, nên nhịp thật
+# còn một nửa. Đo được: bộ 135 ăn `429` ở **6/6 chủ thể**, `bai_viet` trả 0 ký tự, và dây
+# chuyền kết luận "chưa có chủ thể đủ chuyện" trong khi hồ có 29 cái.
+#
+# Đúng họ §17.7: *mọi bộ đếm/đồng hồ dùng để CHẶN phải sống ở TỆP, không ở biến* — ở đó là
+# trần ảnh đếm bằng thuộc tính hàm trong khi mỗi tập là một tiến trình riêng, ở đây là đồng
+# hồ nhịp. Giữ `flock` TRONG lúc ngủ thì hai tiến trình tự xếp hàng, không cần biết nhau.
+#
+# Hỏng mềm ở mọi nhánh: đây là bước tối ưu, hệ thống tệp khoá chặt cũng không được làm chết
+# đường lấy tư liệu (§13.3). Trên Actions mỗi luồng là một RUNNER riêng nên tệp không dùng
+# chung — và đúng thế: ở đó mỗi máy một IP, nhịp theo MÁY mới là đơn vị đúng.
+_LUC_TEP = os.path.join(tempfile.gettempdir(), "mm0_wiki_nhip")
+
+
+def _cho_nhip() -> None:
+    try:
+        import fcntl
+        with open(_LUC_TEP, "a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.seek(0)
+                truoc = float((f.read() or "0").strip() or 0)
+            except Exception:
+                truoc = 0.0
+            cho = NHIP - (time.time() - truoc)
+            if 0 < cho <= NHIP:
+                time.sleep(cho)
+            f.seek(0); f.truncate(); f.write(str(time.time())); f.flush()
+        _LUC[0] = time.time()
+        return
+    except Exception:
+        pass
     cho = NHIP - (time.time() - _LUC[0])
     if cho > 0:
         time.sleep(cho)
     _LUC[0] = time.time()
+
+
+def _goi(url: str, timeout: int = 25) -> dict:
+    _cho_nhip()
     r = urllib.request.Request(url, headers=UA)          # §13.15: thiếu User-Agent -> CDN chặn 403
     return json.load(urllib.request.urlopen(r, timeout=timeout))
 

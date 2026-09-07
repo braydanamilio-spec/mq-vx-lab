@@ -273,6 +273,39 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_nhip_wiki_lien_tien_trinh():
+    """Nhịp gọi Wikipedia phải ghìm được CẢ HAI tiến trình, không chỉ tiến trình mình.
+
+    `_LUC` là biến MODULE nên nó chỉ ghìm các lời gọi trong cùng một tiến trình. Đêm 8/9 có
+    hai tiến trình cùng gọi (bộ sàng chạy nền + lượt dựng bộ 1:3), mỗi bên một đồng hồ, nên
+    nhịp thật còn một nửa: bộ 135 ăn `429` ở **6/6 chủ thể** và dây chuyền kết luận "chưa có
+    chủ thể đủ chuyện" trong khi hồ có 29 cái. §17.7: đồng hồ dùng để CHẶN phải sống ở TỆP.
+
+    Phải chạy THẬT hai tiến trình — mô phỏng bằng thread thì dùng chung biến module và bài
+    kiểm sẽ xanh cho đúng cái nó cần bắt (§13.10)."""
+    import os, subprocess, sys, tempfile
+    import chu_de as C
+    ma = ("import sys, time\n"
+          f"sys.path.insert(0, {os.path.dirname(os.path.abspath(C.__file__))!r})\n"
+          "import chu_de as C\n"
+          "for _ in range(3):\n"
+          "    C._cho_nhip()\n"
+          "    print(time.time(), flush=True)\n")
+    tep = os.path.join(tempfile.gettempdir(), "mm0_thu_nhip_selftest.py")
+    open(tep, "w").write(ma)
+    try:
+        ps = [subprocess.Popen([sys.executable, tep], stdout=subprocess.PIPE, text=True)
+              for _ in range(2)]
+        t = sorted(float(x) for p in ps for x in (p.communicate()[0] or "").split())
+    finally:
+        try: os.remove(tep)
+        except OSError: pass
+    assert len(t) == 6, f"chỉ nhận được {len(t)}/6 mốc thời gian"
+    kc = [b - a for a, b in zip(t, t[1:])]
+    xau = [round(x, 2) for x in kc if x < C.NHIP - 0.2]
+    assert not xau, f"hai tiến trình gọi sát nhau {xau} (nhịp yêu cầu {C.NHIP})"
+
+
 def t_prompt_nen_khong_ten_rieng():
     """Prompt vẽ nền KHÔNG được mang tên riêng — FLUX sẽ vẽ chúng thành chữ nguệch ngoạc.
 
@@ -2783,6 +2816,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("nhịp Wikipedia ghìm được cả hai tiến trình", t_nhip_wiki_lien_tien_trinh)
     check("prompt nền không mang tên riêng", t_prompt_nen_khong_ten_rieng)
     check("lát short không mỏng, không trùng", t_lat_short_khong_mong)
     check("bỏ tiền tố chỉ số đủ bốn dạng", t_bo_tien_to_chi_so)
