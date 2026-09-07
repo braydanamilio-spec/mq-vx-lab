@@ -2449,9 +2449,18 @@ def save_topics(owner: str, channel: str, topics: list[str]):
     # B2 (kho riêng, không đụng quota B) -> lật sang B2 lúc nào cũng có bản mới nhất, hết trùng.
     if not _B2["on"] and _b2_available():
         try:
-            from google.cloud import firestore as _fs2
-            from google.oauth2 import service_account as _sa2
+            # ── IMPORT NẰM TRONG NHÁNH DÙNG NÓ  (8/9/2026) ──────────────────────────────
+            # Hai lệnh `import` này trước đây đứng NGOÀI nhánh tạo client, nên chỉ cần thiếu
+            # `google-cloud-firestore` là cả khối ghi B2 bị `except` nuốt — kể cả khi client
+            # đã được tiêm sẵn và không cần import gì.
+            # Hậu quả đo được: bài diễn tập failover trong `selftest` XANH ở máy anh (có thư
+            # viện) và ĐỎ trên Actions (không cài), và nó là cổng chạy TRƯỚC khi dựng — nên
+            # **cả 18 luồng của CẢ HAI workflow render đều chết ở đó**, nhiều ngày.
+            # Cùng họ với lỗi thiếu PyYAML: cổng cần một gói mà workflow không cài, và triệu
+            # chứng thì hiện ra ở chỗ khác hẳn (§13.2).
             if _B2.get("wclient") is None:
+                from google.cloud import firestore as _fs2
+                from google.oauth2 import service_account as _sa2
                 _B2["wclient"] = _fs2.Client(
                     project=os.environ["FIREBASE_PROJECT_ID_B2"],
                     credentials=_sa2.Credentials.from_service_account_file(
