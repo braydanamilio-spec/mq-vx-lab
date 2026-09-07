@@ -116,7 +116,7 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
         except Exception as e:
             hong += 1
             print(f"   ⚠ không đọc được «{c[:44]}»: {str(e)[:44]}")
-        time.sleep(0.12)
+        time.sleep(0.35)   # xem `_NHIP` — 0,12 s làm 27/104 hạng mục bị chặn nhịp
     # ── LƯỢT ĐỌC HỎNG THÌ KHÔNG ĐƯỢC GHI ĐỆM  (bắt được ngay lần đo đầu, 7/9/2026) ───────
     # Đo thật: "Discontinued products" ra **0 chủ thể** trong khi hỏi trực tiếp cùng hạng mục
     # ấy ra 20 trang. Không phải hạng mục rỗng — là lượt đọc hỏng, và bản đầu của hàm này ghi
@@ -124,10 +124,19 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
     # một kênh không còn đề tài**, và không có gì báo.
     # `0` một mình luôn có hai nghĩa ngược nhau (§15.2). Hỏng thì trả về thứ đọc được, nói ra,
     # và KHÔNG đệm — lượt sau tự thử lại.
-    if hong:
-        print(f"   ⚠ {hong}/{n} hạng mục đọc hỏng — KHÔNG ghi đệm, lượt sau thử lại "
-              f"(tạm có {len(ra)} chủ thể)")
+    # ── "KHÔNG ĐỆM KHI HỎNG" PHẢI CÓ NGƯỠNG, KHÔNG PHẢI TUYỆT ĐỐI  (đo 7/9/2026) ────────
+    # Bản đầu: hỏng MỘT hạng mục là không đệm. Chạy thật ra 27/104 hỏng vì nhịp gọi 0,12 s bị
+    # Wikipedia chặn — tức lượt nào cũng có lỗi, tức KHÔNG BAO GIỜ đệm được, tức mỗi lần dựng
+    # lại quét 208 vòng mạng. Một chốt chặn tuyệt đối ở chỗ lỗi là chuyện BÌNH THƯỜNG thì nó
+    # không bảo vệ gì, nó chỉ khoá tính năng lại (§13.8, phía hạ tầng).
+    # Nới nhịp gọi lên 0,35 s để tỉ lệ hỏng về gần 0, VÀ cho phép đệm khi hỏng dưới 8% — kèm
+    # ghi lại tỉ lệ ấy để lượt sau còn biết bản đệm này là bản đầy đủ hay bản thiếu.
+    if hong and hong > max(2, n * 0.08):
+        print(f"   ⚠ {hong}/{n} hạng mục đọc hỏng ({hong/n*100:.0f}%) — KHÔNG ghi đệm, "
+              f"lượt sau thử lại (tạm có {len(ra)} chủ thể)")
         return sorted(ra)
+    if hong:
+        print(f"   ⓘ {hong}/{n} hạng mục đọc hỏng ({hong/n*100:.0f}% — dưới ngưỡng), vẫn đệm")
     # Chốt thứ hai: KHÔNG đệm một danh sách RỖNG kể cả khi mọi lượt đọc đều "thành công".
     # Một hạng mục gốc rỗng gần như luôn là tên viết sai hoặc một dạng hỏng chưa nhận ra —
     # và đệm nó lại thì kênh ấy cạn đề tài vĩnh viễn mà không có gì báo. Rẻ hơn nhiều so với

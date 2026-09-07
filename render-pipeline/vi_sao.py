@@ -31,8 +31,58 @@ import khung_hoi as K
 # Mới nối MỘT kênh: §4 nói pilot một kênh, anh duyệt, rồi mới nhân ra mười. Mười bảy kênh
 # còn lại thêm vào đây, mỗi kênh một lời hứa và bộ gốc riêng.
 KENH_HUA = {
-    "therules": ("vanished", ["Defunct companies of the United States",
-                              "Discontinued products"]),
+    # Đã KIỂM từng tên bằng API (7/9/2026). Bốn tên hoá ra RỖNG THẬT — khác hẳn "đọc hỏng" —
+    # nên đã thay: `Defunct retailers of the US` · `Industrial disasters` · `Obsolete
+    # technologies` · `Defunct automobile manufacturers of the US`.
+    # Lần đo ĐẦU báo 25/30 tên hỏng, và em suýt loại nhầm cả `Shipwrecks` (125) lẫn
+    # `Power stations` (32): bắn 30 lệnh liên tiếp thì Wikipedia chặn nhịp, và mã -1 (đọc
+    # hỏng) bị trình bày cạnh số 0 (rỗng thật) như thể cùng một nghĩa (§15.2).
+    # Mỗi kênh BA gốc hạng mục, cố ý dư: một tên viết sai hay một hạng mục bị đổi tên trên
+    # Wikipedia thì kênh vẫn còn hai gốc kia mà chạy, thay vì chết câm. `duyet` in cảnh báo
+    # riêng cho gốc ra 0 nên vẫn biết cái nào hỏng (§15.2 — số 0 phải có mẫu số).
+    #
+    # Gốc chọn theo NGHỀ của chuyên gia cố định từng kênh, để chủ thể và người dẫn cùng một
+    # thế giới: Attorney Brooks nói về hãng bay sập và luật liên bang, Dr Imani nói về nhà
+    # máy điện và hoả hoạn. Người dẫn đúng nghề là nửa của việc "nhìn ra một người".
+    "therules":   ("vanished", ["Defunct airlines of the United States",
+                                "United States federal legislation", "Corporate scandals"]),
+    "realcost":   ("vanished", ["Defunct banks of the United States",
+                                "Corporate scandals", "Defunct companies of the United States"]),
+    "whatif":     ("unsolved", ["Cancelled spacecraft", "Abandoned projects",
+                                "Cancelled aircraft projects"]),
+    "survive":    ("unsolved", ["Maritime incidents", "Nuclear accidents and incidents",
+                                "Aviation accidents and incidents in the United States"]),
+    "speedof":    ("vanished", ["Defunct airlines of the United States",
+                                "Defunct railroads", "Supersonic transport"]),
+    "howbig":     ("vanished", ["Demolished buildings and structures in the United States",
+                                "Megaprojects", "Defunct companies of the United States"]),
+    "wheregoes":  ("unsolved", ["Superfund sites", "Waste management",
+                                "Environmental disasters"]),
+    "dayinlife":  ("unsolved", ["Medical controversies", "Withdrawn drugs",
+                                "Health disasters"]),
+    "odds":       ("unsolved", ["Nuclear accidents and incidents", "Fires in the United States",
+                                "Maritime incidents"]),
+    "hiddenfee":  ("vanished", ["Corporate scandals",
+                                "Defunct financial services companies of the United States",
+                                "Defunct banks of the United States"]),
+    "yearsof":    ("vanished", ["Discontinued products", "Defunct computer companies of the United States",
+                                "Defunct companies of the United States"]),
+    "howloud":    ("vanished", ["Defunct record labels of the United States",
+                                "Defunct radio stations in the United States",
+                                "Discontinued products"]),
+    "whatweighs": ("vanished", ["Defunct social networking services",
+                                "Defunct manufacturing companies of the United States",
+                                "Defunct railroads"]),
+    "rightnow":   ("vanished", ["Defunct social networking services", "Defunct websites",
+                                "Discontinued products"]),
+    "howhot":     ("unsolved", ["Fires in the United States", "Power stations",
+                                "Fires in the United States"]),
+    "smallest":   ("vanished", ["Defunct computer companies of the United States",
+                                "Defunct telecommunications companies of the United States",
+                                "Discontinued products"]),
+    "howlong":    ("unsolved", ["Shipwrecks", "Defunct railroads", "Maritime incidents"]),
+    "howmuch":    ("vanished", ["Defunct banks of the United States", "Hyperinflation",
+                                "Defunct department stores of the United States"]),
 }
 
 # `(mã, số tập)` -> {chu_the, khuon, hinh_mau}. `pilot_hai` đọc bảng này.
