@@ -822,6 +822,7 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 
 # ══ DỰNG MỘT TẬP ═════════════════════════════════════════════════════════════════════════════
 MOT_GIONG = False        # bật: MỘT chuyên gia nói liên tục, hình đổi theo lời
+DAO_CU_TAP = ""          # hình mẫu của cả tập (`chu_de.hinh_mau`) — lấp chỗ câu không gợi vật
 
 # ── LỆNH DẶN RIÊNG CHO MỘT GIỌNG  (anh đề xuất, 7/9/2026) ─────────────────────────────────
 # Bật `MOT_GIONG` mà vẫn dùng `LENH_THOAI` thì mô hình viết ĐỐI THOẠI: nó hỏi rồi tự đáp, và
@@ -1309,6 +1310,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         "anhNen": anh_nen, "sang": KC._sang_cua(anh_nen),
         "nhacVol": KC._am_nhac(KC.NHAC[de]),
         **({"motNguoi": True} if MOT_GIONG else {}),
+        **({"daoCuTap": DAO_CU_TAP} if DAO_CU_TAP else {}),
     }
     pj = os.path.join(GOC, "out", f"{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)

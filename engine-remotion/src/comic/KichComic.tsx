@@ -208,12 +208,12 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
+  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
   haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, noi, anhNen, soLieu,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, noi, anhNen, soLieu,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
@@ -325,7 +325,7 @@ const Panel: React.FC<{
           cái router. Không gọi mô hình: câu thoại là văn bản, dò từ khoá là đủ. */}
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
            style={{ position: "absolute", inset: 0, zIndex: 2 }}>
-        <DaoCu ten={doDaoCu(L.nar)} w={w} h={h} mau={mau} mauPhu={mauPhu} hai={doiNguoi} />
+        <DaoCu ten={doDaoCu(L.nar) || (daoCuTap || "")} w={w} h={h} mau={mau} mauPhu={mauPhu} hai={doiNguoi} />
       </svg>
 
       {L.chot ? <VachToc w={w} h={h} p={kep(trong / 0.7)} mau={mauPhu} /> : null}
@@ -590,6 +590,10 @@ export type PropsComic = {
   // Cùng một chữ mang hai nghĩa ở hai tầng là cái bẫy đã ghi ở §13.22 (*một chữ có hai nghĩa
   // thì không dùng làm cổng được*) — ở đây là không dùng làm TÊN BIẾN được.
   motNguoi?: boolean;
+  // Hình mẫu của CẢ TẬP, suy một lần từ chủ thể (`chu_de.hinh_mau`). Câu cụ thể vẫn THẮNG —
+  // §17.5 dặn đồ vật phải lấy từ LỜI — nhưng câu nào không gợi ra vật nào thì lấy hình mẫu
+  // thay vì để trống. Trước đây trống nghĩa là không vẽ gì, và khung ra một nơi chốn vô can.
+  daoCuTap?: string;
   tieuDe?: string; handle?: string; mau?: string; mauPhu?: string; kenh?: string;
   // ── NÉT RIÊNG CỦA KÊNH ────────────────────────────────────────────────────────────────
   // Anh: *"sao cho 10 channel có nét riêng và phong cách riêng"*. Đổi màu là chưa đủ — mười
@@ -642,7 +646,7 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   nhacVol = 0.16,
-  kieuTuyA = {}, kieuTuyB = {}, motNguoi, tieuDe = "", handle = "", mau = "#F0483C",
+  kieuTuyA = {}, kieuTuyB = {}, motNguoi, daoCuTap = "", tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
   sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
@@ -687,7 +691,7 @@ export const KichComic: React.FC<PropsComic> = ({
 
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
-           motNguoi={motNguoi}
+           motNguoi={motNguoi} daoCuTap={daoCuTap}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
            /* Cỡ cảnh: mặc định do engine xoay theo hạt của tập, nhưng một lượt được phép
               ÉP cỡ của riêng nó (`canh`). Kênh HOUSE RULES cần điều đó: mười biến thể của gói

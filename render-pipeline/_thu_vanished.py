@@ -30,4 +30,6 @@ print(f"   ▶ {_r[0]}")
 
 import pilot_hai as P                                   # noqa: E402  (sau khi đã đăng ký)
 P.MOT_GIONG = True          # MỘT chuyên gia nói liên tục, hình đổi theo lời
+P.DAO_CU_TAP = C.hinh_mau(_ho)      # hình mẫu suy từ chủ thể, dùng cho cả tập
+print(f"   🎨 hình mẫu: {P.DAO_CU_TAP or '(không nhận ra)'}")
 raise SystemExit(0 if P.mot_tap(KENH, 4, False) else 1)

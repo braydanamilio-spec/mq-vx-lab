@@ -374,6 +374,82 @@ export const DaoCu: React.FC<{ ten: string; w: number; h: number; mau: string; m
     <rect x={-S * 0.5} y={-S * 0.78} width={S} height={S * 0.78} fill={nhat(mau, 0.45)} />
     <line x1={-S * 0.5} y1={-S * 0.5} x2={S * 0.5} y2={-S * 0.5} />
   </>);
+  // ── ĐẠO CỤ HÌNH MẪU CHO NGÁCH "VÌ SAO"  (anh: *"cái nào vẽ được thì phải vẽ"*, 7/9/2026)
+  // Bảng cũ có BẢY đạo cụ, tất cả của ngách hài (lốp xe · sách · cốc · máy tính · hộp đồ ăn ·
+  // tạ · vali). Ngách mới nói về Kodak, Concorde, Betamax — không cái nào vẽ được, nên khung
+  // ra nền sân bay không liên quan.
+  //
+  // Đo: 49 chủ thể mẫu gom về 10 hình mẫu, và hình mẫu KHÔNG tăng theo số chủ thể. Nên đây là
+  // việc HỮU HẠN: vẽ ~15 đạo cụ là phủ được không gian chủ thể vô hạn.
+  //
+  // Vẽ bằng KHỐI ĐẶC, không bằng nét rỗng: §15.9 đã trả giá — con hươu vẽ bằng ba đường không
+  // tô ra một cái móc câu khi thu xuống 34%. Khối đặc thì co bao nhiêu vẫn giữ bóng dáng.
+  if (ten === "may_anh") return G(<>
+    <rect x={-S * 0.48} y={-S * 0.58} width={S * 0.96} height={S * 0.58} rx={5} fill={MUC} />
+    <rect x={-S * 0.16} y={-S * 0.70} width={S * 0.32} height={S * 0.14} rx={3} fill={MUC} />
+    <circle cx={0} cy={-S * 0.30} r={S * 0.20} fill={nhat(mau, 0.55)} />
+    <circle cx={0} cy={-S * 0.30} r={S * 0.09} fill={MUC} strokeWidth={0} />
+  </>);
+  if (ten === "bang_video") return G(<>
+    <rect x={-S * 0.52} y={-S * 0.44} width={S * 1.04} height={S * 0.44} rx={3} fill={MUC} />
+    <circle cx={-S * 0.17} cy={-S * 0.24} r={S * 0.11} fill={nhat(mau, 0.6)} />
+    <circle cx={S * 0.17} cy={-S * 0.24} r={S * 0.11} fill={nhat(mau, 0.6)} />
+    <rect x={-S * 0.34} y={-S * 0.40} width={S * 0.68} height={S * 0.06} fill={nhat(mauPhu, 0.5)} strokeWidth={0} />
+  </>);
+  if (ten === "may_bay") return G(<>
+    <path d={`M${-S * 0.55} ${-S * 0.30} L${S * 0.46} ${-S * 0.36} q ${S * 0.14} ${S * 0.05} 0 ${S * 0.11} L${-S * 0.55} ${-S * 0.19} Z`} fill={nhat(mau, 0.55)} />
+    <path d={`M${-S * 0.12} ${-S * 0.30} L${-S * 0.30} ${-S * 0.62} L${-S * 0.06} ${-S * 0.30} Z`} fill={MUC} />
+    <path d={`M${-S * 0.12} ${-S * 0.24} L${-S * 0.30} ${S * 0.04} L${-S * 0.06} ${-S * 0.24} Z`} fill={MUC} />
+    <path d={`M${-S * 0.48} ${-S * 0.30} L${-S * 0.58} ${-S * 0.50} L${-S * 0.40} ${-S * 0.30} Z`} fill={MUC} />
+  </>);
+  if (ten === "ten_lua") return G(<>
+    <path d={`M0 ${-S * 0.92} q ${S * 0.20} ${S * 0.30} ${S * 0.18} ${S * 0.62} L${-S * 0.18} ${-S * 0.30} q ${-S * 0.02} ${-S * 0.32} ${S * 0.18} ${-S * 0.62} Z`} fill={nhat(mau, 0.55)} />
+    <path d={`M${-S * 0.18} ${-S * 0.30} L${-S * 0.38} 0 L${-S * 0.06} 0 Z`} fill={MUC} />
+    <path d={`M${S * 0.18} ${-S * 0.30} L${S * 0.38} 0 L${S * 0.06} 0 Z`} fill={MUC} />
+    <circle cx={0} cy={-S * 0.52} r={S * 0.09} fill={nhat(mauPhu, 0.5)} />
+  </>);
+  if (ten === "dien_thoai") return G(<>
+    <rect x={-S * 0.26} y={-S * 0.78} width={S * 0.52} height={S * 0.78} rx={6} fill={MUC} />
+    <rect x={-S * 0.19} y={-S * 0.70} width={S * 0.38} height={S * 0.50} fill={nhat(mau, 0.6)} strokeWidth={0} />
+    <circle cx={0} cy={-S * 0.11} r={S * 0.05} fill={nhat(mau, 0.6)} strokeWidth={0} />
+  </>);
+  if (ten === "cua_hang") return G(<>
+    <rect x={-S * 0.58} y={-S * 0.52} width={S * 1.16} height={S * 0.52} fill={nhat(mau, 0.5)} />
+    <path d={`M${-S * 0.62} ${-S * 0.52} L${-S * 0.44} ${-S * 0.74} L${S * 0.44} ${-S * 0.74} L${S * 0.62} ${-S * 0.52} Z`} fill={MUC} />
+    <rect x={-S * 0.16} y={-S * 0.34} width={S * 0.32} height={S * 0.34} fill={MUC} strokeWidth={0} />
+  </>);
+  if (ten === "xe") return G(<>
+    <path d={`M${-S * 0.54} ${-S * 0.20} L${-S * 0.40} ${-S * 0.48} L${S * 0.28} ${-S * 0.48} L${S * 0.52} ${-S * 0.20} Z`} fill={nhat(mau, 0.55)} />
+    <circle cx={-S * 0.30} cy={-S * 0.14} r={S * 0.16} fill={MUC} />
+    <circle cx={S * 0.30} cy={-S * 0.14} r={S * 0.16} fill={MUC} />
+  </>);
+  if (ten === "lo_phan_ung") return G(<>
+    <path d={`M${-S * 0.40} 0 L${-S * 0.26} ${-S * 0.66} L${S * 0.26} ${-S * 0.66} L${S * 0.40} 0 Z`} fill={nhat(mau, 0.5)} />
+    <ellipse cx={0} cy={-S * 0.66} rx={S * 0.26} ry={S * 0.08} fill={MUC} />
+    <circle cx={0} cy={-S * 0.32} r={S * 0.10} fill={nhat(mauPhu, 0.45)} />
+  </>);
+  if (ten === "ong_nghiem") return G(<>
+    <path d={`M${-S * 0.13} ${-S * 0.76} L${-S * 0.13} ${-S * 0.22} q ${S * 0.13} ${S * 0.22} ${S * 0.26} 0 L${S * 0.13} ${-S * 0.76} Z`} fill={nhat(mau, 0.6)} />
+    <path d={`M${-S * 0.13} ${-S * 0.36} L${-S * 0.13} ${-S * 0.22} q ${S * 0.13} ${S * 0.22} ${S * 0.26} 0 L${S * 0.13} ${-S * 0.36} Z`} fill={nhat(mauPhu, 0.4)} strokeWidth={0} />
+    <rect x={-S * 0.18} y={-S * 0.82} width={S * 0.36} height={S * 0.08} rx={2} fill={MUC} />
+  </>);
+  if (ten === "tau_thuy") return G(<>
+    <path d={`M${-S * 0.58} ${-S * 0.20} L${S * 0.58} ${-S * 0.20} L${S * 0.40} 0 L${-S * 0.40} 0 Z`} fill={MUC} />
+    <rect x={-S * 0.22} y={-S * 0.52} width={S * 0.44} height={S * 0.32} fill={nhat(mau, 0.55)} />
+    <rect x={S * 0.02} y={-S * 0.74} width={S * 0.10} height={S * 0.22} fill={nhat(mauPhu, 0.45)} />
+  </>);
+  if (ten === "toa_nha") return G(<>
+    <rect x={-S * 0.34} y={-S * 0.92} width={S * 0.68} height={S * 0.92} fill={nhat(mau, 0.5)} />
+    <rect x={-S * 0.20} y={-S * 0.78} width={S * 0.12} height={S * 0.14} fill={MUC} strokeWidth={0} />
+    <rect x={S * 0.08} y={-S * 0.78} width={S * 0.12} height={S * 0.14} fill={MUC} strokeWidth={0} />
+    <rect x={-S * 0.20} y={-S * 0.50} width={S * 0.12} height={S * 0.14} fill={MUC} strokeWidth={0} />
+    <rect x={S * 0.08} y={-S * 0.50} width={S * 0.12} height={S * 0.14} fill={MUC} strokeWidth={0} />
+  </>);
+  if (ten === "dong_xu") return G(<>
+    <circle cx={-S * 0.14} cy={-S * 0.22} r={S * 0.22} fill={nhat(mau, 0.55)} />
+    <circle cx={S * 0.16} cy={-S * 0.40} r={S * 0.22} fill={nhat(mauPhu, 0.45)} />
+    <circle cx={S * 0.16} cy={-S * 0.40} r={S * 0.09} fill={MUC} strokeWidth={0} />
+  </>);
   if (ten === "lop_xe") return G(<>
     <circle cx={0} cy={-S * 0.45} r={S * 0.45} fill={MUC} />
     <circle cx={0} cy={-S * 0.45} r={S * 0.2} fill={nhat(mau, 0.6)} />
