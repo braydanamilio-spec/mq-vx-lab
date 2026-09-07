@@ -3299,3 +3299,37 @@ chỉ được dùng làm **tiêu chí phụ giữa những chủ thể ĐÃ qua
 Và một lỗ còn lại, ghi ra vì nó CHƯA sửa: ảnh được rải theo **VỊ TRÍ** (chia đều các nhịp), nên
 nó khớp CHỦ THỂ chứ không khớp MỆNH ĐỀ — câu nói về 2007 vẫn có thể đứng cạnh tấm quảng cáo
 1888. Muốn khớp thì phải ghép theo NGHĨA (chữ trong tiêu đề ảnh so với câu đang nói).
+
+### 19.20 BA LẦN TRONG MỘT NGÀY: ĐỆM MỘT PHÉP ĐO HỎNG NHƯ THỂ NÓ LÀ KẾT QUẢ
+
+Ngày 7/9 dựng hồ đề tài, và cùng một lỗi hiện ra **ba lần ở ba tệp khác nhau** trong vài giờ.
+Ghi thành luật vì vá lần thứ ba mà vẫn cùng họ nghĩa là cách tiếp cận sai (§2).
+
+| lần | chỗ | hậu quả đo được |
+|---|---|---|
+| 1 | `duyet` ghi đệm danh sách hạng mục | "Discontinued products" ra **0** vì đọc hỏng, và cái 0 ấy vào đĩa VĨNH VIỄN |
+| 2 | `duyet` ĐỌC đệm | vá xong lần 1 vẫn hỏng: mục 0 đã nằm sẵn trong đệm thì được trả về mãi mãi. Vá đường GHI, để hở đường ĐỌC (§6) |
+| 3 | `co_chuyen` ghi sổ sàng | `bai_viet` trả `""` khi hỏng mà KHÔNG ném, nên `except` không đỡ -> **40/40 chủ thể tốt bị ghi "0 câu nhân quả" vĩnh viễn** |
+
+Hình dạng chung: **một hàm đọc mạng trả về GIÁ TRỊ RỖNG thay vì ném, và người gọi ghi giá
+trị ấy vào một chỗ SỐNG LÂU HƠN lượt chạy.** Lỗi mạng vài giây biến thành một quyết định
+vĩnh viễn, và không có gì báo — dữ liệu đọc lên vẫn hợp lệ về cú pháp.
+
+**Ba câu hỏi bắt buộc trước khi đệm bất cứ thứ gì:**
+
+1. *"Hàm này trả rỗng khi hỏng, hay nó ném?"* — nếu trả rỗng thì `try/except` KHÔNG bảo vệ
+   được, phải kiểm chính giá trị (`len(van) < 400` chứ không phải `except`).
+2. *"Rỗng ở đây có phải một kết quả hợp lệ không?"* — với danh sách hạng mục và bài viết
+   Wikipedia thì KHÔNG BAO GIỜ. Rỗng luôn là dấu hiệu hỏng, nên đừng đệm.
+3. *"Ai đọc đệm này, và họ có phân biệt được rỗng-vì-hỏng với rỗng-thật không?"* — nếu không
+   thì đường ĐỌC cũng phải coi rỗng là chưa-có.
+
+Và một bẫy con của ngưỡng tỉ lệ: `hong > max(2, n * 0.08)` cho một lượt hỏng **100%** đi qua
+khi `n` nhỏ (1/1 hỏng thì `1 > max(2, 0.08)` là False). Log in ra đúng câu tự mâu thuẫn —
+*"1/1 hạng mục đọc hỏng (100% — dưới ngưỡng), vẫn đệm"*. **Một ngưỡng TỈ LỆ phải kèm điều
+kiện tuyệt đối cho mẫu nhỏ**, nếu không nó chỉ đúng ở mẫu lớn — cùng họ §13.26 (cỡ mẫu nhỏ
+thì trung bình không nói được gì).
+
+Số đo kèm theo, để phiên sau biết nhịp nào là an toàn: Wikipedia API trả **`HTTP 429 Too Many
+Requests`** ở nhịp 0,35 giây (24/114 hạng mục). Nay 0,9 giây, và gặp 429 thì lùi 6/12/24 giây
+chứ không phải 1,5/3/4,5 — 429 là hàng rào có chủ ý, không phải một gói tin rớt.

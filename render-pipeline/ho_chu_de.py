@@ -57,16 +57,28 @@ _BO = re.compile(r"^(list|lists|timeline|index|outline|glossary|history) of |"
                  r"\((disambiguation|surname|given name)\)$", re.I)
 
 
+_LUC = 0.0        # lúc gọi Wikipedia gần nhất — xem `_NHIP`
+_NHIP = 0.9       # giây tối thiểu giữa hai lệnh. Chạy thật ở 0,35 s trả `HTTP 429 Too Many
+                  # Requests` cho 24/114 hạng mục — đây là số đo, không phải phòng xa.
+
+
 def _goi(u: str) -> dict:
     """Trả JSON, hoặc NÉM khi không đọc được. Không trả `{}` — xem `duyet`."""
+    global _LUC
     cuoi = ""
     for lan in range(4):
+        cho = _NHIP - (time.time() - _LUC)
+        if cho > 0:
+            time.sleep(cho)
+        _LUC = time.time()
         try:
             r = urllib.request.Request(u, headers=UA)
             return json.load(urllib.request.urlopen(r, timeout=40))
         except Exception as e:
             cuoi = str(e)[:60]
-            time.sleep(1.5 * (lan + 1))
+            # 429 cần nghỉ LÂU hơn hẳn lỗi mạng thường: nó là hàng rào có chủ ý, không phải
+            # một gói tin rớt. Lùi 6/12/24 giây thay vì 1,5/3/4,5.
+            time.sleep((6.0 if "429" in cuoi else 1.5) * (lan + 1))
     raise RuntimeError(cuoi or "không đọc được Wikipedia")
 
 
@@ -116,7 +128,6 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
         except Exception as e:
             hong += 1
             print(f"   ⚠ không đọc được «{c[:44]}»: {str(e)[:44]}")
-        time.sleep(0.35)   # xem `_NHIP` — 0,12 s làm 27/104 hạng mục bị chặn nhịp
     # ── LƯỢT ĐỌC HỎNG THÌ KHÔNG ĐƯỢC GHI ĐỆM  (bắt được ngay lần đo đầu, 7/9/2026) ───────
     # Đo thật: "Discontinued products" ra **0 chủ thể** trong khi hỏi trực tiếp cùng hạng mục
     # ấy ra 20 trang. Không phải hạng mục rỗng — là lượt đọc hỏng, và bản đầu của hàm này ghi
@@ -131,7 +142,11 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
     # không bảo vệ gì, nó chỉ khoá tính năng lại (§13.8, phía hạ tầng).
     # Nới nhịp gọi lên 0,35 s để tỉ lệ hỏng về gần 0, VÀ cho phép đệm khi hỏng dưới 8% — kèm
     # ghi lại tỉ lệ ấy để lượt sau còn biết bản đệm này là bản đầy đủ hay bản thiếu.
-    if hong and hong > max(2, n * 0.08):
+    # Sàn `max(2, ...)` để lượt hỏng 100% ĐI QUA khi n nhỏ: quét 1 hạng mục hỏng 1 thì
+    # `1 > max(2, 0.08)` là False -> vẫn đệm một danh sách rỗng. Đo thật, in ra đúng câu tự
+    # mâu thuẫn: *"1/1 hạng mục đọc hỏng (100% — dưới ngưỡng), vẫn đệm"*. Một ngưỡng TỈ LỆ
+    # phải đi kèm điều kiện tuyệt đối cho mẫu nhỏ, nếu không nó chỉ đúng ở mẫu lớn.
+    if hong and (hong > n * 0.08 or n <= 4):
         print(f"   ⚠ {hong}/{n} hạng mục đọc hỏng ({hong/n*100:.0f}%) — KHÔNG ghi đệm, "
               f"lượt sau thử lại (tạm có {len(ra)} chủ thể)")
         return sorted(ra)
@@ -186,9 +201,18 @@ def co_chuyen(gocs: list, san: int = 8, them: int = 6, sau: int = 2) -> list:
     moi = 0
     for ct in chua[:max(0, them)]:
         try:
-            n = len(C.cau_nhan_qua(C.bai_viet(ct) or ""))
+            van = C.bai_viet(ct) or ""
         except Exception:
             continue                      # mạng hỏng: KHÔNG ghi, để lượt sau đo lại
+        # ── BÀI VIẾT RỖNG KHÔNG PHẢI "0 CÂU NHÂN QUẢ"  (đo 7/9/2026) ────────────────────
+        # `bai_viet` trả "" khi đọc hỏng và KHÔNG ném, nên `except` ở trên không đỡ được.
+        # Chạy thật với Wikipedia đang trả 429: **0/40 chủ thể đạt**, và cả 40 bị ghi sổ là
+        # "0 câu nhân quả" VĨNH VIỄN — tức một lượt mạng xấu loại vĩnh viễn 40 chủ thể tốt.
+        # Lần thứ ba trong ngày cùng một họ: đệm một phép đo HỎNG như thể nó là kết quả.
+        if len(van) < 400:
+            print(f"   ⚠ «{ct[:36]}»: bài viết đọc về {len(van)} ký tự — KHÔNG ghi sổ")
+            continue
+        n = len(C.cau_nhan_qua(van))
         da[ct] = n
         moi += 1
         if n >= san:
