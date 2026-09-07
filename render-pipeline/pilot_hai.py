@@ -915,6 +915,46 @@ _BO_NEN = {"the","and","for","with","from","that","this","was","were","its","bee
 
 # Tám khuôn hình TĨNH, xoay theo nhịp. Không có cái nào tả chuyển động máy — hàng rào ấy đúng
 # và giữ nguyên (§14.9). Cái đổi là CHIỀU CAO · KHOẢNG CÁCH · TIỀN CẢNH.
+# Từ neo trong `NEN_CUA_HINH_MAU` là chuỗi TÌM KIẾM trong `nen_tag`, không phải câu tả cảnh —
+# ghép thẳng ra `"a trading"`, `"a office"`. Bảng này đổi chúng thành cụm đọc được. Chỉ khai
+# những từ CÓ THẬT trong bảng ấy (65 từ), không đoán thêm: một từ thiếu thì rơi về chính nó,
+# thấy ngay trên prompt chứ không hỏng im lặng.
+_CANH_NEO = {
+    "aircraft": "an aircraft maintenance hangar", "airport": "an airport terminal hall",
+    "aisle": "a supermarket aisle", "apron": "an airport apron with parked aircraft",
+    "archive": "a records archive room", "assembly": "a factory assembly line",
+    "bank": "a bank branch interior", "bookshop": "a bookshop interior",
+    "broadcast": "a broadcast control room", "camera": "a camera shop interior",
+    "checkout": "a store checkout area", "clinic": "a clinic waiting room",
+    "control room": "a control room with consoles", "corridor": "a long office corridor",
+    "counter": "a service counter", "darkroom": "a photo darkroom",
+    "dock": "a loading dock", "editing": "an editing suite",
+    "electronic": "an electronics workbench", "factory": "a factory floor",
+    "garage": "a repair garage", "hangar": "an aircraft hangar",
+    "harbor": "a working harbour", "harbour": "a working harbour",
+    "highway": "a highway roadside", "home office": "a home office",
+    "hospital": "a hospital corridor", "industrial": "an industrial plant floor",
+    "laborator": "a laboratory bench room", "launch": "a rocket launch control room",
+    "librar": "a library reading room", "lobby": "an office building lobby",
+    "market": "a stock exchange trading floor", "medical": "a medical examination room",
+    "newsroom": "a newspaper newsroom", "observator": "an observatory dome",
+    "office": "an open-plan office", "phone": "a phone assembly workbench",
+    "photo": "a photography studio", "plant": "a power plant hall",
+    "port": "a container port", "power": "a power station turbine hall",
+    "print": "a printing press room", "refiner": "an oil refinery walkway",
+    "rental": "a video rental store", "repair": "a repair workshop",
+    "retail": "a retail shop floor", "road": "an empty road",
+    "rocket": "a rocket assembly building", "runway": "an airport runway edge",
+    "server": "a server room", "shipyard": "a shipyard slipway",
+    "shop": "a shop interior", "showroom": "a car showroom",
+    "space": "a spacecraft assembly cleanroom", "store": "a store interior",
+    "studio": "a photography studio", "terminal": "an airport terminal",
+    "tower": "an office tower lobby", "trading": "a stock exchange trading floor",
+    "turbine": "a turbine hall", "vault": "a bank vault",
+    "warehouse": "a warehouse aisle", "workbench": "a workbench room",
+    "workshop": "a workshop interior",
+}
+
 _KHUON_NEN = (
     "wide establishing view from across the space",
     "close view of the object filling the lower half",
@@ -979,11 +1019,29 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         # nặng ký hơn — §15.25), chủ thể lùi xuống làm bối cảnh. Và xoay KHUÔN HÌNH theo nhịp
         # để hai nhịp liền nhau không cùng một góc máy: đa dạng phải nằm ở thứ người xem NHÌN
         # THẤY, không ở thứ đếm được (§14.9).
+        # ── NƠI CHỐN NEO BẰNG HÌNH MẪU, DANH TỪ CHỈ THÊM CHI TIẾT  (soi khung 8/9/2026) ─
+        # Bản trước cho danh từ TRẦN của câu dẫn đầu, và mất ngữ cảnh: câu *"India's market
+        # crashed"* ra một CHỢ ĐƯỜNG PHỐ, còn một tập về bê bối chứng khoán có cả kệ gấu
+        # bông. Đa dạng thì đạt, đúng thì không — mà sai chủ đề còn tệ hơn nhàm.
+        #
+        # `hinh_mau` đã suy MỘT LẦN từ chủ thể (§19.10) và nói thẳng nơi chốn: `dong_xu` ->
+        # ngân hàng · sàn giao dịch · két. Cho nó NEO cảnh, rồi danh từ của câu thêm chi
+        # tiết vào cái neo ấy. Nơi chốn đứng đầu, chi tiết đứng sau — cùng thứ tự §15.25.
         _dt = [w for w in re.findall(r"[A-Za-z][a-z]{3,}", noi)
                if w.lower() not in _BO_NEN][:4]
+        _neo = ""
+        try:
+            import chu_de as _CD1
+            _nh = _CD1.nhom_nen_cua(DAO_CU_TAP)
+            if _nh:
+                _k = _nh[i % len(_nh)]
+                _neo = _CANH_NEO.get(_k, f"a {_k}") + ", "
+        except Exception:
+            pass
         _canh = _KHUON_NEN[i % len(_KHUON_NEN)]
-        _dau = (", ".join(_dt) + ". ") if _dt else ""
-        viec.append((i, f"{_dau}{_canh}. Setting: {chu_the}. {SAN_NEN_VAT}. {GU_NEN}"))
+        _chi = (", ".join(_dt) + ". ") if _dt else ""
+        viec.append((i, f"{_neo}{_canh}. In it: {_chi}Setting: {chu_the}. "
+                        f"{SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:
