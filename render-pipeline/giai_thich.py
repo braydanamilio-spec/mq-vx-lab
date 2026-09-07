@@ -5184,6 +5184,14 @@ TOC_DO = [("a sneeze", 100,
 
 
 def sinh_speedof(i):
+    # ── DẤU NGĂN HÀNG NGHÌN  (soi lưới 18 kênh, 7/9/2026) ────────────────────────────
+    # Thẻ số của kênh này hiện `3500` và `1129x` trong khi 17 kênh kia hiện `1,000,000`,
+    # `1,923`, `31,622,776,602`. Đo: 97 con số trên thẻ của 18 kênh, **6 chỗ thiếu dấu phẩy
+    # và cả 6 đều ở đây** — tức không phải chuyện chung của engine mà là một bộ sinh viết
+    # `f"{kmh}"` thay vì `f"{kmh:,}"`.
+    # Người Mỹ luôn viết dấu phẩy; thiếu nó là §12.13 ở dạng nhỏ nhưng người xem đọc ra ngay.
+    # Và nó còn kéo theo một lỗi hình: `3500 mph` không có dấu phẩy vẫn dài, nên thẻ so sánh
+    # XUỐNG DÒNG giữa số và đơn vị trong khi vế kia (`3 mph`) nằm gọn một dòng.
     # Cặp làm chủ đề — xem `sinh_howloud`. Mốc neo (tốc độ đi bộ) ở lại thân bài.
     # `ti=1.5`: hai tốc độ chênh dưới rưỡi thì không ai thấy đó là một cuộc so.
     ds = TOC_DO
@@ -5195,15 +5203,15 @@ def sinh_speedof(i):
     bt_ten = ("may_bay" if "jet" in ten else "nguoi" if ("human" in ten or "sneeze" in ten)
               else "cay" if "raindrop" in ten else "nguoi")
     return (f"The speed of {ten} next to {ten2}",
-            f"HOW FAST IS {ten.upper()}?", f"{kmh} MPH",
+            f"HOW FAST IS {ten.upper()}?", f"{kmh:,} MPH",
             [
     _n("canh", "It happens too fast to see.", dinh=True, ve=canh),
-    _n("so_lieu", "So here is the number.", so=f"{kmh}", don="mph", chu=ten, bt="nguoi",
+    _n("so_lieu", "So here is the number.", so=f"{kmh:,}", don="mph", chu=ten, bt="nguoi",
        dinh=True, ve=canh),
     _n("chia_doi", "Next to you, walking.",
        trai={"nhan": "you walking", "bt": "nguoi", "so": "3 mph"},
-       phai={"nhan": ten, "bt": bt_ten, "so": f"{kmh} mph"}, dinh=True),
-    _n("so_lieu", "That is the multiple.", so=f"{lan:.0f}x", don="your walking speed", bt="nguoi",
+       phai={"nhan": ten, "bt": bt_ten, "so": f"{kmh:,} mph"}, dinh=True),
+    _n("so_lieu", "That is the multiple.", so=f"{lan:,.0f}x", don="your walking speed", bt="nguoi",
        ve=_ve("one ordinary person walking calmly at normal pace",
               "walking to the right while a heavily blurred fast shape streaks past behind",
               "unbothered, unaware",
@@ -7389,7 +7397,12 @@ def _be(m: float) -> str:
         return f"{inch:.2f} in"
     lan = TOC_M / m
     if lan < 1:
-        return f"{1/lan:,.0f} hairs wide"
+        # `{1/lan:,.0f}` làm tròn, nên mọi giá trị 1,0–1,49 in ra **"1 hairs wide"** — sai ngữ
+        # pháp, và đó là chuỗi HIỆN TRÊN THẺ nên người xem Mỹ đọc ra ngay (soi lưới 7/9/2026).
+        # Số ít/số nhiều phải quyết theo con số ĐÃ LÀM TRÒN, không theo giá trị thật: chuỗi
+        # hiện ra là chuỗi đã làm tròn, và ngữ pháp phải khớp với thứ MẮT ĐỌC.
+        _n = round(1 / lan)
+        return f"{_n:,} hair{'' if _n == 1 else 's'} wide"
     if lan < 2:
         return "about a hair wide"
     return f"1/{lan:,.0f} of a hair"
