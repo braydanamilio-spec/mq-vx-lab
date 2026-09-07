@@ -381,3 +381,35 @@ def hinh_mau(ho: dict) -> str:
         if re.search(rx, van[:1500], re.I):
             return ten
     return ""
+
+
+# ── HÌNH MẪU -> NHÓM NỀN  (7/9/2026) ──────────────────────────────────────────────────────
+# Bộ phân nhóm nền cũ chấm tập theo LỜI, và tập về Kodak rơi vào nhóm "corporate boardrooms"
+# — cả kho chỉ có MỘT nền nhóm ấy, nên nó lùi về chọn cả kho và ra khu an ninh sân bay.
+#
+# Nhưng hình mẫu thì đã suy được chắc chắn (8/8 chủ thể thử đúng), và nó nói thẳng nơi chốn:
+# máy ảnh -> xưởng ảnh, nhà in, phòng tin; máy bay -> sân đỗ, nhà chứa. Đo trên kho 5.118:
+#
+#     may_anh 112 nền · may_bay 211 · cua_hang 424 · ong_nghiem 232 · toa_nha 246
+#
+# Mọi hình mẫu đều có nền đủ dùng, nên đây là đường chọn ĐÁNG TIN HƠN phép chấm theo lời.
+NEN_CUA_HINH_MAU = {
+    "may_anh":    ("studio", "photo", "darkroom", "camera", "newsroom", "print"),
+    "bang_video": ("studio", "editing", "broadcast", "rental", "newsroom"),
+    "may_bay":    ("airport", "aircraft", "hangar", "runway", "terminal", "apron"),
+    "ten_lua":    ("launch", "space", "rocket", "control room", "observator"),
+    "dien_thoai": ("phone", "electronic", "factory", "assembly", "workbench"),
+    "may_tinh":   ("office", "workbench", "server", "electronic", "home office"),
+    "cua_hang":   ("shop", "store", "retail", "aisle", "checkout", "market"),
+    "xe":         ("garage", "workshop", "road", "highway", "showroom", "repair"),
+    "lo_phan_ung": ("power", "turbine", "industrial", "refiner", "plant"),
+    "ong_nghiem": ("laborator", "clinic", "hospital", "medical"),
+    "tau_thuy":   ("dock", "harbour", "harbor", "port", "shipyard", "warehouse"),
+    "toa_nha":    ("office", "corridor", "lobby", "tower"),
+    "dong_xu":    ("bank", "office", "trading", "vault", "counter"),
+    "sach":       ("librar", "print", "newsroom", "archive", "bookshop"),
+}
+
+
+def nhom_nen_cua(hm: str) -> tuple:
+    return NEN_CUA_HINH_MAU.get(hm or "", ())

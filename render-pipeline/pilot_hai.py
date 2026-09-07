@@ -1103,6 +1103,8 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     rel = f"{slug}.mp3"
     try:
         dur, tu, moc = doc_hai_giong(cau, ga, gb, os.path.join(PUB, rel))
+    except _DungChon:
+        pass
     except Exception as e:
         print(f"   ❌ giọng đọc hỏng: {str(e)[:100]}"); return ""
     if not tu or len(moc) < len(cau):
@@ -1165,8 +1167,19 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         _bo = set()
 
     def _co(i):
-        """Đường dẫn ảnh nền thứ i nếu có trên đĩa. WebP trước — kho mới nén WebP (−93% dung
+        """Đường dẫn ảnh nền thứ i nếu có trên đĩa.
+
+        Nhận CẢ số (nền của kênh này) lẫn chuỗi `"<kênh>_<số>"` (nền MƯỢN của kênh khác) —
+        xem tầng mượn ở dưới. Kho nền là NƠI CHỐN, không phải tài sản riêng của kênh. WebP trước — kho mới nén WebP (−93% dung
         lượng), kho cũ còn JPEG hai chữ số, và cả hai phải cùng dùng được."""
+        if isinstance(i, str):                       # nền mượn: "<kênh>_<số>"
+            if i in _bo:
+                return ""
+            for _e in (".webp", ".jpg"):
+                _t = f"comic_nen/{i}{_e}"
+                if os.path.exists(os.path.join(PUB, _t)):
+                    return _t
+            return ""
         if f"{de}_{i:03d}" in _bo:
             return ""
         # `_{i:02d}.webp` thêm 6/9/2026: kho hai-chữ-số đời cũ vốn còn là JPEG 1024×1024 và
@@ -1201,9 +1214,33 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     #     nền CÙNG NHÓM với tập  ->  nếu đủ ≥3 nền thì dùng riêng nhóm ấy
     #     không đủ                ->  dùng cả kho (hành vi cũ, vẫn đúng)
     #     chưa có thẻ             ->  dùng cả kho
+    class _DungChon(Exception):
+        pass
+
     try:
         import nen_tag as NT
         _the = json.load(io.open(os.path.join(GOC, "nen_tag.json"), encoding="utf-8"))
+        # ── HÌNH MẪU CHỌN NỀN, KHÔNG PHẢI PHÉP CHẤM THEO LỜI  (7/9/2026) ─────────────
+        # Phép chấm theo lời xếp tập Kodak vào "corporate boardrooms" — cả kho có ĐÚNG MỘT
+        # nền nhóm ấy, nên nó lùi về chọn cả kho và ra khu an ninh sân bay (anh soi ra).
+        # Hình mẫu thì suy chắc chắn (8/8 đúng) và nói thẳng nơi chốn. Khi có hình mẫu, dùng
+        # nó — và tìm trong CẢ KHO, vì nơi chốn không phải tài sản riêng của kênh.
+        _tu_hm = ()
+        try:
+            import chu_de as _CD0
+            _tu_hm = _CD0.nhom_nen_cua(DAO_CU_TAP)
+        except Exception:
+            pass
+        if _tu_hm:
+            _nhom_hop = [n for n in set(_the.values())
+                         if any(t in str(n).lower() for t in _tu_hm)]
+            _muon_hm = [k for k, v in _the.items() if v in _nhom_hop]
+            _muon_hm = [k for k in _muon_hm if _co(k)]
+            if len(_muon_hm) >= 3:
+                print(f"   🎯 hình mẫu «{DAO_CU_TAP}» -> {len(_muon_hm)} nền "
+                      f"({len(_nhom_hop)} nhóm) trong cả kho")
+                co = _muon_hm[:80]
+                raise _DungChon
         _nh = NT.nhom_tap(ma, tieu + ". " + " ".join(loi))
         _hop = [j for j in co if _the.get(f"{de}_{j:03d}") and
                 _the.get(f"{de}_{j:03d}") == _nh] if _nh else []
@@ -1211,7 +1248,22 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
             print(f"   🎯 nhóm nền «{_nh}» — {len(_hop)}/{len(co)} nền hợp nội dung")
             co = _hop
         elif _nh:
-            print(f"   🎯 nhóm «{_nh}» chỉ có {len(_hop)} nền — dùng cả kho")
+            # ── MƯỢN NỀN CỦA KÊNH KHÁC  (7/9/2026) ───────────────────────────────────
+            # Bộ chọn cũ chỉ tìm trong nền của RIÊNG kênh. Đo: `therules` có 277 nền nhưng
+            # dồn vào vài nhóm (phòng chờ 50 · hành lang cơ quan 47) và KHÔNG có nhóm nào về
+            # nhiếp ảnh — nên tập về Kodak rơi về khu an ninh sân bay, đúng cái anh soi ra.
+            # Cả kho có 5.118 nền / 176 nhóm.
+            #
+            # Kho nền là NƠI CHỐN, không phải tài sản riêng của kênh: một xưởng ảnh vẽ cho
+            # kênh này thì kênh kia dùng cũng đúng. Mượn xong vẫn giữ luật chống trùng liền
+            # kề vì lượt rải ở dưới không biết nền đến từ đâu.
+            _muon = [k for k, v in _the.items() if v == _nh and not k.startswith(de + "_")]
+            _muon = [k for k in _muon if _co(k)]
+            if len(_muon) >= 3:
+                print(f"   🎯 nhóm «{_nh}»: kênh này {len(_hop)} nền — MƯỢN {len(_muon)} nền cả kho")
+                co = (_hop + _muon)[:60]
+            else:
+                print(f"   🎯 nhóm «{_nh}» chỉ có {len(_hop)}+{len(_muon)} nền — dùng cả kho")
     except Exception as e:
         print(f"   ⚠ không đọc được nen_tag.json ({str(e)[:40]}) — dùng cả kho")
     # ── CHỌN PHÒNG: BƯỚC NGUYÊN TỐ CÙNG NHAU, KHÔNG PHẢI LIỀN KỀ  (6/9/2026) ──────────────
