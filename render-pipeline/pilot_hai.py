@@ -113,6 +113,12 @@ RULES
 3. Speaker "a" ASKS: curious, sceptical, or complaining, and never supplies a figure of
    their own. Speaker "b" is the domain professional named in the cast — the surveyor, the
    accountant, the attorney, the ranger — and is the ONLY one who answers with figures.
+3a. THE FIRST TURN DECIDES WHETHER ANYONE WATCHES. It must do one of three things, and
+   nothing else counts: carry a figure, contradict something the viewer already believes,
+   or speak to the viewer as "you"/"your". A plain "How hot is a summer day in Phoenix?"
+   promises nothing and the viewer scrolls — measured on 18 real episodes, 7 opened like
+   that. Write "How hot does your car get in a Phoenix summer?" instead: same question,
+   now it is about them.
 3b. Speaker "b" talks like a working analyst being interviewed, not like a host: states the
    figure, then one clause of what it means, and stops. No exclamation marks, no "wow", no
    "get this", no rhetorical questions back, no selling. Confidence comes from being brief
@@ -643,7 +649,20 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 
 
 # ══ DỰNG MỘT TẬP ═════════════════════════════════════════════════════════════════════════════
-def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
+def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
+    """`chuong > 0` -> BẢN DÀI 16:9 (`KichComicWide`), tên `v11L_`.
+
+    ── VÌ SAO BẢN DÀI DÙNG CHUNG ĐÚNG HÀM NÀY  (anh giao, 7/9/2026) ───────────────────────
+    Anh xin một clip dài 2–3 phút khung ngang. Cả hai thứ cần đã có sẵn và chưa ai nối:
+    `giai_thich.kich_ban(ma, idx, long=True, so_chuong=N)` sinh 32/59/95 nhịp cho 3/6/10
+    chương, và `Root.tsx` đã khai composition `KichComicWide` 1920×1080 dùng CHÍNH component
+    `KichComic`. Viết một hàm dựng thứ hai là tạo nguồn sự thật thứ hai cho mọi thứ vừa sửa
+    hôm nay — vai chuyên gia, ngữ điệu, luân phiên, trang phục — và bản sao ấy sẽ mòn dần
+    khỏi bản gốc mà không ai thấy (§13.1 · §15.25).
+
+    Nên bản dài chỉ khác bản ngắn ĐÚNG BA THAM SỐ: số chương, tên composition, tiền tố tệp.
+    Mọi bộ vá của hôm nay tự động áp cho nó.
+    """
     import giai_thich as G
     import kich_comic as KC
     from kich_hai import doc_hai_giong
@@ -761,7 +780,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     _i = next((_k for _k, _v in enumerate(_dan) if _v is vai[0]), _i)
     _j = next((_k for _k, _v in enumerate(_dan) if _v is vai[1]), _j)
 
-    k, tieu, hook, hook_phu, nhip, muc = G.kich_ban(ma, idx, False, 3)
+    k, tieu, hook, hook_phu, nhip, muc = G.kich_ban(ma, idx, chuong > 0, chuong or 3)
     loi = [n["loi"] for n in nhip]
     print(f"\n▶ {g['ten']} · {tieu}")
     print(f"   📜 {len(loi)} câu dẫn -> đối thoại {vai[0]['vai']} ↔ {vai[1]['vai']}")
@@ -869,7 +888,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     # Cổng `kiem_workflow` bắt được triệu chứng ("không gói tệp video nào") vì nó đòi tiền tố
     # `v<số>_`; đi nới cổng là chữa cái báo động thay vì chữa cái hỏng.
     # `v11_` = thế hệ COMIC GIẢI THÍCH, đứng sau `v9_` (giải thích) và `v10_` (phim).
-    slug = f"v11_{ma}_{idx:04d}"
+    slug = f"v11L_{ma}_{idx:04d}" if chuong else f"v11_{ma}_{idx:04d}"
     rel = f"{slug}.mp3"
     try:
         dur, tu, moc = doc_hai_giong(cau, ga, gb, os.path.join(PUB, rel))
@@ -1085,7 +1104,8 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     io.open(pj, "w", encoding="utf-8").write(json.dumps(props, ensure_ascii=False))
 
     out = os.path.join(GOC, "out", f"{slug}.mp4")
-    r = subprocess.run(["npx", "remotion", "render", "src/index.ts", "KichComic", out,
+    r = subprocess.run(["npx", "remotion", "render", "src/index.ts",
+                        "KichComicWide" if chuong else "KichComic", out,
                         # ── CHẤT LƯỢNG ĐẶT TƯỜNG MINH  (anh: "ko được HD sắc nét lắm") ──
                         # Remotion mặc định CRF 18 và đã cho 10,4 Mbps ở 1080×1920 — không tệ,
                         # nhưng đây là tệp NGUỒN đem lên YouTube, nơi nó còn bị nén LẦN NỮA.
@@ -1357,8 +1377,10 @@ def main() -> int:
     ap.add_argument("--kenh", default="dayinlife")
     ap.add_argument("--tu", type=int, default=4)
     ap.add_argument("--khong-ve-nen", action="store_true")
+    ap.add_argument("--chuong", type=int, default=0,
+                    help="＞0 = bản DÀI 16:9; 6 chương ≈ 2,5 phút")
     a = ap.parse_args()
-    return 0 if mot_tap(a.kenh, a.tu, not a.khong_ve_nen) else 1
+    return 0 if mot_tap(a.kenh, a.tu, not a.khong_ve_nen, a.chuong) else 1
 
 
 if __name__ == "__main__":

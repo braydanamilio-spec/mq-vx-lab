@@ -133,9 +133,39 @@ def cham(nhip: list) -> dict:
     if re.search(r"[\d]", h_all) or re.search(
             r"\b(not|never|no|nobody|nothing|n't|actually|really|but|instead|wrong|turns out)\b",
             h_all, re.I) or re.search(r"\byou(?:'\w+)?\s+\w+", h_all, re.I):
-        d["hook"] += 5      # có số HOẶC có mâu thuẫn — hai cách duy nhất giữ chân ở giây đầu
+        # 5 -> 2: trọng số DỜI sang câu người xem thật sự nghe, tổng trục giữ nguyên.
+        # Cộng thêm mà không cân lại thì thang vỡ — lượt đo đầu ra 100,5/100, và một thang
+        # cho quá 100 thì mọi con số trên nó thôi so được với nhau (§13.24).
+        d["hook"] += 2      # nhịp dẫn có số hoặc mâu thuẫn
     else:
         bao.append("hook không có số cũng không có mâu thuẫn — không có gì để ở lại")
+    # ── THƯỚC PHẢI ĐO CÂU NGƯỜI XEM NGHE, KHÔNG CHỈ NHỊP DẪN  (7/9/2026) ─────────────────
+    # Anh hỏi: *"kịch bản đã phù hợp người dùng USA chưa, họ có thực sự dừng lại coi không"*.
+    # Thước trên chấm `nhip[0]` — NHỊP DẪN. Nhưng bộ v11 biến nhịp dẫn thành ĐỐI THOẠI, nên
+    # thứ người xem thật sự nghe ở giây đầu là LƯỢT THOẠI ĐẦU do mô hình viết, không phải câu
+    # dẫn. Hai nguồn khác nhau, và thước đang đọc nguồn không lên hình (§15.5).
+    #
+    # Đo 18 tập đã dựng: **7/18 mở bằng một câu hỏi trơn** — *"How loud is a quiet library?"*,
+    # *"How heavy is a car tire?"* — không số, không mâu thuẫn, không nói về người xem. Thư
+    # viện yên tĩnh thì yên tĩnh; câu ấy không hứa gì nên không có lý do ở lại.
+    #
+    # CHẤM chứ không CHẶN (§13.23): hook nhạt làm video kém đi, không làm video HỎNG — và
+    # chặn nó là tiêu một vòng gọi AI cho một câu mà `don()` không sửa được.
+    _cau_dau = (cau[0] if cau else "") or ""
+    if _cau_dau:
+        _co = (re.search(r"\d", _cau_dau)
+               or re.search(r"\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|"
+                            r"twelve|twenty|thirty|forty|fifty|hundred|thousand|million|"
+                            r"billion|trillion)\b", _cau_dau, re.I)
+               or re.search(r"(\bnot\b|\bnever\b|\bno\b|\bnobody\b|\bnothing\b|n['\u2019]t\b|"
+                            r"\bactually\b|\breally\b|\bbut\b|\binstead\b|\bwrong\b|turns out)",
+                            _cau_dau, re.I)
+               or re.search(r"\byou(?:['\u2019]\w+|r)?\b", _cau_dau, re.I))
+        if _co:
+            d["hook"] += 3      # câu NGHE đầu tiên — thứ quyết định lướt hay ở lại
+        else:
+            bao.append("CÂU NGHE ĐẦU TIÊN là câu hỏi trơn — không số, không mâu thuẫn, "
+                       "không nói về người xem; không có lý do ở lại")
     if (nhip[0].get("khuon") or "") != "the_chu":
         d["hook"] += 4      # §12.12: thẻ tiêu đề đè lên ba giây đầu là dấu hiệu nghiệp dư
     else:
