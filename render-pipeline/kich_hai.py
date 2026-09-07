@@ -1341,10 +1341,24 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str, moc_dich: list
     #   · tự tin -> chậm, trầm (chắc nịch) · vui   -> nhanh, cao
     # CÚ CHỐT luôn CHẬM LẠI một nấc: người kể chuyện hài nào cũng hạ nhịp ở câu cuối để câu ấy
     # rơi xuống có trọng lượng.
+    # ── TÊN CẢM XÚC PHẢI PHỦ ĐỦ THỨ ĐẦU VÀO THẬT SỰ GỬI TỚI  (đo 7/9/2026) ─────────────
+    # Anh hỏi bộ này nghe ra kênh phân tích hay kênh hài — và chỗ hỏng nằm đúng ở ngữ điệu.
+    # Đo 18 tập: mô hình gửi xuống `ngac_nhien` **30%** số câu, cộng `ngoc_nhien` (viết sai
+    # chính tả) **5%**. Cả hai KHÔNG có trong bảng này, nên `.get(..., (0,0))` nuốt im lặng và
+    # **35% số câu đánh dấu "ngạc nhiên" được đọc PHẲNG LÌ**.
+    #
+    # Và lệnh dặn cho mô hình liệt kê thẳng `ngac_nhien` — tức chính đề bài bảo nó dùng một từ
+    # mà bên tiêu thụ không nhận. §13.2 lật ngược: cổng đo một TỪ thì lệnh dặn phải liệt kê
+    # đúng từ ấy; ở đây lệnh dặn liệt kê một từ cổng không biết.
+    # Cùng họ với hai tên cử chỉ chết (`chong_nanh`, `ngan_ngam`) — giá trị hợp lệ về kiểu,
+    # có nhánh dự phòng, và triệu chứng duy nhất là "nghe đều đều".
     _DIEU = {
         "tuc":       (+10, +8), "buon":     (-12, -8), "bat_ngo": (+2, +16),
         "nghi_ngo":  (-8,  -4), "tu_tin":   (-6,  -6), "vui":     (+8, +10),
         "so":        (+12, +14), "trung_tinh": (0, 0),
+        # bí danh: mô hình viết theo lối tự nhiên của nó, đừng bắt nó nhớ từ vựng của mình
+        "ngac_nhien": (+2, +16), "ngoc_nhien": (+2, +16), "to_mo": (+2, +10),
+        "quan_tam":  (-2, +4),  "hoai_nghi": (-8, -4),
     }
 
     def _dieu(rate0: str, pitch0: str, cx: str, la_chot: bool, chu: str = "", truoc: int = 0) -> tuple:

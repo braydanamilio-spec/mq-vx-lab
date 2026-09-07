@@ -118,7 +118,8 @@ RULES
 
 Return ONLY a JSON array: [{"ai":"a","chu":"...","cx":"trung_tinh"}]
 "ai" is "a" for the first character and "b" for the second.
-"cx" is one of: trung_tinh, ngac_nhien, tuc, buon, nghi_ngo, vui.
+"cx" is one of exactly these: trung_tinh, bat_ngo, tu_tin, nghi_ngo, vui, buon.
+Use bat_ngo when the line lands a big figure, tu_tin when it explains, trung_tinh otherwise. This is an explainer channel, not a comedy: never angry.
 """
 
 # `re.I` ở đây là một lỗi, không phải một tiện ích: hậu tố `K/M/B` viết HOA (xem `_tien`:
@@ -505,10 +506,34 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     luot = []
     for i, (chu, ai, cx) in enumerate(cau):
         cuoi = i == len(cau) - 1
-        luot.append({"s": moc[i][0], "e": moc[i][1], "ai": ai, "nar": chu, "camXuc": cx,
-                     "camXucKia": ("bat_ngo" if cuoi else
-                                   ["nghi_ngo", "bat_ngo", "trung_tinh", "tuc",
-                                    "buon", "nghi_ngo"][i % 6]),
+        # ── NÉT MẶT PHẢI HỢP MỘT KÊNH GIẢI THÍCH, VÀ PHẢI LÀ TÊN ENGINE VẼ ĐƯỢC ─────────
+        # Anh hỏi bộ này nghe/nhìn ra kênh phân tích hay kênh hài. Đo 18 tập thì ra kênh HÀI,
+        # ở đúng hai chỗ:
+        #
+        #  · người NGHE lấy cảm xúc từ một vòng xoay CỐ ĐỊNH `i % 6` — mù nội dung — nên nó
+        #    **tức giận 13% và buồn 10%** số ô. Nghe "một tiếng súng là 165 decibel" mà mặt
+        #    người kia giận dữ thì khung nói một đằng lời nói một nẻo. Đó là máy phản ứng của
+        #    bộ hài (ở đó cãi nhau là chất liệu); kênh giải thích thì phản ứng đúng là TÒ MÒ,
+        #    CHÚ Ý, và BẤT NGỜ khi con số lớn.
+        #
+        #  · mô hình gửi xuống `ngac_nhien` (30%) và `ngoc_nhien` (5%) — cả hai KHÔNG nằm
+        #    trong 8 tên `TenCamXuc` mà engine vẽ được, cũng không có trong bảng ngữ điệu.
+        #    Nét mặt rơi về mặc định, giọng đọc phẳng lì. Chuẩn hoá tại NGUỒN thay vì vá ở hai
+        #    nơi tiêu thụ (§11: một nguồn sự thật).
+        _HOP = {"trung_tinh","vui","buon","so","tuc","bat_ngo","nghi_ngo","tu_tin"}
+        _DOI = {"ngac_nhien": "bat_ngo", "ngoc_nhien": "bat_ngo", "to_mo": "tu_tin",
+                "quan_tam": "tu_tin", "hoai_nghi": "nghi_ngo", "ngac nhien": "bat_ngo"}
+        _cx = str(cx or "trung_tinh").strip().lower()
+        _cx = _cx if _cx in _HOP else _DOI.get(_cx, "trung_tinh")
+        # Người nghe phản ứng theo THỨ ĐANG NGHE, không theo số thứ tự lượt:
+        _co_so = any(ch.isdigit() for ch in chu)
+        _hoi = chu.strip().endswith("?")
+        _kia = ("bat_ngo" if cuoi else            # cú chốt: sững ra
+                "bat_ngo" if _co_so else          # vừa nghe một con số -> bất ngờ
+                "tu_tin" if _hoi else             # vừa được hỏi -> sẵn sàng trả lời
+                ["trung_tinh", "nghi_ngo", "tu_tin"][i % 3])
+        luot.append({"s": moc[i][0], "e": moc[i][1], "ai": ai, "nar": chu, "camXuc": _cx,
+                     "camXucKia": _kia,
                      "cuChi": KC.cu_chi_cua(chu, i, cuoi), "chot": cuoi})
     for i, l in enumerate(luot):
         l["s"], l["e"] = moc[i]
