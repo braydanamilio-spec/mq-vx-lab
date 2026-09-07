@@ -1060,8 +1060,23 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         # `hinh_mau` đã suy MỘT LẦN từ chủ thể (§19.10) và nói thẳng nơi chốn: `dong_xu` ->
         # ngân hàng · sàn giao dịch · két. Cho nó NEO cảnh, rồi danh từ của câu thêm chi
         # tiết vào cái neo ấy. Nơi chốn đứng đầu, chi tiết đứng sau — cùng thứ tự §15.25.
-        _dt = [w for w in re.findall(r"[A-Za-z][a-z]{3,}", noi)
-               if w.lower() not in _BO_NEN][:4]
+        # ── TÊN RIÊNG TRONG PROMPT = CHỮ NGUỆCH NGOẠC TRONG ẢNH  (soi khung 8/9/2026) ──
+        # Lưới bộ 131: nền vẽ ra `John Paul / Pauift / Ridle / born` chạy ngang khung, và
+        # `Arlit Kept INTERNATIONA` trên một tấm biển. FLUX vẽ đúng thứ được đưa: câu dẫn
+        # có `John Paul Riddle`, prompt còn thêm `Setting: Airlift International`.
+        # §13.20 đã đo: chữ trong khung là chỗ mô hình hỏng nặng nhất, và người xem đọc ra
+        # "nghiệp dư" trong nửa giây. §12.7: chuỗi dài luôn ra sai, cấm bằng câu phủ định
+        # thì lại thành ĐẶT HÀNG chữ (§17.6) — nên cách duy nhất là ĐỪNG ĐƯA TÊN VÀO.
+        #
+        # Nhận ra quy luật thay vì liệt kê ngoại lệ (§13.9): tên riêng VIẾT HOA giữa câu.
+        # Chỉ lấy từ viết thường — chúng là danh từ chung, thứ duy nhất vẽ được thành hình.
+        _cam = {w.lower() for w in re.findall(r"[A-Za-z]{3,}", chu_the or "")}
+        # Và bỏ ĐỘNG TỪ: `born · died · pioneered · bought` không vẽ được thành hình, chúng
+        # chỉ pha loãng prompt (§17.5 — chỉ lấy thứ vẽ được). Đuôi `-ed`/`-ing` là một QUY
+        # LUẬT, không phải một danh sách ngoại lệ (§13.9).
+        _dt = [w for w in re.findall(r"(?<![.!?]\s)\b[a-z]{4,}\b", noi)
+               if w not in _BO_NEN and w not in _cam
+               and not w.endswith(("ed", "ing"))][:4]
         _neo = ""
         try:
             import chu_de as _CD1
@@ -1073,7 +1088,10 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
             pass
         _canh = _KHUON_NEN[i % len(_KHUON_NEN)]
         _chi = (", ".join(_dt) + ". ") if _dt else ""
-        viec.append((i, f"{_neo}{_canh}. In it: {_chi}Setting: {chu_the}. "
+        # `Setting: {chu_the}` đã bị BỎ: nó là nguồn tên riêng thứ hai, và nó THỪA — neo
+        # cảnh đã suy từ hình mẫu của chính chủ thể (§19.10), tức đã mang đúng thế giới ấy
+        # rồi. Giữ cái tên chỉ để mô hình viết nó ra thành chữ hỏng.
+        viec.append((i, f"{_neo}{_canh}. In it: {_chi}"
                         f"{SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens

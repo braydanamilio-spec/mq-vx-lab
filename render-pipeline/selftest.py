@@ -273,6 +273,40 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_prompt_nen_khong_ten_rieng():
+    """Prompt vẽ nền KHÔNG được mang tên riêng — FLUX sẽ vẽ chúng thành chữ nguệch ngoạc.
+
+    Lưới bộ 131: nền hiện `John Paul / Pauift / Ridle / born` chạy ngang khung và
+    `Arlit Kept INTERNATIONA` trên một tấm biển. Nguồn là câu dẫn (`John Paul Riddle`) cộng
+    một vế `Setting: Airlift International` trong chính prompt. §13.20: chữ trong khung là
+    chỗ mô hình hỏng nặng nhất; §17.6: cấm bằng câu phủ định thì thành ĐẶT HÀNG chữ — nên
+    cách duy nhất là đừng đưa tên vào."""
+    import ast, re, inspect, textwrap, pilot_hai as P
+    src = inspect.getsource(P._nen_theo_tap)
+    # ── QUÉT MÃ THÌ BỎ CHÚ THÍCH TRƯỚC (§17.15) ────────────────────────────────────────
+    # Chốt này ĐỎ ngay lần chạy đầu, và thủ phạm là chú thích của chính bản vá: nó TRÍCH
+    # LẠI `Setting: {chu_the}` để kể rằng vế ấy đã bị bỏ. Càng viết chú thích tử tế càng dễ
+    # tự bắn vào chân — §17.15 ghi đúng câu này, và em vẫn dính lại trong cùng một phiên.
+    fn = ast.parse(textwrap.dedent(src)).body[0]
+    than = fn.body[1:] if (isinstance(fn.body[0], ast.Expr)
+                           and isinstance(fn.body[0].value, ast.Constant)) else fn.body
+    ma = "\n".join(ast.unparse(x) for x in than)
+    ma = re.sub(r"(?m)^\s*#.*$", "", ma)
+    assert "Setting: {chu_the}" not in ma, "prompt nền còn dán tên chủ thể vào"
+    # chạy CHÍNH phép lọc của mã thật trên câu đã gây lỗi
+    m = re.search(r"_dt = \[w for w in re\.findall\((.*?)\)\n(.*?)\]\[:4\]", src, re.S)
+    assert m, "không tìm thấy phép lọc danh từ trong _nen_theo_tap"
+    noi = "John Paul Riddle born 1901 died 1989 pioneered aviation at Slick Airways."
+    ct = "Airlift International"
+    cam = {w.lower() for w in re.findall(r"[A-Za-z]{3,}", ct)}
+    dt = [w for w in re.findall(r"(?<![.!?]\s)\b[a-z]{4,}\b", noi)
+          if w not in P._BO_NEN and w not in cam and not w.endswith(("ed", "ing"))][:4]
+    hoa = [w for w in dt if w[:1].isupper()]
+    assert not hoa, f"còn tên riêng lọt vào prompt nền: {hoa}"
+    assert not [w for w in dt if w.endswith(("ed", "ing"))], f"còn động từ: {dt}"
+    assert dt, "lọc sạch trơn — prompt nền sẽ không còn chi tiết nào"
+
+
 def t_lat_short_khong_mong():
     """Không lát short nào được mỏng hơn sàn, và không hai lát nào trùng nhau.
 
@@ -2735,6 +2769,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("prompt nền không mang tên riêng", t_prompt_nen_khong_ten_rieng)
     check("lát short không mỏng, không trùng", t_lat_short_khong_mong)
     check("bỏ tiền tố chỉ số đủ bốn dạng", t_bo_tien_to_chi_so)
     check("cổng giọng chặn chủ thể có thương vong", t_cong_giong_bao_luc)
