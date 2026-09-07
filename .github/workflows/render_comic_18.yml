@@ -191,6 +191,17 @@ jobs:
           # Đếm CẢ hai tiền tố: `v11L_` là bản dài, `v11_` là short. Bản trước chỉ đếm
           # `v11_` nên một bộ dựng đúng vẫn báo thiếu bản dài — cổng đếm sai đại lượng thì
           # nó báo động giả, và báo động giả dạy người ta bỏ qua báo động (§15.12).
+          # ── QC HÌNH: TRƯỚC (props) + SAU (pixel) cho MỌI clip vừa dựng ────────────────
+          # Không CHẶN lượt chạy: một clip dính lỗi thì 3 clip kia vẫn đáng giao. Nhưng phải
+          # in ra ::warning:: để nó nổi lên trong tóm tắt lượt — im lặng thì lỗi hình chỉ lộ
+          # ra khi anh ngồi soi từng khung (§12.8: hỏng mà vẫn báo xanh).
+          for J in out/v11*_${{ matrix.kenh }}_*.json; do
+            case "$J" in *.tai.json) continue;; esac
+            python -u qc_hinh.py "$J" "${J%.json}.mp4" 2>&1 | tee /tmp/qc.txt || true
+            if grep -q "❌ QC" /tmp/qc.txt; then
+              echo "::warning::QC hình: $(basename "$J") — $(grep -c '❌' /tmp/qc.txt) dòng lỗi"
+            fi
+          done
           N=$(ls out/v11_${{ matrix.kenh }}_*.tai.json out/v11L_${{ matrix.kenh }}_*.tai.json 2>/dev/null | wc -l | tr -d ' ')
           echo "n=$N" >> "$GITHUB_OUTPUT"
           echo "::notice::${{ matrix.kenh }}: $N tập có đủ bộ giao hàng"

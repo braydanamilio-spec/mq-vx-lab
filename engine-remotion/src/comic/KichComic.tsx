@@ -60,7 +60,12 @@ const NUA_RONG = 100;         // nửa bề ngang khi tay ghim ngực
 // Phần NHÌN THẤY của người dẫn chiếm bao nhiêu chiều cao khung (khung dọc, một chuyên gia).
 // `Math.max(_chuaBong, 1 - TI_LE_NGUOI)` ở `yChan` giữ hai điều kiện cùng lúc: đầu không bao
 // giờ chui vào bong bóng, VÀ nhân vật không cao quá tỉ lệ này.
-const TI_LE_NGUOI = 0.34;
+// 0,34 làm nhân vật bị cắt gần hết dưới mép: soi khung thì chỉ còn đầu và vai nhô lên, đọc ra
+// như đang nấp sau bàn chứ không phải người dẫn. Lý do là ĐẦU chỉ chiếm ~1/4 chiều cao người,
+// nên "phần nhìn thấy 34%" cho ra một khuôn mặt quá nhỏ để đọc biểu cảm.
+// 0,44 giữ được mặt đọc rõ mà nền vẫn còn 56% khung — và người dẫn LỆCH hẳn sang một bên
+// (`GU_DUNG.viTri`, biên độ 0,26) nên nền không bị chẻ đôi.
+const TI_LE_NGUOI = 0.44;
 
 const LE = 44;                // lề mực quanh khung
 const NET = 7;                // độ dày viền mực MẶC ĐỊNH (mỗi kênh ghi đè, xem `netMuc`)
@@ -398,7 +403,7 @@ const Panel: React.FC<{
   // Người dẫn đứng LỆCH theo kênh (`GU_DUNG.viTri`). Đây là bản sắc đặt vào thứ ĐÃ hiện ở
   // mọi khung, không phải một món đồ thêm vào (§17.3 · §17.4). Lệch 0,18 khung là đủ để hai
   // kênh đọc ra khác nhau mà vẫn chừa chỗ cho ảnh nền ở nửa còn lại.
-  const _lechGu = motNguoi ? (guViTri === "trai" ? -0.18 : guViTri === "phai" ? 0.18 : 0) : 0;
+  const _lechGu = motNguoi ? (guViTri === "trai" ? -0.26 : guViTri === "phai" ? 0.26 : 0) : 0;
   const cxA = doiNguoi ? w * 0.28 : canRong ? w * 0.29 : w * (0.5 + _lechGu);
   const cxB = doiNguoi ? w * 0.72 : canRong ? w * 0.71 : w * (0.5 + _lechGu);
 
