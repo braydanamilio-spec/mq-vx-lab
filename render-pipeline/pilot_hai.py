@@ -885,6 +885,7 @@ GU_DUNG = {
     "howhot": ("phai", "ngang", "lanh"),   "smallest": ("giua", "ra", "lanh"),
 }
 
+DA_GHIM = False          # `bo_1_3` đã chọn chủ thể cho cả bộ — `mot_tap` không chọn lại
 NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
@@ -1153,7 +1154,14 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     _vs = None
     try:
         import vi_sao as _VS
-        if _VS.co_vi_sao(ma):
+        # `bo_1_3` đã CHỌN chủ thể cho cả bộ và ghim vào `BO_SINH`. Không có cờ này thì
+        # `mot_tap` chọn lại ở từng clip và GHI ĐÈ cái ghim — đo lượt thật: bản dài về
+        # `Air California` còn ba short về `Air New England`, `ATA Airlines`, `Air Berlin`,
+        # mà cả ba vẫn chạy nền vẽ cho Air California. Bản vá trước đưa quyết định về
+        # `bo_1_3` nhưng KHÔNG chặn nơi cũ, nên hai nơi cùng quyết và nơi sau thắng (§15.3).
+        if DA_GHIM:
+            _vs = None
+        elif _VS.co_vi_sao(ma):
             _vs = _VS.sinh(ma, idx)
     except Exception as e:
         print(f"   ⚠ đường 'vì sao' hỏng ({str(e)[:50]}) — dùng bộ sinh cũ")
@@ -2011,6 +2019,14 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
     def _ghim(bo_nhip):
         _G1.BO_SINH[_ma_sinh] = lambda _i, _x=bo_nhip: _x
 
+    global DA_GHIM, MOT_GIONG, CHU_THE_TAP, DAO_CU_TAP, ANH_THAT
+    _ch = _VS.DA_CHON.get((ma, idx), {})
+    MOT_GIONG = True
+    CHU_THE_TAP = _ch.get("chu_the", "")
+    DAO_CU_TAP = _ch.get("hinh_mau", "")
+    ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=14) if CHU_THE_TAP else []
+    print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · 🖼 ảnh thật: {len(ANH_THAT)}")
+    DA_GHIM = True
     n = 0
     _ghim(_r)
     if mot_tap(ma, idx, False, chuong):
@@ -2041,6 +2057,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
                 n += 1
     finally:
         NEN_SAN = []
+        DA_GHIM = False
         if _cu is None:
             os.environ.pop("KHONG_NEN_TAP", None)
         else:
