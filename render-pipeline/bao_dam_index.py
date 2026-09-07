@@ -126,6 +126,22 @@ def bao_dam() -> int:
             # 409 = đã tồn tại (một lượt trước vừa đặt) -> KHÔNG phải lỗi.
             if e.code == 409:
                 print(f"   ✅ {nhom}: index đang được dựng (lượt trước đã đặt)")
+            elif e.code == 403:
+                # ── 403 KHÔNG PHẢI LỖI TẠM THỜI, VÀ CÂU CŨ KHÔNG NÓI ĐƯỢC GÌ  (7/9/2026) ──
+                # Log production ngày 6/9 in `⚠ render_jobs: tạo index hỏng HTTP 403` mỗi
+                # giờ, suốt. Nghĩa là cái van tự chữa này CHƯA BAO GIỜ tạo được một index
+                # nào kể từ khi viết — service account không có quyền tạo index, và không
+                # lượt chạy nào sẽ tự có quyền ấy. Một cảnh báo lặp mãi mà không nói phải
+                # làm gì thì người đọc học cách bỏ qua nó (§15.12), và khi đó nó còn tệ hơn
+                # im lặng: nó chiếm chỗ của một dòng đỏ thật.
+                print(f"   ⛔ {nhom}: KHÔNG CÓ QUYỀN tạo index (HTTP 403) — cái van này sẽ "
+                      f"không bao giờ tự chữa được, đừng chờ nó.")
+                print(f"      Cách duy nhất đang chạy được: deploy tay từ máy đã đăng nhập "
+                      f"`firebase` —")
+                print(f"        cd MM0-AutoPublisher/dashboard && "
+                      f"firebase deploy --only firestore:indexes --project b")
+                print(f"      (hoặc cấp `roles/datastore.indexAdmin` cho service account "
+                      f"thì lượt sau tự tạo được.)")
             else:
                 print(f"   ⚠ {nhom}: tạo index hỏng HTTP {e.code} {t}")
     return dat

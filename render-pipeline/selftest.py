@@ -2560,6 +2560,7 @@ def main():
     check("bài nghiệm thu bắt được đúng lỗi đã lọt", t_nghiem_thu_bat_duoc_loi_that)
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
+    check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
     check("mọi nhịp có khuôn đổi bố cục đều ĐƯỢC GÁN bố cục", t_moi_nhip_co_bo_cuc)
@@ -8154,6 +8155,35 @@ def t_chia_doi_hai_ve_khac_nhau():
 
     assert G._moc_khac([{"nhan": "a", "so": "60 dB"}, {"nhan": "b", "so": "30 dB"}],
                        "60 dB")["nhan"] == "b", "_moc_khac không đổi mốc khi trùng"
+
+
+def t_khoi_khoa_kenh_khong_lech():
+    """`publish.yml` phải truyền khoá cho ĐÚNG các kênh trong `channels.yaml`.
+
+    Đo ngày 7/9: khối ấy chép tay và đứng yên ở BA kênh thế hệ 1 (`BROKE`, `HUH`,
+    `INSIDE_YOU`) trong khi `channels.yaml` đã sang 18 kênh khác hẳn — tức đường lùi
+    "đọc khoá từ GitHub Secrets" của `main.resolve_channel_env` KHÔNG TỒN TẠI cho một
+    kênh nào đang chạy, và không có gì báo. Đúng §13.2: một khối cầm danh sách chép tay
+    là chỗ lỗi thật nằm mà không ai thấy.
+
+    Cổng này so hai bên và ĐỎ khi lệch; sinh lại bằng
+    `python3 dong_bo_khoa_kenh.py --viet`.
+    """
+    import importlib.util as _iu, os as _o
+    p = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "dong_bo_khoa_kenh.py")
+    sp = _iu.spec_from_file_location("_dbkk", p); m = _iu.module_from_spec(sp)
+    sp.loader.exec_module(m)
+    yml = m._duong(_o.path.join(".github", "workflows", "publish.yml"))
+    if not yml:
+        return                      # repo đăng bài không có mặt (chạy ở nơi khác) -> không kết luận
+    import io as _io
+    s = _io.open(yml, encoding="utf-8").read()
+    moi = m.khoi()
+    assert m.DAU in s and m.CUOI in s, \
+        "publish.yml chưa có khối kênh SINH TỰ ĐỘNG — chạy dong_bo_khoa_kenh.py --viet"
+    cu = s[s.index(m.DAU): s.index(m.CUOI) + len(m.CUOI)]
+    assert cu.strip() == moi.strip(), \
+        "khối kênh trong publish.yml LỆCH channels.yaml — chạy dong_bo_khoa_kenh.py --viet"
 
 
 def t_chart_co_so_that():
