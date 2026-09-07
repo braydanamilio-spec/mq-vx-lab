@@ -625,14 +625,37 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     for i, lop in co_lop:
         # vị trí tương ứng trong dòng lời thoại
         j = min(len(cau) - 1, round(i * (len(cau) - 1) / max(1, len(nhip) - 1)))
-        kim = re.sub(r"[^0-9A-Za-z]", "", str(lop.get("so") or ""))[:6].lower()
-        # tinh chỉnh: trong cửa sổ ±2 lượt, ưu tiên lượt THẬT SỰ đọc con số ấy
-        if kim:
+        # ── THẺ PHẢI RƠI VÀO LƯỢT THẬT SỰ ĐỌC CON SỐ ẤY  (anh nghe ra, 7/9/2026) ────────
+        # Anh: *"số liệu phải đọc đúng, a thấy đang bị đọc sai"*. Đọc tay `realcost`:
+        #
+        #     A: What does a nine dollar sandwich really cost?   [THẺ $213K]
+        #     B: Two hundred thirteen thousand dollars…          [THẺ $9]     <- lệch một nhịp
+        #
+        # Miệng đọc một con số, màn hình hiện con số khác. Gốc nằm ở đúng phép tinh chỉnh này:
+        # `kim` là CHỮ SỐ (`213k`) còn mô hình viết số bằng CHỮ (*"two hundred thirteen
+        # thousand"*), nên phép `in` không bao giờ khớp. Tinh chỉnh chưa từng chạy, và thẻ luôn
+        # rơi về vị trí TỈ LỆ — lệch bất cứ khi nào số lượt thoại khác số câu dẫn.
+        #
+        # Cùng họ với hai lỗi đã trả giá đêm qua (§18.11): phép so đo CHUỖI trong khi thứ cần
+        # đo là NỘI DUNG. Nay so cả ba dạng người ta thật sự viết ra: chữ số · chữ số bỏ dấu
+        # phẩy · dạng ĐỌC BẰNG CHỮ (`_doc_so` đã có sẵn và đã nới tới hàng tỉ).
+        _thoi = str(lop.get("so") or "")
+        _sc = re.sub(r"[^0-9A-Za-z]", "", _thoi)[:6].lower()
+        _cs = re.sub(r"[^\d]", "", _thoi)
+        _chu = _doc_so(int(_cs)) if _cs.isdigit() and len(_cs) <= 12 else ""
+        def _doc_o_luot(t: int) -> bool:
+            if not (0 <= t < len(cau)) or so_lieu[t]:
+                return False
+            g = cau[t][0].lower()
+            for _d in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+                g = g.replace(_d, "-")
+            if _sc and _sc in re.sub(r"[^0-9A-Za-z]", "", g):
+                return True
+            return bool(_chu) and _chu in g
+        if _sc or _chu:
             for d in (0, 1, -1, 2, -2):
-                t = j + d
-                if 0 <= t < len(cau) and not so_lieu[t] \
-                        and kim in re.sub(r"[^0-9A-Za-z]", "", cau[t][0]).lower():
-                    j = t
+                if _doc_o_luot(j + d):
+                    j = j + d
                     break
         while j < len(cau) and so_lieu[j]:
             j += 1
