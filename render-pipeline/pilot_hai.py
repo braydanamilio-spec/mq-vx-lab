@@ -123,6 +123,15 @@ RULES
    figure, then one clause of what it means, and stops. No exclamation marks, no "wow", no
    "get this", no rhetorical questions back, no selling. Confidence comes from being brief
    and specific, and specificity comes from the figure they were given.
+3c. THE VIEWER MUST BE IN THE EPISODE. At least two turns say "you" or "your" and tie the
+   figure to the viewer's own life — their commute, their kitchen, their paycheck, their
+   body. Measured on 18 real episodes: 6 of them never said "you" once. An explainer that
+   never mentions the person watching is a lecture, and people do not stay for lectures.
+3d. THE LAST TURN IS NOT A NUMBER. It is the one sentence the viewer repeats to someone
+   else tomorrow. Measured endings that FAILED: "Three times bigger." · "Twenty five
+   pounds, the actual weight." · "One is a mound, one is terrain." Each restates a figure
+   already said and leaves nothing to carry. Close on what it means for them instead:
+   "You have been paying for the trip, not the cup." Never end on digits.
 4. Plain spoken American English. Contractions are fine. No narrator voice, no "as you can
    see", nobody explains what the audience is looking at.
 5. Keep the same number of turns as there are narration lines, or at most two more.
@@ -640,6 +649,21 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
                              "chu": _NOI[(_lech + len(_ket)) % len(_NOI)], "cx": "trung_tinh"})
             _ket.append(_x)
         ra = _ket
+        # ── ĐO GIỮ CHÂN NGAY TRÊN LỜI THOẠI ĐÃ DỰNG  (7/9/2026) ────────────────────────
+        # Anh: *"đã giữ chân người coi chưa"*. Hai chỗ hỏng đo được trên 18 tập, và cả hai
+        # chỉ nhìn thấy Ở ĐÂY — `cham_kich_ban` chấm CÂU DẪN, còn thứ người xem nghe là lời
+        # thoại do mô hình viết ở bước này. Em vừa suýt gắn hai trục ấy vào thước sai nguồn
+        # lần thứ ba trong ngày (§15.5); đặt phép đo cạnh thứ nó đo mới đúng chỗ.
+        #
+        # BÁO chứ không CHẶN: một tập ít nói "you" thì nhạt, không hỏng — chặn nó là tiêu
+        # một vòng gọi AI cho thứ luật 3c/3d trong lệnh dặn đã lo (§13.23, ba nấc).
+        _van = " ".join(x.get("chu", "") for x in ra)
+        _ban = len(re.findall(r"\byou(?:['\u2019]\w+|r)?\b", _van, re.I))
+        _chot = (ra[-1].get("chu") if ra else "") or ""
+        if _ban < 2:
+            print(f"   ⚠ giữ chân: người xem chỉ xuất hiện {_ban} lần — tập này là bài giảng")
+        if re.search(r"\d", _chot):
+            print(f"   ⚠ giữ chân: câu chốt đọc lại một con số «{_chot[:34]}» — không mang đi được")
         thieu = _du_so(loi, ra, man)
         if not thieu:
             return ra
