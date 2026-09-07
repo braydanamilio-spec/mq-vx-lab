@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""HỒ CHỦ THỂ — nguồn đề tài không cạn cho 18 kênh.  (7/9/2026)
+
+Anh: *"làm xây pepline chuẩn cho 18 channel và số lượng lớn videos ko phải 1 videos"*.
+
+── VÌ SAO TỆP NÀY LÀ THỨ THIẾU LỚN NHẤT ──────────────────────────────────────────────────
+`khung_hoi.nhip_tu_khuon(khuon, chu_the, ...)` nhận chủ thể làm THAM SỐ, và chỗ duy nhất
+truyền tham số ấy là `_thu_vanished.py` — một tệp THỬ đọc từ dòng lệnh. Nghĩa là toàn bộ
+đường "vì sao" chạy được đúng một tập mỗi lần có người gõ tên chủ thể vào.
+
+Không có hồ chủ thể thì mọi thứ phía trên (18 lời hứa · 24 khuôn hỏi · cổng sự thật) đều là
+một cỗ máy không có nguyên liệu.
+
+── VÌ SAO HẠNG MỤC WIKIPEDIA, KHÔNG PHẢI DANH SÁCH VIẾT TAY ──────────────────────────────
+Danh sách viết tay cạn sau vài trăm tập và phải viết lại bằng tay — tức nó là một hằng số
+đội lốt một nguồn (§13.6). Hạng mục Wikipedia là một CÂY do hàng nghìn người duy trì: mỗi
+lần thế giới có thêm một công ty phá sản, một sản phẩm bị khai tử, một vụ mất tích, thì cây
+tự dài thêm mà không ai ở đây phải làm gì.
+
+Và phải duyệt CẢ CÂY, không chỉ tầng đầu: "Defunct companies of the United States" có đúng
+**14** trang thành viên trực tiếp, còn hàng nghìn trang nằm trong các hạng mục con (theo
+bang · theo ngành · theo thập kỷ). Đếm một tầng rồi kết luận "hạng mục này nhỏ" là lỗi đã
+mắc một lần trong repo này.
+
+── HAI CỔNG ─────────────────────────────────────────────────────────────────────────────
+1. **Bỏ trang KHÔNG phải chủ thể**: `List of …`, `Timeline of …`, trang định hướng, và mọi
+   trang có ngoặc đơn phân loại kiểu `(disambiguation)`. Chúng đọc lên như chủ thể nhưng
+   không có câu chuyện nào để kể.
+2. **Đủ tư liệu**: `chu_de.ho_so` phải rút được đủ câu sự thật. Đây là cổng ĐẮT (một lượt
+   mạng mỗi chủ thể) nên nó chạy LƯỜI — chỉ khi chủ thể sắp được dùng, không phải lúc quét
+   hạng mục. Quét 2.000 chủ thể mà kiểm tư liệu cả 2.000 là trả tiền cho 1.990 tập chưa làm.
+
+── SỔ ĐÃ DÙNG ───────────────────────────────────────────────────────────────────────────
+Mỗi kênh giữ danh sách `(chủ thể, khuôn hỏi)` đã dựng. Một chủ thể được phép quay lại với
+khuôn hỏi KHÁC — đó chính là phép nhân ở §19.6 — nhưng cùng một cặp thì không bao giờ hai
+lần. Sổ để ở tệp JSON cạnh kho, không ở Firestore: nó chỉ cần đúng, không cần chia sẻ, và
+hạn mức Firestore là tài nguyên dùng chung (§13.7).
+"""
+from __future__ import annotations
+
+import io
+import json
+import os
+import re
+import time
+import urllib.parse
+import urllib.request
+
+UA = {"User-Agent": "MM0-pipeline/1.0 (youtube explainer; contact via repo owner)"}
+GOC = os.path.dirname(os.path.abspath(__file__))
+DEM = os.path.join(GOC, "ho_chu_de.json")      # đệm cây hạng mục
+SO = os.path.join(GOC, "so_chu_de.json")       # sổ (kênh -> các cặp đã dựng)
+
+# Trang đọc lên như chủ thể mà không có chuyện để kể.
+_BO = re.compile(r"^(list|lists|timeline|index|outline|glossary|history) of |"
+                 r"\((disambiguation|surname|given name)\)$", re.I)
+
+
+def _goi(u: str) -> dict:
+    """Trả JSON, hoặc NÉM khi không đọc được. Không trả `{}` — xem `duyet`."""
+    cuoi = ""
+    for lan in range(4):
+        try:
+            r = urllib.request.Request(u, headers=UA)
+            return json.load(urllib.request.urlopen(r, timeout=40))
+        except Exception as e:
+            cuoi = str(e)[:60]
+            time.sleep(1.5 * (lan + 1))
+    raise RuntimeError(cuoi or "không đọc được Wikipedia")
+
+
+def _thanh_vien(cat: str, kind: str) -> list:
+    u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&list=categorymembers"
+         f"&cmtitle=Category:{urllib.parse.quote(cat)}&cmlimit=500&cmtype={kind}")
+    return [x["title"] for x in _goi(u).get("query", {}).get("categorymembers", [])]
+
+
+def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
+    """Duyệt CÂY hạng mục, trả danh sách chủ thể đã lọc. Có đệm đĩa.
+
+    `tran_cat` chặn trên số hạng mục duyệt, không trên số chủ thể: thứ tốn mạng là lượt hỏi
+    hạng mục, nên trần phải đặt trên chính đại lượng ấy (§15.1).
+    """
+    dem = {}
+    if os.path.exists(DEM):
+        try:
+            dem = json.load(io.open(DEM, encoding="utf-8"))
+        except Exception:
+            dem = {}
+    khoa = f"{goc}|{sau}"
+    if khoa in dem:
+        return dem[khoa]
+    ra, hang, da, n, hong = set(), [(goc, 0)], set(), 0, 0
+    while hang and n < tran_cat:
+        c, d = hang.pop(0)
+        if c in da:
+            continue
+        da.add(c)
+        n += 1
+        try:
+            for t in _thanh_vien(c, "page"):
+                if not _BO.search(t):
+                    ra.add(t)
+            if d < sau:
+                for x in _thanh_vien(c, "subcat"):
+                    hang.append((x.replace("Category:", ""), d + 1))
+        except Exception as e:
+            hong += 1
+            print(f"   ⚠ không đọc được «{c[:44]}»: {str(e)[:44]}")
+        time.sleep(0.12)
+    # ── LƯỢT ĐỌC HỎNG THÌ KHÔNG ĐƯỢC GHI ĐỆM  (bắt được ngay lần đo đầu, 7/9/2026) ───────
+    # Đo thật: "Discontinued products" ra **0 chủ thể** trong khi hỏi trực tiếp cùng hạng mục
+    # ấy ra 20 trang. Không phải hạng mục rỗng — là lượt đọc hỏng, và bản đầu của hàm này ghi
+    # thẳng cái 0 ấy vào `ho_chu_de.json`, tức **một trục trặc mạng vài giây khoá vĩnh viễn
+    # một kênh không còn đề tài**, và không có gì báo.
+    # `0` một mình luôn có hai nghĩa ngược nhau (§15.2). Hỏng thì trả về thứ đọc được, nói ra,
+    # và KHÔNG đệm — lượt sau tự thử lại.
+    if hong:
+        print(f"   ⚠ {hong}/{n} hạng mục đọc hỏng — KHÔNG ghi đệm, lượt sau thử lại "
+              f"(tạm có {len(ra)} chủ thể)")
+        return sorted(ra)
+    # Chốt thứ hai: KHÔNG đệm một danh sách RỖNG kể cả khi mọi lượt đọc đều "thành công".
+    # Một hạng mục gốc rỗng gần như luôn là tên viết sai hoặc một dạng hỏng chưa nhận ra —
+    # và đệm nó lại thì kênh ấy cạn đề tài vĩnh viễn mà không có gì báo. Rẻ hơn nhiều so với
+    # việc đi tìm nguyên nhân sáu tháng sau.
+    if not ra:
+        print(f"   ⚠ «{goc[:48]}» ra 0 chủ thể — KHÔNG đệm (nghi tên hạng mục sai)")
+        return []
+    dem[khoa] = sorted(ra)
+    io.open(DEM, "w", encoding="utf-8").write(json.dumps(dem, ensure_ascii=False))
+    return dem[khoa]
+
+
+def _so() -> dict:
+    if os.path.exists(SO):
+        try:
+            return json.load(io.open(SO, encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def da_dung(kenh: str) -> set:
+    return set(tuple(x) for x in _so().get(kenh, []))
+
+
+def ghi(kenh: str, chu_the: str, khuon: str) -> None:
+    s = _so()
+    s.setdefault(kenh, []).append([chu_the, khuon])
+    io.open(SO, "w", encoding="utf-8").write(json.dumps(s, ensure_ascii=False))
+
+
+def con_lai(kenh: str, gocs: list, khuons: list, sau: int = 2) -> int:
+    """Số CẶP (chủ thể × khuôn) còn chưa dựng — trần lý thuyết của kênh này.
+
+    Trả một con số có MẪU SỐ: `0` một mình có hai nghĩa ngược nhau (§15.2).
+    """
+    ct = set()
+    for g in gocs:
+        ct.update(duyet(g, sau))
+    return len(ct) * len(khuons) - len(da_dung(kenh))
+
+
+def tiep(kenh: str, gocs: list, khuons: list, so_luong: int = 1, sau: int = 2) -> list:
+    """`so_luong` cặp (chủ thể, khuôn) chưa dựng cho kênh này.
+
+    Đi theo BƯỚC NGUYÊN TỐ CÙNG NHAU trên không gian tích thay vì lấy tuần tự: lấy tuần tự
+    thì mười tập liền nhau đều là chủ thể vần A và cùng một khuôn hỏi — mỗi trục nhìn riêng
+    đều trải hết mà bộ đôi thì đi thành vệt (§13.13 · §14.9).
+    """
+    ct = []
+    for g in gocs:
+        ct.extend(x for x in duyet(g, sau) if x not in ct)
+    if not ct or not khuons:
+        return []
+    P = len(ct) * len(khuons)
+    buoc = next((b for b in (10007, 7919, 4001, 1009, 997, 101, 97, 31, 7, 3, 1) if P % b), 1)
+    xong = da_dung(kenh)
+    ra, i = [], 0
+    # Mốc xuất phát riêng cho từng kênh, viết TƯỜNG MINH — `hash()` của Python đổi theo mỗi
+    # lần chạy nên máy anh và runner sẽ ra hai lịch khác nhau (§13.13, đã trả giá).
+    bam = 0
+    for c in kenh:
+        bam = (bam * 131 + ord(c)) % 1000003
+    while len(ra) < so_luong and i < P:
+        k = (bam + i * buoc) % P
+        cap = (ct[k % len(ct)], khuons[k // len(ct)])
+        if cap not in xong and cap not in ra:
+            ra.append(cap)
+        i += 1
+    return ra
+
+
+if __name__ == "__main__":
+    import sys
+    gocs = sys.argv[1:] or ["Defunct companies of the United States", "Discontinued products"]
+    tong = set()
+    for g in gocs:
+        r = duyet(g)
+        print(f"{len(r):6}  {g}")
+        tong.update(r)
+    print(f"\nhợp lại, khử trùng: {len(tong)} chủ thể")
+    print("vd:", ", ".join(sorted(tong)[:6]))

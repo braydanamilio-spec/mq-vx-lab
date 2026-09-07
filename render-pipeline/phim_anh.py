@@ -456,8 +456,24 @@ def ve(prompt: str, ma: str, idx: int, i: int, doc: bool = True,
         raw, loi = None, "không còn nhà cung cấp nào"
         # ── TẦNG 1–3: CLOUDFLARE ────────────────────────────────────────────────────────
         # Model đã vẽ được ảnh đầu tiên của tập này đứng TRƯỚC — xem `_CHOT` ở docstring.
-        _tang = [("@cf/black-forest-labs/flux-2-klein-9b", True, {}),
-                 ("@cf/black-forest-labs/flux-2-klein-4b", True, {}),
+        # ── 4b ĐỨNG TRƯỚC 9b — ĐO 4 CHỦ THỂ, KHÔNG PHẢI SUY  (7/9/2026) ─────────────────
+        # Anh hỏi *"nên vẽ loại nào nó vẽ đúng mà đẹp"*. Vẽ CÙNG một prompt bằng cả ba model
+        # cho bốn chủ thể rồi nhìn tận mắt:
+        #
+        #   chủ thể            klein-9b                      klein-4b
+        #   Kodak              phòng khách, KHÔNG máy ảnh     máy ảnh Kodak giữa khung
+        #   Concorde           trời trống + ghế bành          máy bay
+        #   Betamax            phòng khách, không đầu máy     đầu Sony trên bàn
+        #   Three Mile Island  tháp giải nhiệt nhỏ ở xa       tháp giải nhiệt lớn, giữa khung
+        #
+        # **4/4 so với 1/4.** Và 4b rẻ hơn 2,4 lần (≥90 ảnh/tài khoản/ngày so với 37). Model
+        # ĐẮT NHẤT đang cho kết quả TỆ NHẤT ở việc này — đúng §12.5: 9b được chọn cho cảnh
+        # phim v10 (có người, có biểu cảm), còn nền theo chủ thể cần bám ĐỀ BÀI, việc khác hẳn.
+        #
+        # `schnell` vẫn ở chót và đúng chỗ: nó chỉ vẽ VUÔNG 1024 nên phải cắt, mà panel là
+        # khung dọc — 68% điểm ảnh không tới được màn hình (§18.13). Rẻ 24 lần không bù được.
+        _tang = [("@cf/black-forest-labs/flux-2-klein-4b", True, {}),
+                 ("@cf/black-forest-labs/flux-2-klein-9b", True, {}),
                  ("@cf/black-forest-labs/flux-1-schnell", False, {"steps": 8})]
         # ── ĐẢO THANG CHO VIỆC RẺ TIỀN  (6/9/2026) ──────────────────────────────────────
         # Giá thật, tra tài liệu Cloudflare (không phải suy đoán) cho một ảnh 1344×768:

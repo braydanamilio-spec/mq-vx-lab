@@ -792,6 +792,7 @@ def ve_nen_moi_luot(k: dict, DS, canh_ds: list) -> list:
     return ra
 
 
+
 def canh_nen_ai(k: dict, cau: list, keys) -> str:
     """Hỏi AI: mẩu hài này diễn ra ở đâu thì hợp nhất? Trả cụm mô tả, rỗng nếu hỏng.
 
@@ -892,6 +893,18 @@ CAM_CHU = (", no signs on walls, no lettering anywhere in the scene, no shop sig
            "no numbers, no writing of any kind, blank walls")
 CAM_BAO_BI = (", all packaging completely blank and unbranded, plain white and solid colour "
               "surfaces, no labels, no printed text on any package")
+
+# ── BIẾN THỂ CHO CẢNH CÓ CHỦ THỂ / NGOÀI TRỜI  (đo 7/9/2026) ────────────────────────────────
+# `SAN_NEN` viết cho cảnh TRONG NHÀ của bộ truyện tranh, và chữ **"furniture"** trong đó là một
+# yêu cầu vẽ: đem sang cảnh nhà máy điện hạt nhân thì FLUX làm đúng thứ được bảo — hai cái ghế
+# bành ngồi bên bờ sông. Đúng §12.5, và lần này đo được bằng hai ảnh cùng prompt chỉ khác một
+# cụm từ: có "furniture" -> ghế cam ở hai mép; đổi sang "anything in the scene" -> hàng cây.
+#
+# BỐN mệnh lệnh giữ nguyên từng chữ một (cổng `kiem_nen` vẫn nhận), chỉ đổi DANH TỪ được dồn ra
+# mép. Không viết lại câu — dẫn xuất từ chính `SAN_NEN` để hai bản không bao giờ lệch nhau.
+SAN_NEN_VAT = SAN_NEN.replace(
+    "all furniture and objects pushed far to the left and right edges",
+    "anything in the scene pushed far to the left and right edges")
 
 GU_NEN = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
           "bold clean outlines, simple flat colours, no people, no text, no signage, "

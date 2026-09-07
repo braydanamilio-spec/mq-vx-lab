@@ -70,7 +70,12 @@ def _tu_do(em: dict) -> bool:
 _NGUOI = re.compile(r"\b(portrait|headshot|selfie|posing|actor|actress|singer|player|"
                     r"ceo|president|founder|speaking at|interview)\b", re.I)
 # Rác kỹ thuật của Wikipedia: biểu tượng, cờ, mũi tên tăng giảm, bản đồ SVG trống.
-_RAC = re.compile(r"(icon|logo|flag|arrow|increase|decrease|symbol|commons-logo|"
+# `logo` ĐÃ BỊ BỎ khỏi danh sách này (7/9/2026). Anh: *"mấy hình ảnh logo … liên quan KODAK
+# … cho vào khi nói"* — và đo ra 5 logo Kodak Public domain đang bị chặn bởi chính chữ ấy.
+# Rác của Wikipedia (`Commons-logo`) vẫn bị chặn bằng tên riêng của nó, còn logo của chủ thể
+# thì để `_dung_chu_the` quyết: tên tệp phải mang tên chủ thể (§19.13). Một chữ chặn cả rác
+# lẫn thứ mình cần là một chữ không dùng làm cổng được (§13.22).
+_RAC = re.compile(r"(icon|flag|arrow|increase|decrease|symbol|commons-logo|"
                   r"edit-|ambox|question_book|wiki|padlock)", re.I)
 
 
@@ -78,7 +83,8 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
     """[{ten, url, giay_phep}] — CHỈ ảnh tự do, đã bỏ chân dung người và rác biểu tượng."""
     u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&generator=images"
          f"&titles={urllib.parse.quote(chu_the)}&gimlimit=40&prop=imageinfo"
-         "&iiprop=url|extmetadata&iiextmetadatafilter=License|LicenseShortName|"
+         "&iiprop=url|extmetadata&iiurlwidth=1000"
+         "&iiextmetadatafilter=License|LicenseShortName|"
          "UsageTerms|AttributionRequired|ImageDescription|Categories|ObjectName")
     try:
         d = _goi(u)
@@ -94,8 +100,20 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
         # truy vấn ("...?width=800&...original"), nên `url.endswith(".jpg")` trượt SẠCH — bộ
         # lọc trả 0 ảnh cho mọi chủ thể trong khi cổng giấy phép vẫn nói `TỰ DO? True`.
         # Cổng đúng, phép kiểm cạnh nó sai, và triệu chứng giống hệt "không có ảnh nào".
-        if not url or not os.path.splitext(ten.lower())[1] in (".jpg", ".jpeg", ".png"):
-            continue                      # bỏ svg/gif/ogg: engine dán ảnh bitmap
+        # ── SVG ĐƯỢC NHẬN QUA BẢN PNG DO WIKIMEDIA DỰNG  (7/9/2026) ──────────────────
+        # Engine dán ảnh bitmap nên bản đầu loại thẳng `.svg`. Nhưng logo của công ty gần như
+        # LUÔN là SVG, và đó đúng là thứ hợp nhất với một tập nói về công ty ấy. Wikimedia tự
+        # dựng PNG khi mình xin `iiurlwidth` — hỏi API lấy `thumburl`, đừng tự ghép đường
+        # `/thumb/` (ghép tay trả `HTTP 400 Use thumbnail sizes listed on…`, §13.8).
+        _duoi = os.path.splitext(ten.lower())[1]
+        _mark = False
+        if _duoi == ".svg":
+            _th = str(ii.get("thumburl") or "")
+            if not _th:
+                continue
+            url, _mark = _th, True
+        elif _duoi not in (".jpg", ".jpeg", ".png"):
+            continue                      # gif/ogg/pdf: không dán được
         if _RAC.search(ten) or _NGUOI.search(ten):
             continue
         mo = str((em.get("ImageDescription") or {}).get("value", ""))
@@ -105,7 +123,7 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
             continue
         cat = str((em.get("Categories") or {}).get("value", ""))
         ten_ob = str((em.get("ObjectName") or {}).get("value", ""))
-        ra.append({"ten": ten, "url": url, "cat": cat, "ob": ten_ob,
+        ra.append({"ten": ten, "url": url, "cat": cat, "ob": ten_ob, "mark": _mark,
                    "giay_phep": str((em.get("LicenseShortName") or {}).get("value", "?"))})
     return _dung_chu_the(ra, chu_the)[:toi_da]
 
@@ -145,6 +163,37 @@ def _dung_chu_the(ds: list, chu_the: str) -> list:
     return giu or ds
 
 
+def _the_logo(d: str) -> str:
+    """Dựng logo thành TẤM DỌC có nền, thay vì để nó bị `objectFit: cover` cắt méo.
+
+    ── VÌ SAO KHÔNG DÁN THẲNG  (7/9/2026) ────────────────────────────────────────────────
+    Logo là một dấu hiệu PHẲNG, nền trong suốt, tỉ lệ thường rất ngang (5:1). Panel là khung
+    DỌC 1080×1920 và engine đặt ảnh bằng `objectFit: cover` — dán thẳng thì nó phóng theo
+    chiều ngang tới khi lấp đủ chiều cao, tức cắt mất hai đầu chữ và phóng to gấp mấy lần.
+    Cùng phép tính đã đo ở §18.13, chỉ khác là ở đây tỉ lệ còn lệch hơn nhiều.
+
+    Nên đóng khung nó: nền sáng đúng khổ dọc, logo đặt giữa, chiếm 62% bề ngang. Đó là cách
+    một tấm thẻ hiệu bài được dựng, và nó đọc ra "đây là công ty đang nói tới" trong nửa giây.
+    """
+    try:
+        from PIL import Image
+    except Exception:
+        return d
+    try:
+        lg = Image.open(d).convert("RGBA")
+        W, H = 768, 1344
+        nen = Image.new("RGB", (W, H), "#F2EFE9")
+        r = min(W * 0.62 / lg.width, H * 0.30 / lg.height)
+        lg = lg.resize((max(1, int(lg.width * r)), max(1, int(lg.height * r))), Image.LANCZOS)
+        nen.paste(lg, ((W - lg.width) // 2, (H - lg.height) // 2), lg)
+        moi = os.path.splitext(d)[0] + "_the.jpg"
+        nen.save(moi, "JPEG", quality=90, optimize=True)
+        return moi
+    except Exception as e:
+        print(f"   ⚠ dựng thẻ logo hỏng ({str(e)[:40]}) — dùng ảnh gốc")
+        return d
+
+
 def tai_ve(anh: dict) -> str:
     """Tải một ảnh về kho cục bộ. Trả đường dẫn, hoặc "" khi hỏng — KHÔNG ném lên trên."""
     try:
@@ -153,12 +202,12 @@ def tai_ve(anh: dict) -> str:
         duoi = os.path.splitext(urllib.parse.urlparse(anh["url"]).path)[1].lower() or ".jpg"
         d = os.path.join(KHO, k + duoi)
         if os.path.exists(d) and os.path.getsize(d) > 4096:
-            return d
+            return _the_logo(d) if anh.get("mark") else d
         r = urllib.request.Request(anh["url"], headers=UA)
         b = urllib.request.urlopen(r, timeout=45).read()
         if len(b) < 4096:                 # ảnh quá nhỏ gần như luôn là biểu tượng
             return ""
         io.open(d, "wb").write(b)
-        return d
+        return _the_logo(d) if anh.get("mark") else d
     except Exception:
         return ""

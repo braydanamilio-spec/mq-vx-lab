@@ -851,30 +851,97 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 MOT_GIONG = False        # bật: MỘT chuyên gia nói liên tục, hình đổi theo lời
 DAO_CU_TAP = ""          # hình mẫu của cả tập (`chu_de.hinh_mau`) — lấp chỗ câu không gợi vật
 ANH_THAT: list = []      # ảnh PD/CC0 của chính chủ thể — xem `_chen_anh_that`
+CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
+# Trần ảnh CF cho MỘT tập. Đặt ở đây chứ không ở biến toàn cục dùng chung: mỗi tập là một
+# tiến trình riêng nên phạm vi "một tiến trình" ĐÚNG BẰNG phạm vi "một tập" — khác hẳn ca
+# §17.7, nơi bộ đếm tự nhận là "mỗi lượt chạy" mà thật ra đếm mỗi tập.
+TRAN_NEN_TAP = int(os.environ.get("TRAN_NEN_TAP", "") or 14)
+
+
+def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str) -> list:
+    """Vẽ nền RIÊNG cho tập này từ chính CHỦ THỂ + câu đang nói, thay cho nền kho chung.
+
+    ── VÌ SAO  (anh, 7/9/2026) ───────────────────────────────────────────────────────────
+    Anh: *"bỏ nền sẵn và nên lấy nền liên quan videos khi làm … hơn là mấy nền ko liên quan"*.
+    Kho `nen_kho.json` được soạn từ mô tả PHÒNG chung chung (*"a metal forge, hanging chains
+    and glowing furnaces"*) nên nó không bao giờ khớp chủ thể, dù bộ vẽ mạnh cỡ nào. Nút thắt
+    chưa bao giờ là bộ vẽ — mà là mình bảo nó vẽ GÌ.
+
+    ── CÓ ĐỦ HẠN MỨC KHÔNG: ĐO, KHÔNG ĐOÁN ──────────────────────────────────────────────
+        121 tài khoản CF × 37 ảnh/ngày (flux-2-klein-9b) = 4.477 ảnh/ngày
+        một tập 12 nhịp                                  =    12 ảnh
+        -> ~373 tập/ngày cho cả 18 kênh (~21 tập/kênh/ngày)
+    `A.ve` đệm theo VÂN TAY PROMPT nên dựng lại một tập đã có tốn 0 lượt — điều kiện để soi
+    khung nhiều vòng mà không đốt hồ.
+
+    ── BỐN TẦNG VẪN NGUYÊN (§7) ─────────────────────────────────────────────────────────
+    ảnh thật PD/CC0  ->  nền vẽ theo chủ thể (hàm này)  ->  kho nền chung  ->  nền vector.
+    CF cạn hay hỏng thì nhịp ấy GIỮ NGUYÊN ảnh kho đã tính — không nhịp nào để trống.
+
+    Chủ thể đứng ĐẦU prompt: docstring của `_prompt` bên `giai_thich` từng viết đúng điều này
+    rồi mã làm ngược, và hậu quả đo được là kênh SURVIVE đặt hàng "a lone person in a frozen
+    tundra" mà ra một căn phòng hiện đại (§15.25).
+    """
+    if not chu_the or not anh_nens:
+        return anh_nens
+    if os.environ.get("KHONG_NEN_TAP"):
+        return anh_nens
+    from kich_hai import SAN_NEN_VAT
+    viec = []
+    for i, c in enumerate(cau[:len(anh_nens)]):
+        if len(viec) >= TRAN_NEN_TAP:
+            break
+        noi = " ".join(str(c.get("nar") or c.get("chu") or "").split())[:150]
+        if not noi:
+            continue
+        viec.append((i, f"{chu_the}. {noi} {SAN_NEN_VAT}. {GU_NEN}"))
+    if not viec:
+        return anh_nens
+    try:
+        ra = A.ve_nhieu(viec, "nentap", 0, doc=True, luong=6)
+    except Exception as e:
+        print(f"   ⚠ vẽ nền theo tập hỏng ({str(e)[:44]}) — giữ nền kho")
+        return anh_nens
+    out = list(anh_nens)
+    n = 0
+    for (i, _), rel in zip(viec, ra or []):
+        if rel:
+            out[i] = rel
+            n += 1
+    print(f"   🎨 nền vẽ theo chủ thể «{chu_the}»: {n}/{len(viec)} nhịp"
+          f" (còn lại dùng kho chung)")
+    return out
 
 
 def _chen_anh_that(anh_nens: list, duong: list) -> list:
-    """Rải ảnh THẬT của chủ thể vào danh sách nền, xen kẽ với nền vẽ.
+    """Rải ảnh THẬT của chủ thể vào danh sách nền — ưu tiên ảnh thật, nền vẽ chỉ lấp chỗ trống.
 
-    ── VÌ SAO XEN KẼ, KHÔNG THAY HẾT  (7/9/2026) ─────────────────────────────────────────
-    Anh: *"hình ảnh chưa vẽ ra được ảnh liên quan tới nội dung"*. Nền vẽ đã chọn đúng LĨNH
-    VỰC (xưởng ảnh cho Kodak) nhưng vẫn là một căn phòng chung — người xem không nhìn ra đó
-    là phòng ảnh. Một tấm ảnh THẬT "Eastman Kodak HQ 1900" thì không nền vẽ nào thay được.
-    Nhưng thay HẾT thì mất luôn phong cách truyện tranh của kênh, và ảnh thật thì hữu hạn
-    (Kodak 8, Betamax 1) nên không đủ cho mọi nhịp.
+    ── ĐỔI VAI, KHÔNG XOÁ  (anh đề xuất, 7/9/2026) ───────────────────────────────────────
+    Anh: *"a nghĩ bỏ nền sẵn và nên lấy nền liên quan videos khi làm … hơn là mấy nền ko liên
+    quan"*. Đúng hướng, và bản trước của hàm này đi ngược: nó chỉ chèn ảnh thật vào nhịp LẺ,
+    tức nền vẽ chung chung vẫn giữ một nửa số nhịp kể cả khi có đủ ảnh đúng chủ thể.
 
-    Xen kẽ: nhịp chẵn giữ nền vẽ, nhịp lẻ dùng ảnh thật khi có. Người xem thấy cả hai, và
-    chỗ nào không có ảnh thì rơi về nền vẽ — không bao giờ để trống (§7, bốn tầng).
+    Nhưng XOÁ hẳn kho nền vẽ thì không được, và đây là số đo chặn lại: nguồn ảnh tự do cạn rất
+    nhanh theo chủ thể — Kodak 12 · Concorde 4 · Betamax 3 · MH370 **0**. Một tập 9–12 nhịp mà
+    bỏ kho nền thì những chủ thể ít tư liệu không còn gì để hiện. §7 nói rõ tầng cuối phải là
+    tầng KHÔNG gọi mạng, vì chỉ nó mới không bao giờ hỏng.
+
+    Nên: ảnh thật lấp TỪ ĐẦU và lấp hết những gì nó có; nền vẽ nhận phần còn lại. Có 12 ảnh thì
+    12 nhịp đầu là ảnh thật. Có 1 ảnh thì đúng 1 nhịp, phần còn lại vẫn có nền.
+
+    Rải ĐỀU chứ không dồn cục: dồn 12 ảnh vào 12 nhịp đầu của một tập 20 nhịp thì nửa sau tập
+    trở lại toàn nền vẽ, và người xem đọc ra hai nửa khác nhau. Chia đều thì cả tập cùng một
+    chất — cùng lý do đã rút cho `ve_kho` (dừng ở đâu cũng để lại một kho CÂN).
     """
     if not duong:
         return anh_nens
     ra = list(anh_nens)
-    k = 0
-    for i in range(1, len(ra), 2):          # chỉ nhịp LẺ, giữ nhịp chẵn cho nền vẽ
-        if k >= len(duong):
-            break
-        ra[i] = duong[k]
-        k += 1
+    n, m = len(ra), len(duong)
+    if m >= n:
+        return list(duong[:n])            # đủ ảnh thật cho mọi nhịp: bỏ hẳn nền vẽ
+    # m < n: đặt ảnh thật ở m vị trí cách đều nhau trên cả tập
+    for k in range(m):
+        ra[round(k * (n - 1) / max(1, m - 1)) if m > 1 else n // 2] = duong[k]
     return ra
 
 
@@ -1402,6 +1469,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # quay vòng, nên số phòng riêng = min(số ô, cỡ kho) — tức mỗi ô một phòng đã là tối ưu
         # và không phép gộp nào cải thiện được. Bỏ hẳn phép gộp.
         anh_nens = [_co(co[(noi_idx + i * buoc) % len(co)]) for i in range(len(cau))]
+        anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP)
         anh_nens = _chen_anh_that(anh_nens, ANH_THAT)
     else:
         anh_nens = []

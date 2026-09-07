@@ -34,6 +34,7 @@ P.DAO_CU_TAP = C.hinh_mau(_ho)      # hình mẫu suy từ chủ thể, dùng ch
 print(f"   🎨 hình mẫu: {P.DAO_CU_TAP or '(không nhận ra)'}")
 
 # ── ẢNH THẬT: engine chỉ đọc được tệp dưới `public`, nên `nap_anh_that` tải VÀ copy ─────
-P.ANH_THAT = P.nap_anh_that(CHU_THE, toi_da=6)
+P.CHU_THE_TAP = CHU_THE.split(" (")[0]      # bộ vẽ nền theo tập cần biết chủ thể
+P.ANH_THAT = P.nap_anh_that(CHU_THE, toi_da=14)
 print(f"   🖼 ảnh thật PD/CC0: {len(P.ANH_THAT)}")
 raise SystemExit(0 if P.mot_tap(KENH, 4, False) else 1)
