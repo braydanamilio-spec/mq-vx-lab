@@ -906,6 +906,27 @@ def k_ma_sinh(ma: str) -> str:
     return next((k["sinh"] for k in G.KENH if k["ma"] == ma), ma)
 
 
+# Từ KHÔNG gợi được hình: đứng đầu prompt thì mô hình vẽ một cảnh chung chung.
+_BO_NEN = {"the","and","for","with","from","that","this","was","were","its","been","have",
+           "after","before","when","which","their","there","then","than","also","into",
+           "would","could","company","service","began","ended","started","stopped","made",
+           "took","came","went","said","later","first","most","more","some","many","other",
+           "about","over","under","between","during","because","while","only","still"}
+
+# Tám khuôn hình TĨNH, xoay theo nhịp. Không có cái nào tả chuyển động máy — hàng rào ấy đúng
+# và giữ nguyên (§14.9). Cái đổi là CHIỀU CAO · KHOẢNG CÁCH · TIỀN CẢNH.
+_KHUON_NEN = (
+    "wide establishing view from across the space",
+    "close view of the object filling the lower half",
+    "view from a doorway looking in",
+    "low angle looking slightly up",
+    "view down a long corridor",
+    "elevated view looking down across the floor",
+    "corner view with something large at the left edge",
+    "flat straight-on view of a single wall",
+)
+
+
 def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -> list:
     """Vẽ nền RIÊNG cho tập này từ chính CHỦ THỂ + câu đang nói, thay cho nền kho chung.
 
@@ -949,7 +970,20 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         noi = " ".join(str(noi).split())[:150]
         if not noi:
             continue
-        viec.append((i, f"{chu_the}. {noi} {SAN_NEN_VAT}. {GU_NEN}"))
+        # ── CÂU DẪN DẮT, CHỦ THỂ CHỈ ĐỨNG SAU  (soi khung 8/9/2026) ────────────────────
+        # Bản đầu ghép `"{chủ thể}. {câu}"`, và soi 20 nền vẽ cho `Air Berlin` thì **cả 20
+        # gần như một cảnh**: sảnh sân bay trống, cùng một góc. Đúng thôi — chủ thể đứng đầu
+        # nên mô hình vẽ "hãng hàng không", còn câu thì nói về lịch sử công ty, không tả cảnh.
+        #
+        # Đảo lại: DANH TỪ CỤ THỂ của chính câu ấy đứng đầu (mô hình khuếch tán đọc phần đầu
+        # nặng ký hơn — §15.25), chủ thể lùi xuống làm bối cảnh. Và xoay KHUÔN HÌNH theo nhịp
+        # để hai nhịp liền nhau không cùng một góc máy: đa dạng phải nằm ở thứ người xem NHÌN
+        # THẤY, không ở thứ đếm được (§14.9).
+        _dt = [w for w in re.findall(r"[A-Za-z][a-z]{3,}", noi)
+               if w.lower() not in _BO_NEN][:4]
+        _canh = _KHUON_NEN[i % len(_KHUON_NEN)]
+        _dau = (", ".join(_dt) + ". ") if _dt else ""
+        viec.append((i, f"{_dau}{_canh}. Setting: {chu_the}. {SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:

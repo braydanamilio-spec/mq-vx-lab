@@ -24,6 +24,8 @@ bảng khoá theo `(mã, số tập)`, và `pilot_hai` tra đúng cặp nó đan
 """
 from __future__ import annotations
 
+import re
+
 import ho_chu_de as H
 import khung_hoi as K
 
@@ -89,6 +91,54 @@ KENH_HUA = {
 DA_CHON: dict = {}
 
 
+# ── CHỦ THỂ KHÔNG HỢP VỚI ĐỊNH DẠNG  (soi khung 8/9/2026) ───────────────────────────────────
+# Lượt dựng thật chọn trúng **"1971 Iraq poison grain disaster"** — một vụ ngộ độc hàng loạt
+# chết hàng trăm người — và người dẫn là nhân vật hoạt hình ĐANG CƯỜI. Không cổng nào bắt, vì
+# mọi cổng đang đo tay nghề viết và độ đầy tư liệu, không đo **chuyện này có kể được bằng
+# giọng ấy không**.
+#
+# Đây không phải chuyện thẩm mỹ. Một kênh hoạt hình vui vẻ kể chuyện người chết hàng loạt thì
+# vừa phản cảm với người xem Mỹ, vừa là dạng bị gỡ và bị tắt kiếm tiền nhanh nhất.
+#
+# Hồ đề tài lấy từ chính những hạng mục ấy (`Maritime incidents`, `Nuclear accidents`,
+# `Fires in the United States`…) nên nó sẽ còn trúng nữa — phải chặn ở khâu CHỌN, không phải
+# dặn khâu viết (§14.12: ràng buộc tuyệt đối thì làm cho nó không thể vi phạm).
+#
+# Danh sách này cố ý HẸP và chỉ nhắm thứ có NGƯỜI CHẾT. Tai nạn không chết người, công ty phá
+# sản, sản phẩm khai tử — vẫn nhận, vì đó đúng là ngách "vì sao nó biến mất".
+_KHONG_HOP = re.compile(
+    r"\b(massacre|genocide|atrocit|holocaust|lynching|execution|"
+    r"murder|homicide|manslaughter|assassinat|suicide|"
+    r"poisoning|poison\s+\w+\s+disaster|famine|epidemic|pandemic|plague|"
+    r"terror|bombing|shooting|hijack|hostage|kidnap|"
+    r"casualt|fatalit|death toll|mass grave|"
+    r"abuse|assault|trafficking|slavery)\b", re.I)
+
+
+def hop_dinh_dang(chu_the: str, van: str = "") -> bool:
+    """Chuyện này kể được bằng giọng một nhân vật hoạt hình vui vẻ không?
+
+    Xét TÊN trước (rẻ), rồi vài trăm chữ đầu bài viết — phần mở đầu Wikipedia luôn nói ngay
+    quy mô thương vong nếu có.
+    """
+    if _KHONG_HOP.search(chu_the or ""):
+        return False
+    if van and _KHONG_HOP.search(van[:1200]):
+        return False
+    # Con số thương vong ở phần mở đầu: "killed 47", "459 died", "death toll of 6,000".
+    if van and re.search(r"\b(kill(?:ed|ing)|died|dead|perished)\b[^.]{0,40}\d",
+                         van[:1200], re.I):
+        return False
+    # Số đứng TRƯỚC động từ — dạng phổ biến nhất và bản đầu bỏ sót: *"a runway collision in
+    # which **10 people died**"* lọt qua vì biểu thức đòi chữ số đứng SAU. Một cổng chỉ bắt
+    # một trật tự từ là cổng chỉ bắt một nửa (§13.9: nhận ra quy luật, đừng liệt kê ví dụ).
+    if van and re.search(r"\b\d[\d,]*\s+(?:\w+\s+){0,3}?(?:were\s+|was\s+)?"
+                         r"(?:killed|died|dead|perished|injured|wounded)\b",
+                         van[:1200], re.I):
+        return False
+    return True
+
+
 def co_vi_sao(ma: str) -> bool:
     return ma in KENH_HUA
 
@@ -144,6 +194,13 @@ def sinh(ma: str, i: int):
     # Trong số ĐÃ qua cổng chuyện: nhiều câu nhân quả trước, đó mới là thứ quyết định tập hay.
     _ung.sort(key=lambda x: -x[2])
     for chu_the, khuon, _nq in _ung:
+        try:
+            _van = C.bai_viet(chu_the) or ""
+        except Exception:
+            _van = ""
+        if not hop_dinh_dang(chu_the, _van):
+            print(f"   ⏭ «{chu_the[:40]}»: có thương vong — không kể được bằng giọng này")
+            continue
         try:
             ho = C.ho_so(chu_the)
         except Exception:

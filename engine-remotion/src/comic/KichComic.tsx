@@ -381,7 +381,16 @@ const Panel: React.FC<{
     // tay buông xuôi nên bàn tay tụt hẳn dưới mép cắt ngang hông — tức cử động khuỷu vừa thêm
     // không ai nhìn thấy. Người dẫn nói với máy quay để tay phía TRƯỚC, và đó cũng là chỗ duy
     // nhất bàn tay còn nằm trong khung ở cỡ trung thân trên.
-    return CHO_PHEP_MOT.indexOf(c) >= 0 && c !== ("mo_tay" as TenCuChi) ? c : ("dem" as TenCuChi);
+    // ── XOAY TƯ THẾ THEO NHỊP  (soi khung 8/9/2026) ────────────────────────────────
+    // Bản trước quy MỌI tư thế về `dem`, nên người dẫn giống hệt nhau ở cả 32 khung — đúng
+    // "một người" như anh muốn, nhưng đọc ra như một hình DÁN chứ không phải người đang nói.
+    // Lặp một hình ĐÚNG chỉ nhàm; nhưng ở đây cái lặp là TƯ THẾ, mà tư thế thì đổi được mà
+    // không đụng tới bản sắc — §17.5 đã rút đúng điều này: người được phép lặp, cái đổi là
+    // TƯ THẾ. Xoay theo `thuTu + hat` nên hai nhịp liền nhau khác nhau, và hai TẬP khác nhau
+    // cũng bắt đầu ở tư thế khác (hạt đổi theo tập).
+    if (CHO_PHEP_MOT.indexOf(c) >= 0 && c !== ("mo_tay" as TenCuChi)) return c;
+    const _xoay: TenCuChi[] = ["dem", "nghi", "chi", "dem", "mo_tay"] as TenCuChi[];
+    return _xoay[Math.abs(thuTu + hat) % _xoay.length];
   })();
 
   // 31/8 — Anh: *"lúc nói thì tất cả hình nhân vật đều mấp máy miệng"*. Gốc nằm ở một dòng:
