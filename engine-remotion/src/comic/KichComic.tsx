@@ -208,12 +208,12 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
+  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
   haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, noi, anhNen, soLieu,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, noi, anhNen, soLieu,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
@@ -223,7 +223,9 @@ const Panel: React.FC<{
 
   // Cỡ cảnh do NGƯỜI DỰNG quyết (`hai`), không do kịch bản và cũng không còn do panel tự đo —
   // mỗi lượt chiếm trọn khung nên không có chuyện ô bé không chứa nổi hai người.
-  const doiNguoi = hai !== undefined ? hai : (w >= 620 && h >= 540);
+  // `motNguoi` THẮNG cỡ cảnh: định dạng một chuyên gia thì không bao giờ vẽ người thứ hai,
+  // dù cảnh rộng cỡ nào.
+  const doiNguoi = motNguoi === true ? false : (hai !== undefined ? hai : (w >= 620 && h >= 540));
   const khungDoc = h > w * 1.1;
   const noiA = L.ai === 0;
 
@@ -578,6 +580,16 @@ export type PropsComic = {
   luot?: Luot[]; tu?: Tu[]; voMp3?: string; nhac?: string;
   nhacVol?: number;   // hệ số riêng của tệp nhạc, do `can_nhac.py` tính
   kieuA?: string; kieuB?: string; kieuTuyA?: Partial<Kieu>; kieuTuyB?: Partial<Kieu>;
+  // ── MỘT NGƯỜI TRONG KHUNG  (anh đề xuất, 7/9/2026) ────────────────────────────────────
+  // KHÔNG đặt tên là `hai`. `Panel` đã có một prop tên `hai`, và nó KHÔNG có nghĩa "hai
+  // người" — nó là CỠ CẢNH (`hai={... coCanh(ix, ...)}`). Em đọc lướt thấy `doiNguoi = hai
+  // !== undefined ? hai : ...` rồi tưởng đó là công tắc một/hai người, thêm một `hai={hai}`
+  // thứ hai vào cùng thẻ JSX — dòng sau ghi đè dòng trước, nên bản sửa KHÔNG BAO GIỜ chạy
+  // và anh soi khung vẫn thấy hai nhân vật.
+  //
+  // Cùng một chữ mang hai nghĩa ở hai tầng là cái bẫy đã ghi ở §13.22 (*một chữ có hai nghĩa
+  // thì không dùng làm cổng được*) — ở đây là không dùng làm TÊN BIẾN được.
+  motNguoi?: boolean;
   tieuDe?: string; handle?: string; mau?: string; mauPhu?: string; kenh?: string;
   // ── NÉT RIÊNG CỦA KÊNH ────────────────────────────────────────────────────────────────
   // Anh: *"sao cho 10 channel có nét riêng và phong cách riêng"*. Đổi màu là chưa đủ — mười
@@ -630,7 +642,7 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   nhacVol = 0.16,
-  kieuTuyA = {}, kieuTuyB = {}, tieuDe = "", handle = "", mau = "#F0483C",
+  kieuTuyA = {}, kieuTuyB = {}, motNguoi, tieuDe = "", handle = "", mau = "#F0483C",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
   sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
@@ -675,6 +687,7 @@ export const KichComic: React.FC<PropsComic> = ({
 
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
+           motNguoi={motNguoi}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
            /* Cỡ cảnh: mặc định do engine xoay theo hạt của tập, nhưng một lượt được phép
               ÉP cỡ của riêng nó (`canh`). Kênh HOUSE RULES cần điều đó: mười biến thể của gói

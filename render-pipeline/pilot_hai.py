@@ -1308,7 +1308,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         "noiIdx": noi_idx, "hook": (hook_phu or hook or tieu).upper()[:44],
         "anhNen": anh_nen, "sang": KC._sang_cua(anh_nen),
         "nhacVol": KC._am_nhac(KC.NHAC[de]),
-        **({"hai": False} if MOT_GIONG else {}),
+        **({"motNguoi": True} if MOT_GIONG else {}),
     }
     pj = os.path.join(GOC, "out", f"{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
