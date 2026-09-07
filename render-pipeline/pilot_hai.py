@@ -586,7 +586,22 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     if co:
         buoc = next((b for b in (37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 1)
                      if len(co) % b), 1)
-        anh_nens = [_co(co[(noi_idx + (i // 3) * buoc) % len(co)]) for i in range(len(cau))]
+        # ── MỖI Ô MỘT PHÒNG KHI KHO ĐỦ  (anh soi ra, 7/9/2026) ─────────────────────────
+        # Anh: *"nhiều clip ở nhiều channel sao trùng bối cảnh"*. Đo 18 tập: **189 ô nhưng chỉ
+        # 69 nền khác nhau — 36%**, vì `i // 3` giữ nguyên một phòng cho ba ô liền.
+        #
+        # Con số 3 đúng ở thời của nó: kho mới có 2 nền/kênh nên đổi mỗi ô là quay vòng ngay
+        # trên hai tấm. Nay mỗi kênh có 42–142 nền và lọc theo chủ đề còn 8–29 tấm — thừa cho
+        # 9–16 ô. Hằng số sống lâu hơn ngữ cảnh sinh ra nó (§13.6).
+        #
+        # Chia theo thứ CÓ THẬT thay vì một hằng số: đủ nền thì mỗi ô một phòng, thiếu thì mới
+        # gộp — và gộp đúng mức tối thiểu để không tấm nào phải dùng quá hai lần.
+        # Bản đầu của bản sửa này chia `len(cau)/len(co)` rồi gộp theo trần — và nó cho ra
+        # KÉM HƠN mức tối đa: 9 ô trên kho 8 nền ra 5 phòng thay vì 8. Với `buoc` nguyên tố
+        # cùng nhau, dãy `(noi_idx + i*buoc) % len(co)` đi qua các phòng KHÁC NHAU cho tới khi
+        # quay vòng, nên số phòng riêng = min(số ô, cỡ kho) — tức mỗi ô một phòng đã là tối ưu
+        # và không phép gộp nào cải thiện được. Bỏ hẳn phép gộp.
+        anh_nens = [_co(co[(noi_idx + i * buoc) % len(co)]) for i in range(len(cau))]
     else:
         anh_nens = []
 
