@@ -76,17 +76,19 @@ def sinh(ma: str, i: int):
     #
     # Nên: lọc bằng CHUYỆN trước, rồi trong số đã qua cổng mới ưu tiên chủ thể nhiều ảnh.
     SAN_NHAN_QUA = 8          # Kodak/Concorde/Zeppelin/Pan Am = 30 · Periscope = 5 (trượt)
+    # Lấy từ hồ ĐÃ SÀNG. Bản đầu thử 10 chủ thể rồi loại 7 ở NGAY lúc dựng — đo thật ở lượt
+    # chạy tối nay: 7/7 bị loại, 7 vòng gọi mạng cho một tập rồi vẫn phải rơi về bộ sinh cũ.
+    # `co_chuyen` đệm kết quả đã đo và sàng thêm vài chủ thể mỗi lượt, nên chi phí tỉ lệ với
+    # PHẦN MỚI chứ không với kích thước hồ (§18.8).
+    _dat = set(H.co_chuyen(gocs, san=SAN_NHAN_QUA, them=6))
+    _sang = H._doc_sang()
     _ung = []
-    for chu_the, khuon in H.tiep(ma, gocs, khuons, so_luong=10):
-        try:
-            van = C.bai_viet(chu_the) or ""
-            nq = len(C.cau_nhan_qua(van))
-        except Exception:
+    for chu_the, khuon in H.tiep(ma, gocs, khuons, so_luong=40):
+        if chu_the not in _dat:
             continue
-        if nq < SAN_NHAN_QUA:
-            print(f"   ⏭ «{chu_the[:32]}»: {nq} câu nhân quả < {SAN_NHAN_QUA} — chưa đủ CHUYỆN")
-            continue
-        _ung.append((chu_the, khuon, nq))
+        _ung.append((chu_the, khuon, _sang.get(chu_the, SAN_NHAN_QUA)))
+        if len(_ung) >= 6:
+            break
     if not _ung:
         print(f"   ⚠ {ma}: không chủ thể nào trong 10 cặp đầu đủ chuyện — dùng bộ sinh cũ")
         return None

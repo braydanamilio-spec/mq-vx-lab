@@ -89,8 +89,16 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
         except Exception:
             dem = {}
     khoa = f"{goc}|{sau}"
-    if khoa in dem:
+    # ── ĐỆM RỖNG = COI NHƯ CHƯA CÓ  (bắt được trong sản xuất, 7/9/2026) ──────────────────
+    # Chốt chặn thêm lúc trước chỉ canh đường GHI ("hỏng thì đừng đệm"), và để hở đường ĐỌC:
+    # một mục 0 đã lỡ nằm trong đệm từ lượt chạy cũ thì `duyet` trả thẳng cái 0 ấy MÃI MÃI,
+    # không bao giờ quét lại. Đo thật: "Defunct companies of the United States" ra 0 chủ thể
+    # trong khi cùng hạng mục ấy quét tay ra **2.080**. Vá một nhánh, để nguyên nhánh song
+    # song (§6) — và nhánh còn hở là nhánh sống lâu hơn, vì đệm nằm trên đĩa.
+    if dem.get(khoa):
         return dem[khoa]
+    if khoa in dem:
+        print(f"   ↻ đệm «{goc[:44]}» đang rỗng — quét lại thay vì tin nó")
     ra, hang, da, n, hong = set(), [(goc, 0)], set(), 0, 0
     while hang and n < tran_cat:
         c, d = hang.pop(0)
@@ -130,6 +138,57 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
     dem[khoa] = sorted(ra)
     io.open(DEM, "w", encoding="utf-8").write(json.dumps(dem, ensure_ascii=False))
     return dem[khoa]
+
+
+SANG = os.path.join(GOC, "so_sang.json")      # chủ thể -> số câu nhân quả đã đo
+
+
+def _doc_sang() -> dict:
+    if os.path.exists(SANG):
+        try:
+            return json.load(io.open(SANG, encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def co_chuyen(gocs: list, san: int = 8, them: int = 6, sau: int = 2) -> list:
+    """Chủ thể ĐÃ QUA cổng chuyện, và sàng thêm `them` chủ thể mới mỗi lượt gọi.
+
+    ── VÌ SAO SÀNG DẦN, KHÔNG SÀNG MỘT LƯỢT  (7/9/2026) ──────────────────────────────────
+    Cổng chuyện phải đọc bài viết -> một lượt gọi mạng cho MỖI chủ thể. Hồ có 2.175 chủ thể
+    thì sàng hết một lượt là 2.175 vòng mạng cho một tập sắp dựng — trả tiền cho 2.000 tập
+    chưa làm (§18.8: chi phí tỉ lệ với KÍCH THƯỚC kho trong khi việc thật tỉ lệ với PHẦN MỚI).
+
+    Và không sàng gì thì mỗi lần dựng lại phải thử 10 chủ thể qua mạng rồi loại 7 — đo thật
+    ở lượt chạy tối nay. Nên: đệm kết quả đã đo, mỗi lượt dựng chỉ sàng thêm vài chủ thể, và
+    hồ đủ dùng lớn dần lên. Sàng rồi thì không bao giờ sàng lại.
+
+    Tỉ lệ qua cổng đo được ~25% (2/8 mẫu hãng bay), nên sàng 6 chủ thể/lượt thì mỗi lượt hồ
+    dày thêm ~1,5 chủ thể — nhanh hơn tốc độ tiêu thụ (1 chủ thể × 24 khuôn hỏi mỗi tập).
+    """
+    import chu_de as C
+    da = _doc_sang()
+    het = []
+    for g in gocs:
+        het.extend(x for x in duyet(g, sau) if x not in het)
+    dat = [x for x in het if da.get(x, -1) >= san]
+    chua = [x for x in het if x not in da]
+    moi = 0
+    for ct in chua[:max(0, them)]:
+        try:
+            n = len(C.cau_nhan_qua(C.bai_viet(ct) or ""))
+        except Exception:
+            continue                      # mạng hỏng: KHÔNG ghi, để lượt sau đo lại
+        da[ct] = n
+        moi += 1
+        if n >= san:
+            dat.append(ct)
+    if moi:
+        io.open(SANG, "w", encoding="utf-8").write(json.dumps(da, ensure_ascii=False))
+        print(f"   🔎 sàng thêm {moi} chủ thể · hồ ĐỦ CHUYỆN: {len(dat)}/{len(da)} đã đo "
+              f"({len(het)} trong hồ)")
+    return dat
 
 
 def _so() -> dict:

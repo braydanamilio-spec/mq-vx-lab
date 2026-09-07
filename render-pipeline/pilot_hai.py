@@ -885,6 +885,7 @@ GU_DUNG = {
     "howhot": ("phai", "ngang", "lanh"),   "smallest": ("giua", "ra", "lanh"),
 }
 
+TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
 # Trần ảnh CF cho MỘT tập. Đặt ở đây chứ không ở biến toàn cục dùng chung: mỗi tập là một
 # tiến trình riêng nên phạm vi "một tiến trình" ĐÚNG BẰNG phạm vi "một tập" — khác hẳn ca
@@ -962,36 +963,72 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
     return out
 
 
-def _chen_anh_that(anh_nens: list, duong: list) -> list:
-    """Rải ảnh THẬT của chủ thể vào danh sách nền — ưu tiên ảnh thật, nền vẽ chỉ lấp chỗ trống.
+def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
+    """Gắn ảnh THẬT vào nhịp mà nó NÓI VỀ, không rải đều theo vị trí.
 
-    ── ĐỔI VAI, KHÔNG XOÁ  (anh đề xuất, 7/9/2026) ───────────────────────────────────────
-    Anh: *"a nghĩ bỏ nền sẵn và nên lấy nền liên quan videos khi làm … hơn là mấy nền ko liên
-    quan"*. Đúng hướng, và bản trước của hàm này đi ngược: nó chỉ chèn ảnh thật vào nhịp LẺ,
-    tức nền vẽ chung chung vẫn giữ một nửa số nhịp kể cả khi có đủ ảnh đúng chủ thể.
+    ── VÌ SAO ĐỔI  (anh hỏi thẳng, 7/9/2026) ─────────────────────────────────────────────
+    Anh: *"như thế có đúng bối cảnh khớp kịch bản videos khi nói ko"*. Bản trước rải ảnh
+    CÁCH ĐỀU các nhịp, nên nó khớp CHỦ THỂ mà không khớp MỆNH ĐỀ: câu nói về 2007 vẫn có thể
+    đứng cạnh tấm quảng cáo 1888. Anh đúng, và đó là lỗ em tự ghi ra mà chưa vá.
 
-    Nhưng XOÁ hẳn kho nền vẽ thì không được, và đây là số đo chặn lại: nguồn ảnh tự do cạn rất
-    nhanh theo chủ thể — Kodak 12 · Concorde 4 · Betamax 3 · MH370 **0**. Một tập 9–12 nhịp mà
-    bỏ kho nền thì những chủ thể ít tư liệu không còn gì để hiện. §7 nói rõ tầng cuối phải là
-    tầng KHÔNG gọi mạng, vì chỉ nó mới không bao giờ hỏng.
+    Ghép theo chữ chung giữa TIÊU ĐỀ ảnh và CÂU đang nói. Tiêu đề nguồn rất giàu thông tin —
+    *"Eastman Kodak HQ 1900"*, *"Folding Pocket Kodak Camera ad 1900"* — nên phép so chỉ cần
+    đếm từ nội dung chung, không cần mô hình.
 
-    Nên: ảnh thật lấp TỪ ĐẦU và lấp hết những gì nó có; nền vẽ nhận phần còn lại. Có 12 ảnh thì
-    12 nhịp đầu là ảnh thật. Có 1 ảnh thì đúng 1 nhịp, phần còn lại vẫn có nền.
+    Nhịp KHÔNG có ảnh nào khớp thì để TRỐNG cho `_nen_theo_tap` vẽ nền riêng theo chính câu
+    ấy. Đó vừa là chất lượng (khung nói đúng thứ đang nói) vừa là cách tiêu đúng hạn mức CF:
+    ngân sách đo được là 11,8 ảnh/bộ, mà bản cũ chỉ dùng 36% vì nó bỏ qua mọi nhịp đã có ảnh
+    kể cả khi ảnh ấy không liên quan.
 
-    Rải ĐỀU chứ không dồn cục: dồn 12 ảnh vào 12 nhịp đầu của một tập 20 nhịp thì nửa sau tập
-    trở lại toàn nền vẽ, và người xem đọc ra hai nửa khác nhau. Chia đều thì cả tập cùng một
-    chất — cùng lý do đã rút cho `ve_kho` (dừng ở đâu cũng để lại một kho CÂN).
+    Tên chủ thể bị BỎ khỏi phép so: nó có trong mọi tiêu đề lẫn gần mọi câu, nên để lại thì
+    mọi cặp đều khớp bằng nhau và phép so mất hết sức phân giải (§13.4 — cắt phần giống nhau
+    ĐÚNG ra trước rồi mới đo).
     """
     if not duong:
         return anh_nens
     ra = list(anh_nens)
-    n, m = len(ra), len(duong)
-    if m >= n:
-        return list(duong[:n])            # đủ ảnh thật cho mọi nhịp: bỏ hẳn nền vẽ
-    # m < n: đặt ảnh thật ở m vị trí cách đều nhau trên cả tập
-    for k in range(m):
-        ra[round(k * (n - 1) / max(1, m - 1)) if m > 1 else n // 2] = duong[k]
+    if not cau:
+        n, m = len(ra), len(duong)
+        if m >= n:
+            return list(duong[:n])
+        for k in range(m):
+            ra[round(k * (n - 1) / max(1, m - 1)) if m > 1 else n // 2] = duong[k]
+        return ra
+
+    _bo = set(re.findall(r"[a-z]+", (CHU_THE_TAP or "").lower())) | {
+        "the", "and", "for", "with", "from", "that", "this", "was", "were", "its",
+        "file", "jpg", "png", "svg", "logo", "photo", "image", "company", "inc"}
+
+    # ── NĂM LÀ TÍN HIỆU MẠNH NHẤT, VÀ BẢN ĐẦU BỎ MẤT NÓ  (7/9/2026) ────────────────────
+    # Bộ tách từ đầu tiên chỉ lấy `[a-z]{3,}`, nên tiêu đề *"Eastman Kodak HQ 1900"* và câu
+    # *"The headquarters opened in 1900"* khớp ĐÚNG 0 từ — chữ thì `HQ` vs `headquarters`
+    # không trùng, còn `1900` thì bị vứt. Đo trên bốn nhịp thử: khớp 1/4.
+    # Năm bốn chữ số là thứ nối chắc nhất giữa một tấm ảnh lưu trữ và một câu nói về mốc thời
+    # gian — nó hiếm, nên trùng là trùng thật, không phải trùng ngẫu nhiên như từ thường.
+    # Cho nó trọng số 3: một năm trùng thắng ba từ nội dung trùng.
+    def _tu(t):
+        t = str(t).lower()
+        ra = {w for w in re.findall(r"[a-z]{3,}", t) if w not in _bo}
+        for n in re.findall(r"\b(1[6-9]\d{2}|20[0-4]\d)\b", t):
+            ra |= {"nam" + n, "nam" + n + "_", "nam" + n + "__"}   # đếm ba lần = trọng số 3
+        return ra
+
+    _ct = [_tu(c[0] if isinstance(c, (tuple, list)) else c) for c in cau[:len(ra)]]
+    _ca = [(d, _tu(TEN_ANH.get(d, d))) for d in duong]
+    # Ghép THAM LAM theo điểm giảm dần: cặp khớp mạnh nhất được chọn trước, mỗi ảnh và mỗi
+    # nhịp chỉ dùng một lần. Đủ tốt cho 10–14 nhịp và không cần thuật toán ghép cặp tối ưu.
+    cham = sorted(((len(a & b), i, d) for i, a in enumerate(_ct) for d, b in _ca),
+                  key=lambda x: -x[0])
+    xong_i, xong_d, n = set(), set(), 0
+    for diem, i, d in cham:
+        if diem < 1 or i in xong_i or d in xong_d:
+            continue
+        ra[i] = d
+        xong_i.add(i); xong_d.add(d); n += 1
+    print(f"   🔗 ảnh khớp NGHĨA: {n}/{len(ra)} nhịp "
+          f"({len(ra) - n} nhịp còn lại sẽ vẽ nền riêng)")
     return ra
+
 
 
 def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
@@ -1047,6 +1084,7 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
             if not _o.path.exists(dich):
                 _sh.copyfile(d, dich)
             ra.append("anh_pd/" + ten)
+            TEN_ANH["anh_pd/" + ten] = a.get("ten", "")
             if len(ra) >= toi_da:
                 break
     return ra
@@ -1564,7 +1602,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # phủ hết 8 nhịp nên **cả 8 nền vừa vẽ bị thay ngay**, tức tiêu 8 ảnh hạn mức cho thứ
         # không ai nhìn thấy. Ở sản lượng 900 tập/ngày thì đó là 7.200 ảnh vứt đi mỗi ngày.
         # Hai dòng log nói ngược nhau là dấu hiệu quen (§14.8) — đọc kỹ thay vì mừng vì 8/8.
-        anh_nens = _chen_anh_that(anh_nens, ANH_THAT)
+        anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
         anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
     else:
         anh_nens = []
@@ -1916,6 +1954,49 @@ PHONG_KENH = {
 }
 
 
+def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
+    """MỘT BỘ = 1 bản dài + 3 short, DÙNG CHUNG một bộ ảnh. Trả số clip ra được.
+
+    ── VÌ SAO ĐÂY LÀ MẶC ĐỊNH, KHÔNG PHẢI TUỲ CHỌN  (anh dặn ghi nhớ, 7/9/2026) ──────────
+    Bất đối xứng đo được, và nó còn đúng lâu:
+
+        thời gian render (Actions, repo PUBLIC)   dư ~8 lần
+        hạn mức ảnh CF                            NÚT THẮT
+
+    Ảnh hiếm, thời gian máy thừa. Dùng lại một bộ ảnh cho bốn clip là ×4 sản lượng trên cùng
+    ngân sách ảnh — đòn bẩy lớn nhất trong nhóm "tốn CPU, không tốn ảnh".
+
+    Nó cũng ĐÚNG về sản phẩm: short cắt ra từ long giữ được khoảnh khắc mạnh nhất của bản
+    dài. §17.11 đã trả giá cho chiều ngược lại — `short_tu_long` mang đúng cái tên ấy mà dựng
+    một tập MỚI ở chỉ số lệch; đo 36 bộ: **0 ảnh của long được dùng lại**, 3.566 ảnh/ngày vẽ
+    thừa khi chạy 24/7.
+
+    RÀNG BUỘC CỨNG: short **không được gọi CF**, kể cả cho nhịp mà bản dài vẽ hụt. Một short
+    ăn theo mà tự đặt hàng ảnh thì nó không còn là bản cắt ra, và mọi phép tính ngân sách
+    theo bộ 1:3 sai theo. Cưỡng chế bằng `KHONG_NEN_TAP`, không bằng lời dặn (§14.12).
+    """
+    n = 0
+    if mot_tap(ma, idx, False, chuong):
+        n += 1
+    else:
+        print(f"   ⚠ {ma} tập {idx}: bản dài hỏng — bỏ cả bộ, không dựng short lẻ")
+        return 0
+    # Short ăn theo: khoá hẳn đường vẽ ảnh trong tiến trình này.
+    _cu = os.environ.get("KHONG_NEN_TAP")
+    os.environ["KHONG_NEN_TAP"] = "1"
+    try:
+        for c in range(3):
+            if mot_tap(ma, idx * 10 + c, False, 0):
+                n += 1
+    finally:
+        if _cu is None:
+            os.environ.pop("KHONG_NEN_TAP", None)
+        else:
+            os.environ["KHONG_NEN_TAP"] = _cu
+    print(f"   📦 bộ {ma}/{idx}: {n}/4 clip")
+    return n
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--kenh", default="dayinlife")
@@ -1923,7 +2004,11 @@ def main() -> int:
     ap.add_argument("--khong-ve-nen", action="store_true")
     ap.add_argument("--chuong", type=int, default=0,
                     help="＞0 = bản DÀI 16:9; 6 chương ≈ 2,5 phút")
+    ap.add_argument("--bo", action="store_true",
+                    help="dựng MỘT BỘ 1 long + 3 short dùng chung bộ ảnh (mặc định nên dùng)")
     a = ap.parse_args()
+    if a.bo:
+        return 0 if bo_1_3(a.kenh, a.tu, a.chuong or 3) >= 1 else 1
     return 0 if mot_tap(a.kenh, a.tu, not a.khong_ve_nen, a.chuong) else 1
 
 

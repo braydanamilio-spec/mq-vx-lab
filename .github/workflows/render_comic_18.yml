@@ -178,11 +178,20 @@ jobs:
             echo "── ${{ matrix.kenh }} tập $IDX"
             # `--khong-ve-nen`: kho nền là việc của `kho_nen.yml`, không phải của luồng dựng.
             # Trộn vào đây là để một luồng dựng đói ảnh đi tranh hạn mức với 17 luồng khác.
-            python -u pilot_hai.py --kenh ${{ matrix.kenh }} --tu $IDX --khong-ve-nen || true
+            # ── MỘT BỘ 1 LONG + 3 SHORT, DÙNG CHUNG BỘ ẢNH  (anh dặn, 7/9/2026) ─────────
+            # Bản trước dựng 3 short RỜI, mỗi short tự đặt hàng ảnh riêng. Bất đối xứng đo
+            # được: thời gian Actions dư ~8 lần, hạn mức ảnh CF là nút thắt — nên dùng lại
+            # một bộ ảnh cho bốn clip là ×4 sản lượng trên cùng ngân sách ảnh.
+            # `--bo` cũng khoá hẳn đường vẽ ảnh của ba short (§17.11: short ăn theo mà tự đặt
+            # hàng CF thì nó không còn là bản cắt ra).
+            python -u pilot_hai.py --kenh ${{ matrix.kenh }} --tu $IDX --bo || true
           done
           # ĐẾM SẢN PHẨM, không đọc mã thoát (§15.3). Một tập chỉ tính là xong khi có ĐỦ bốn
           # mảnh — `pilot_hai` trả rỗng nếu thiếu, nhưng cổng ở đây không được tin vào đó.
-          N=$(ls out/v11_${{ matrix.kenh }}_*.tai.json 2>/dev/null | wc -l | tr -d ' ')
+          # Đếm CẢ hai tiền tố: `v11L_` là bản dài, `v11_` là short. Bản trước chỉ đếm
+          # `v11_` nên một bộ dựng đúng vẫn báo thiếu bản dài — cổng đếm sai đại lượng thì
+          # nó báo động giả, và báo động giả dạy người ta bỏ qua báo động (§15.12).
+          N=$(ls out/v11_${{ matrix.kenh }}_*.tai.json out/v11L_${{ matrix.kenh }}_*.tai.json 2>/dev/null | wc -l | tr -d ' ')
           echo "n=$N" >> "$GITHUB_OUTPUT"
           echo "::notice::${{ matrix.kenh }}: $N tập có đủ bộ giao hàng"
 
