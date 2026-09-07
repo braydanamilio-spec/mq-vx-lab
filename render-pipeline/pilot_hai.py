@@ -309,6 +309,55 @@ def _da_doc_trong(x: str, van: str) -> bool:
     return bool(c) and c in g
 
 
+_DON_CHU = {"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,
+            "nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,
+            "fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,
+            "twenty":20,"thirty":30,"forty":40,"fifty":50,"sixty":60,"seventy":70,
+            "eighty":80,"ninety":90}
+_NHAN_CHU = {"hundred":100, "thousand":1000, "million":10**6, "billion":10**9,
+             "trillion":10**12}
+
+
+def _so_trong(van: str) -> set:
+    """Mọi GIÁ TRỊ số nhắc tới trong câu — cả chữ số lẫn số viết bằng chữ.
+
+    Ghép chữ thành giá trị thay vì gắn cờ từng từ: bản dò đầu tiên của em cho `hundred` và
+    `million` là "số lạ" ở 12/18 tập, trong khi chúng là THÀNH PHẦN của những số hợp lệ
+    ("one billion steps"). Một bộ dò kêu 12/18 mà hai phần ba là oan thì không dùng được
+    (§13.8) — phải ghép "one hundred ninety" thành 190 rồi mới so.
+    """
+    ra = set()
+    for x in re.findall(r"\b\d[\d,\.]*\b", van or ""):
+        g = x.replace(",", "").rstrip(".")
+        if g:
+            ra.add(g)
+    tu = re.findall(r"[a-z]+", (van or "").lower())
+    cum = tong = 0
+    for w in tu + ["\x00"]:
+        if w in _DON_CHU:
+            cum += _DON_CHU[w]
+        elif w in _NHAN_CHU:
+            n = _NHAN_CHU[w]
+            if n >= 1000:
+                tong += max(cum, 1) * n; cum = 0
+            else:
+                cum = max(cum, 1) * n
+        else:
+            v = tong + cum
+            if v:
+                ra.add(str(v))
+            cum = tong = 0
+    return ra
+
+
+def _so_kich_ban(man: list, loi: list) -> set:
+    """Mọi số HỢP LỆ — tức mọi số do kịch bản (Python) cấp."""
+    ra = set()
+    for x in list(man or []) + list(loi or []):
+        ra |= _so_trong(str(x or ""))
+    return ra
+
+
 def _du_so(loi: list, thoai: list, man: list = None) -> list:
     """Con số nào ĐANG HIỆN trên màn (hoặc có trong lời dẫn) mà lời thoại không đọc.
 
@@ -664,6 +713,34 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
             print(f"   ⚠ giữ chân: người xem chỉ xuất hiện {_ban} lần — tập này là bài giảng")
         if re.search(r"\d", _chot):
             print(f"   ⚠ giữ chân: câu chốt đọc lại một con số «{_chot[:34]}» — không mang đi được")
+        # ── SỐ NÀO KHÔNG DO KỊCH BẢN CẤP THÌ KHÔNG ĐƯỢC LÊN HÌNH  (7/9/2026) ───────────
+        # Anh: *"a người việt, a coi biết đẹp thôi chứ ko đánh giá được nó hay ko"*. Nên em
+        # đọc tay lời thoại như một người xem Mỹ, và bắt được lỗi nặng nhất cả buổi:
+        #
+        #   howmuch tập 4  kịch bản cấp ĐÚNG HAI số: 1.000.000 và 1.000.000.000 bước
+        #                  lời thoại nói thêm: "roughly one hundred ninety miles"  (đúng: 500)
+        #                                      "circle the earth forty times"      (đúng: 20)
+        #
+        # Cả hai do MÔ HÌNH BỊA, và cả hai SAI. Nguyên tắc cứng của cả hệ — *AI không bao giờ
+        # được cấp một con số* — đang bị vi phạm trong bản giao đi, và không cổng nào thấy:
+        # `_du_so` chỉ hỏi "số BẮT BUỘC đã được đọc chưa", không bao giờ hỏi "có số THỪA
+        # không". Một cổng đo chiều thiếu thì mù hoàn toàn với chiều thừa.
+        #
+        # CHẶN chứ không báo (§13.23 nấc ba): một con số bịa là lỗi SỰ THẬT, và ở kênh giải
+        # thích thì sai một con số là mất lý do tồn tại. Đây đúng là loại "làm HỎNG sản phẩm",
+        # nên nó đáng tiêu một vòng gọi AI.
+        _hop = _so_kich_ban(man, loi)
+        _la = []
+        for _t in ra:
+            _c = _t.get("chu", "")
+            if " point " in f" {_c.lower()} ":
+                continue          # số thập phân đọc bằng chữ: bộ ghép chưa xử được -> THA
+            for _v in _so_trong(_c):
+                if _v not in _hop and len(_v) > 1:
+                    _la.append(_v)
+        if _la:
+            print(f"   ↻ lời thoại BỊA số {sorted(set(_la))[:4]} — không có trong kịch bản, viết lại")
+            continue
         thieu = _du_so(loi, ra, man)
         if not thieu:
             return ra
