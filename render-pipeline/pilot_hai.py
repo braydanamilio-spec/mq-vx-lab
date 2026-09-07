@@ -587,8 +587,17 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         # bị xén mất đầu), và số tối đa hai chữ số (nếu không thì *"1888 was the year"* bị xén).
         for _x in ds:
             if isinstance(_x, dict):
-                _x["chu"] = re.sub(r"^\s*(?:[A-Za-z]\d{1,2}|\d{1,2})\s*[.):]\s*",
-                                   "", str(_x.get("chu", "")))
+                _c0 = str(_x.get("chu", ""))
+                # ── DẤU NỘI BỘ `[KEEP]` KHÔNG ĐƯỢC LÊN MÀN HÌNH  (anh soi khung, 7/9/2026) ──
+                # `mot_tap` đã gỡ `[KEEP]` khỏi từng NHỊP, nhưng danh sách `loi` đưa cho mô
+                # hình được lấy TRƯỚC lượt gỡ ấy — và đó là bản có chủ ý: đề bài dạy mô hình
+                # rằng câu mang dấu này là cú lật của tập. Cái không lường được là mô hình
+                # chép luôn cái dấu vào lời thoại, nên phụ đề hiện *"[KEEP]Despite the common
+                # misconception…"*. Vá ở nhịp mà để nguyên nhánh đi ra màn hình — đúng họ §6.
+                # Gỡ MỌI dấu ngoặc vuông ở đầu câu, không riêng `[KEEP]`: dấu nội bộ nào cũng
+                # sẽ rò cùng một đường, và liệt kê từng cái là danh sách vô hạn (§13.9).
+                _c0 = re.sub(r"^\s*\[[A-Z_]{2,12}\]\s*", "", _c0)
+                _x["chu"] = re.sub(r"^\s*(?:[A-Za-z]\d{1,2}|\d{1,2})\s*[.):]\s*", "", _c0)
         def _chi_so(x, mac_dinh):
             """Chỉ số câu dẫn mà lượt này diễn. Sai kiểu / ngoài khoảng -> quay về ước lượng."""
             try:
@@ -858,7 +867,7 @@ CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tậ
 TRAN_NEN_TAP = int(os.environ.get("TRAN_NEN_TAP", "") or 14)
 
 
-def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str) -> list:
+def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -> list:
     """Vẽ nền RIÊNG cho tập này từ chính CHỦ THỂ + câu đang nói, thay cho nền kho chung.
 
     ── VÌ SAO  (anh, 7/9/2026) ───────────────────────────────────────────────────────────
@@ -888,10 +897,17 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str) -> list:
         return anh_nens
     from kich_hai import SAN_NEN_VAT
     viec = []
+    bo_qua = bo_qua or set()
     for i, c in enumerate(cau[:len(anh_nens)]):
         if len(viec) >= TRAN_NEN_TAP:
             break
-        noi = " ".join(str(c.get("nar") or c.get("chu") or "").split())[:150]
+        if anh_nens[i] in bo_qua:
+            continue                  # nhịp này đã có ẢNH THẬT — vẽ nữa là vẽ vào thùng rác
+        # `cau` là danh sách TUPLE `(lời, ai, cảm xúc)` — không phải dict. Em đã đoán hình
+        # dạng và render chết ở đúng dòng này. Đọc phần tử đầu, và vẫn nhận dict phòng khi
+        # khâu trên đổi kiểu (§13.8: đọc vật thật trước khi viết lối gọi mới).
+        noi = c[0] if isinstance(c, (tuple, list)) else (c.get("nar") or c.get("chu") or "")
+        noi = " ".join(str(noi).split())[:150]
         if not noi:
             continue
         viec.append((i, f"{chu_the}. {noi} {SAN_NEN_VAT}. {GU_NEN}"))
@@ -1469,8 +1485,13 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # quay vòng, nên số phòng riêng = min(số ô, cỡ kho) — tức mỗi ô một phòng đã là tối ưu
         # và không phép gộp nào cải thiện được. Bỏ hẳn phép gộp.
         anh_nens = [_co(co[(noi_idx + i * buoc) % len(co)]) for i in range(len(cau))]
-        anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP)
+        # THỨ TỰ: ảnh THẬT trước, rồi mới vẽ bù chỗ còn trống. Bản đầu làm ngược và log tự
+        # tố cáo: *"nền vẽ theo chủ thể: 8/8 nhịp"* đứng cạnh *"ảnh thật: 11"* — 11 ảnh thật
+        # phủ hết 8 nhịp nên **cả 8 nền vừa vẽ bị thay ngay**, tức tiêu 8 ảnh hạn mức cho thứ
+        # không ai nhìn thấy. Ở sản lượng 900 tập/ngày thì đó là 7.200 ảnh vứt đi mỗi ngày.
+        # Hai dòng log nói ngược nhau là dấu hiệu quen (§14.8) — đọc kỹ thay vì mừng vì 8/8.
         anh_nens = _chen_anh_that(anh_nens, ANH_THAT)
+        anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
     else:
         anh_nens = []
 

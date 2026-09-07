@@ -57,6 +57,10 @@ const CAO_NGUOI = 460;        // đỉnh tóc -> gót
 const Y_HONG = 168;           // hông cách gót (số dương)
 const Y_NGUC = 230;           // ngực dưới cách gót
 const NUA_RONG = 100;         // nửa bề ngang khi tay ghim ngực
+// Phần NHÌN THẤY của người dẫn chiếm bao nhiêu chiều cao khung (khung dọc, một chuyên gia).
+// `Math.max(_chuaBong, 1 - TI_LE_NGUOI)` ở `yChan` giữ hai điều kiện cùng lúc: đầu không bao
+// giờ chui vào bong bóng, VÀ nhân vật không cao quá tỉ lệ này.
+const TI_LE_NGUOI = 0.34;
 
 const LE = 44;                // lề mực quanh khung
 const NET = 7;                // độ dày viền mực MẶC ĐỊNH (mỗi kênh ghi đè, xem `netMuc`)
@@ -309,8 +313,19 @@ const Panel: React.FC<{
   // Chỉ dùng cho nhánh MỘT NGƯỜI khung dọc — mười kênh comic hai người đang chạy vẫn đi đường
   // `chuaTren` cũ, không đổi một pixel (§12.5: câu luật đúng ở ngữ cảnh nó sinh ra).
   const _chuaBong = Math.min(0.40, Math.max(0.15, caoBong(L.nar, L.chot === true, hook) / h + 0.03));
+  // ── NHÂN VẬT CHIẾM MỘT PHẦN BA KHUNG  (anh, 7/9/2026) ────────────────────────────────
+  // Anh: *"nhân vật chiếm khung hình hơi nhiều che mất ảnh nền và logo, chỉ đứng 1/3 khung
+  // hình thôi"*. Đây là lượt ĐẢO CHIỀU của bản phóng to sáng nay, và cả hai đều đúng ở thời
+  // của nó: lúc nền còn là phòng chung chung thì nền không mang thông tin gì, phóng to nhân
+  // vật là đòn đúng. Nay nền là ẢNH THẬT của chủ thể (trụ sở Kodak 1900, thẻ logo) — nó là
+  // NỘI DUNG, và che nó bằng một nhân vật cao 90% khung là che đúng thứ tập này đi bán.
+  // §12.5 ở dạng thuần: một hằng số đúng ở ngữ cảnh nó được đo, sai khi ngữ cảnh đổi.
+  //
+  // Giải thẳng một điều kiện: phần NHÌN THẤY của nhân vật (đỉnh đầu -> mép cắt ngang hông)
+  // bằng `TI_LE_NGUOI` chiều cao panel, và mép cắt nằm đúng đáy panel. Không `min()` của hai
+  // trần rồi để trần nào thắng cũng được.
   const kCan = khungDoc
-    ? Math.min((h * (1 - _chuaBong)) / ((CAO_NGUOI - Y_HONG) * (noiA ? caoA : caoB)),
+    ? Math.min((h * TI_LE_NGUOI) / ((CAO_NGUOI - Y_HONG) * (noiA ? caoA : caoB)),
                w / (NUA_RONG * 2.3))            // chỉ để tay mở không văng hẳn khỏi khung
     : Math.min((w * 0.46) / (NUA_RONG * 2.1),
                (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
@@ -323,7 +338,8 @@ const Panel: React.FC<{
   // dài, khung càng cận — cắt ở hông (1 dòng) tới ngang ngực (3 dòng).
   const yChan = doiNguoi
     ? (khungDoc ? h * (bongDuoi ? SAN - 0.21 : SAN) : h + Y_HONG * caoMin * k)
-    : h * (khungDoc ? _chuaBong : _chuaCan) + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
+    : h * (khungDoc ? Math.max(_chuaBong, 1 - TI_LE_NGUOI) : _chuaCan)
+      + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
 
   // Người NGHE không được đứng yên tay buông — nửa còn lại của trò đùa nằm ở phản ứng của nó.
   const CU_CHI_NGHE: Record<string, TenCuChi> = {
@@ -394,7 +410,12 @@ const Panel: React.FC<{
                     ? ` translate(${Math.sin(trong * 62) * 5}px, ${Math.cos(trong * 54) * 4}px)` : ""),
     }}>
       <NenPanel kenh={kenh} noi={noi} anh={anhNen} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
-                bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} />
+                bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} 
+                /* Tiến độ của CHÍNH nhịp này (0->1) cho Ken Burns. Dùng `L.s`/`L.e` chứ không
+                   dùng `giay/DAI`: mỗi nhịp là một cú máy riêng, và một phép trôi trải trên cả
+                   video thì mỗi nhịp chỉ nhận một lát cắt vài phần trăm — mắt không thấy gì. */
+                ken={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0}
+                kenHat={thuTu + hat} />
 
       {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có
           cái router. Không gọi mô hình: câu thoại là văn bản, dò từ khoá là đủ. */}

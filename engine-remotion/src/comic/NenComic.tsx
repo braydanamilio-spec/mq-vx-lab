@@ -629,7 +629,10 @@ export const NenGan: React.FC<{
 export const NenPanel: React.FC<{
   kenh: string; noi: Noi; w: number; h: number; mau: string; mauPhu: string; hat: number;
   rong: boolean; bien?: number; net?: number; cham?: number; anh?: string;
-}> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9, anh = "" }) => {
+  ken?: number;      // 0..1 — tiến độ của NHỊP này, dùng cho Ken Burns
+  kenHat?: number;   // hạt chọn hướng trôi, để hai nhịp liền nhau không trôi cùng chiều
+}> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9, anh = "",
+        ken = 0, kenHat = 0 }) => {
   // 31/8 — MỖI PANEL MỘT GÓC NHÌN KHÁC. Khung thử cho ra sáu panel với cùng cái màn hình ở
   // cùng một chỗ, và sáu lần lặp lại một hình trong hai mươi giây thì mắt đọc ra là ảnh dán,
   // không phải là sáu ô truyện tranh. Cùng một căn phòng nhìn từ ba chỗ đứng vẫn là một căn
@@ -667,6 +670,31 @@ export const NenPanel: React.FC<{
         <AbsoluteFill style={{ overflow: "hidden" }}>
           <Img src={staticFile(anh)} style={{
             width: "100%", height: "100%", objectFit: "cover",
+            /* ── KEN BURNS: PHÓNG CHẬM + TRÔI  (anh yêu cầu, 7/9/2026) ──────────────────
+               Nền giờ là ẢNH TĨNH thật (trụ sở Kodak 1900, thẻ logo). Một ảnh tĩnh đứng yên
+               tám giây sau lưng một nhân vật đang nói thì đọc ra là ảnh dán — người xem thấy
+               "slideshow", và đó là dấu hiệu nghiệp dư đúng họ đã liệt kê ở §12.12.
+               Phóng chậm và trôi làm nó đọc ra là một CÚ MÁY, tức khung hình có chủ ý.
+
+               HAI RÀNG BUỘC, và cái thứ hai mới là chỗ dễ hỏng:
+               · biên độ phải NHỎ — 1,06 -> 1,15 trong cả nhịp. Lớn hơn thì thành zoom lồi
+                 và cãi nhau với nhân vật đứng yên phía trước.
+               · KHÔNG ĐƯỢC HỞ MÉP. `objectFit: cover` phủ vừa khít ở scale 1, nên khi phóng
+                 S thì phần dôi mỗi bên đúng `(S-1)/2` bề khung — trôi quá mức ấy là lòi nền
+                 trắng ra mép. Nên biên độ trôi TÍNH TỪ S, không phải một hằng số: lấy 0,62
+                 phần dôi để còn dư. Đây đúng chỗ mà một con số gõ tay sẽ sai ở nhịp nào đó
+                 rồi không ai thấy cho tới khi soi đúng khung ấy.
+               Bốn hướng trôi xoay theo `kenHat` để hai nhịp liền nhau không cùng chiều. */
+            transform: (() => {
+              const p = Math.max(0, Math.min(1, ken));
+              const S = 1.06 + 0.09 * p;              // phóng chậm suốt nhịp
+              const doi = ((S - 1) / 2) * 100 * 0.62;  // trần trôi, suy TỪ S
+              const g = ((kenHat % 4) + 4) % 4;
+              const hx = [1, -1, 1, -1][g], hy = [1, 1, -1, -1][g];
+              return `translate(${(hx * doi * (p - 0.5) * 2).toFixed(3)}%, `
+                   + `${(hy * doi * (p - 0.5) * 2 * 0.7).toFixed(3)}%) scale(${S.toFixed(4)})`;
+            })(),
+            transformOrigin: "center center",
             /* ── ĐỘ MỜ CHỒNG LÊN PHÉP PHÓNG  (anh: "ko được HD sắc nét lắm", 7/9/2026) ──
                `blur(2.4px)` chọn để đẩy nền ra sau. Nhưng nền đời đầu là ảnh NGANG 1344×768
                đặt `objectFit: cover` vào khung DỌC, tức đã bị phóng 2,5 lần — chỉ 432 px ngang

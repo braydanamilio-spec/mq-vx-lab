@@ -109,9 +109,27 @@ export const SoPanel: React.FC<{
        §17.2 lần thứ ba trong ngày: một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá
        một. Chữ số Poppins 900 rộng khoảng 0,62em, dấu phẩy hẹp hơn — lấy 0,62 cho cả chuỗi là
        ước lượng CAO, tức an toàn: ước cao thì chữ nhỏ hơn cần một chút, ước thấp thì lại tràn. */
-    const RONG_CHU = 0.62;
+    /* ── HAI CHỖ SAI CỦA CHÍNH CỔNG NÀY  (anh soi khung «KODAK» bị cắt, 7/9/2026) ──────
+       1. `RONG_CHU = 0.62` đo trên CHỮ SỐ Poppins 900. Trường `so` nay còn nhận CHỮ (tên
+          chủ thể: `KODAK`), và chữ HOA nặng rộng ~0,78em — hụt 26%, nên "KODAK" tràn mép
+          phải. Đúng họ §12.5: một hằng số đo ở ngữ cảnh này, đem dùng ở ngữ cảnh khác.
+       2. Trần bề ngang tính trên cỡ chữ TĨNH, trong khi khối này còn nhân `nay` — cú nảy
+          vào khung khởi đầu ở **1,18**. Chữ đặt vừa khít 90% bề ngang thì ở đỉnh nảy thành
+          1,06 lần bề ngang panel, tức tràn ĐÚNG những khung đầu của nhịp. Cổng đo bản
+          tĩnh, sản phẩm chạy bản động — cùng hình dạng với §14.13.
+       Bề rộng tính theo TỪNG ký tự thay vì một hệ số chung: ước cao thì chữ nhỏ hơn cần một
+       chút, ước thấp thì tràn — nên chỗ nào không chắc thì ước CAO. */
+    const NAY_DINH = 1.18;
+    const rongEm = (t: string) => {
+      let r = 0;
+      for (const c of t) {
+        r += /[A-Z]/.test(c) ? 0.78 : /[a-z]/.test(c) ? 0.60
+           : /[0-9]/.test(c) ? 0.62 : c === " " ? 0.30 : 0.34;
+      }
+      return Math.max(0.5, r);
+    };
     const coCao = u * (hien.length > 8 ? 0.20 : hien.length > 5 ? 0.25 : 0.31);
-    const co = Math.min(coCao, (w * 0.90) / Math.max(1, hien.length * RONG_CHU));
+    const co = Math.min(coCao, (w * 0.90) / (NAY_DINH * rongEm(hien)));
     const khoi = co * 0.95 + u * 0.035 + Math.max(3, u * 0.014)
                + (lop.don ? u * 0.03 + u * 0.072 * 1.2 : 0) + DEM;
     return (
