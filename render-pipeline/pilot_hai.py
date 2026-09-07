@@ -885,12 +885,16 @@ GU_DUNG = {
     "howhot": ("phai", "ngang", "lanh"),   "smallest": ("giua", "ra", "lanh"),
 }
 
+NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
 # Trần ảnh CF cho MỘT tập. Đặt ở đây chứ không ở biến toàn cục dùng chung: mỗi tập là một
 # tiến trình riêng nên phạm vi "một tiến trình" ĐÚNG BẰNG phạm vi "một tập" — khác hẳn ca
 # §17.7, nơi bộ đếm tự nhận là "mỗi lượt chạy" mà thật ra đếm mỗi tập.
-TRAN_NEN_TAP = int(os.environ.get("TRAN_NEN_TAP", "") or 14)
+# Trần ảnh CF cho MỘT tập. 20 chứ không 14: với bộ 1:3 thì bộ ảnh của bản dài nuôi CẢ BỐN
+# clip, nên mỗi ảnh được chia cho bốn video — ngân sách đo được là 11,8 ảnh/bộ, tức 20 ảnh
+# cho một bộ vẫn nằm trong tầm khi chủ thể có sẵn ảnh tư liệu.
+TRAN_NEN_TAP = int(os.environ.get("TRAN_NEN_TAP") or 20)
 
 
 def k_ma_sinh(ma: str) -> str:
@@ -1161,7 +1165,12 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=14) if CHU_THE_TAP else []
         print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · "
               f"🖼 ảnh thật: {len(ANH_THAT)}")
-        G.BO_SINH[k_ma_sinh(ma)] = lambda _i, _r=_vs: _r
+        # `import giai_thich as G` nằm ở DƯỚI trong chính hàm này, nên `G` là biến CỤC BỘ và
+        # dùng nó ở trên là `UnboundLocalError` — không phải lỗi nạp module, mà lỗi phạm vi.
+        # Nhập riêng ở đây thay vì dời lệnh import kia lên: dời lên là đụng vào một khối đang
+        # chạy đúng, và §12.5 dặn hỏi lại trước khi đổi thứ đang hoạt động.
+        import giai_thich as _G0
+        _G0.BO_SINH[k_ma_sinh(ma)] = lambda _i, _r=_vs: _r
     import giai_thich as G
     import kich_comic as KC
     from kich_hai import doc_hai_giong
@@ -1266,6 +1275,12 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # Đo 18 kênh: mỗi kênh ra một người rõ rệt và khác nghề nhau — Attorney Brooks ·
         # Dr Quintero · Inspector Nadia · Nurse Tara · Sergeant Boone…
         _c = sorted(_ho_cg, key=lambda v: (-_chat_nghe(v), str(v.get("vai") or "")))[0]
+        # Phần gán `vai` nằm lại ở nhánh dưới khi em tách nhánh này ra — `UnboundLocalError`
+        # ở dòng `if len(vai) < 2`. Tách một nhánh thì phải mang theo cả phần ĐUÔI dùng chung,
+        # không chỉ phần đầu khác nhau (§6: vá một nhánh, để nguyên nhánh song song).
+        # Một giọng thì người HỎI cũng là chính người ấy: `LENH_MOT_GIONG` chỉ dựng lời cho
+        # vai A, còn vai B không có thoại nào — nhưng cấu trúc vẫn cần hai chỗ.
+        vai = [_c, _c]
     elif _ho_cg:
         _c = _ho_cg[(idx // max(1, len(_dan) - 1)) % len(_ho_cg)]
         _khac = [v for v in _dan if v is not _c]
@@ -1602,6 +1617,13 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # phủ hết 8 nhịp nên **cả 8 nền vừa vẽ bị thay ngay**, tức tiêu 8 ảnh hạn mức cho thứ
         # không ai nhìn thấy. Ở sản lượng 900 tập/ngày thì đó là 7.200 ảnh vứt đi mỗi ngày.
         # Hai dòng log nói ngược nhau là dấu hiệu quen (§14.8) — đọc kỹ thay vì mừng vì 8/8.
+        # ── SHORT DÙNG LẠI NỀN CỦA BẢN DÀI  (§17.11) ────────────────────────────────
+        # Không có khối này thì `bo_1_3` chỉ là "dựng bốn tập rồi bỏ CF ở ba tập sau" — ba
+        # short rơi hẳn về kho nền chung, tức mất đúng thứ bộ 1:3 sinh ra để làm. Đo lượt
+        # đầu: long vẽ 14 nhịp theo chủ thể, ba short vẽ 0 và dùng phòng ăn với phòng gym.
+        if NEN_SAN:
+            anh_nens = [NEN_SAN[i % len(NEN_SAN)] for i in range(len(cau))]
+            print(f"   ♻️ dùng lại {len(NEN_SAN)} nền của bản dài (short không gọi CF)")
         anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
         anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
     else:
@@ -1955,45 +1977,75 @@ PHONG_KENH = {
 
 
 def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
-    """MỘT BỘ = 1 bản dài + 3 short, DÙNG CHUNG một bộ ảnh. Trả số clip ra được.
+    """MỘT BỘ = 1 bản dài + 3 short, DÙNG CHUNG một bộ ảnh VÀ một chủ thể. Trả số clip.
 
-    ── VÌ SAO ĐÂY LÀ MẶC ĐỊNH, KHÔNG PHẢI TUỲ CHỌN  (anh dặn ghi nhớ, 7/9/2026) ──────────
-    Bất đối xứng đo được, và nó còn đúng lâu:
+    ── VÌ SAO ĐÂY LÀ MẶC ĐỊNH  (anh dặn ghi nhớ, 7/9/2026) ───────────────────────────────
+    Thời gian render dư ~8 lần, hạn mức ảnh CF là nút thắt. Dùng lại một bộ ảnh cho bốn clip
+    là ×4 sản lượng trên cùng ngân sách — đòn bẩy lớn nhất trong nhóm "tốn CPU, không tốn ảnh".
 
-        thời gian render (Actions, repo PUBLIC)   dư ~8 lần
-        hạn mức ảnh CF                            NÚT THẮT
-
-    Ảnh hiếm, thời gian máy thừa. Dùng lại một bộ ảnh cho bốn clip là ×4 sản lượng trên cùng
-    ngân sách ảnh — đòn bẩy lớn nhất trong nhóm "tốn CPU, không tốn ảnh".
-
-    Nó cũng ĐÚNG về sản phẩm: short cắt ra từ long giữ được khoảnh khắc mạnh nhất của bản
-    dài. §17.11 đã trả giá cho chiều ngược lại — `short_tu_long` mang đúng cái tên ấy mà dựng
-    một tập MỚI ở chỉ số lệch; đo 36 bộ: **0 ảnh của long được dùng lại**, 3.566 ảnh/ngày vẽ
-    thừa khi chạy 24/7.
-
-    RÀNG BUỘC CỨNG: short **không được gọi CF**, kể cả cho nhịp mà bản dài vẽ hụt. Một short
-    ăn theo mà tự đặt hàng ảnh thì nó không còn là bản cắt ra, và mọi phép tính ngân sách
-    theo bộ 1:3 sai theo. Cưỡng chế bằng `KHONG_NEN_TAP`, không bằng lời dặn (§14.12).
+    ── QUYẾT ĐỊNH CHỦ THỂ PHẢI Ở ĐÂY, KHÔNG Ở TỪNG LƯỢT  (sửa 8/9/2026) ─────────────────
+    Hai lượt dựng liên tiếp hỏng vì hàm này phó mặc chọn chủ thể cho từng `mot_tap`:
+      · lượt 1: ba short mỗi cái chọn một chủ thể MỚI rồi dùng nền vẽ cho chủ thể của long
+        — đúng "râu ông nọ cắm cằm bà kia".
+      · lượt 2: long rơi về bộ sinh cũ nên không để lại bộ nhịp nào, ba short lại tự đi.
+    Một BỘ theo định nghĩa là bốn clip về CÙNG một chuyện. Nên nơi quyết định chuyện ấy phải
+    là nơi biết mình đang dựng một bộ — §15.3: đưa quyết định về nơi biết thứ khó truyền đi
+    hơn, rồi TRUYỀN KẾT QUẢ.
     """
+    global NEN_SAN
+    import giai_thich as _G1
+    try:
+        import vi_sao as _VS
+    except Exception as e:
+        print(f"   ⚠ không nạp được vi_sao ({str(e)[:40]})")
+        _VS = None
+
+    _r = _VS.sinh(ma, idx) if (_VS and _VS.co_vi_sao(ma)) else None
+    if not _r:
+        # Không có chuyện thì KHÔNG dựng bộ. Dựng bằng bộ sinh cũ vẫn ra bốn clip, nhưng đó
+        # là bốn clip của đường mình đang thay — nhân bản đúng thứ cần bỏ (§16.7).
+        print(f"   ⏭ {ma} tập {idx}: chưa có chủ thể đủ chuyện — BỎ bộ này, không dựng bừa")
+        return 0
+    _ma_sinh = k_ma_sinh(ma)
+
+    def _ghim(bo_nhip):
+        _G1.BO_SINH[_ma_sinh] = lambda _i, _x=bo_nhip: _x
+
     n = 0
+    _ghim(_r)
     if mot_tap(ma, idx, False, chuong):
         n += 1
     else:
         print(f"   ⚠ {ma} tập {idx}: bản dài hỏng — bỏ cả bộ, không dựng short lẻ")
         return 0
-    # Short ăn theo: khoá hẳn đường vẽ ảnh trong tiến trình này.
+
+    # Bộ ảnh của bản dài, đọc từ chính tệp props nó vừa ghi.
+    _pj = os.path.join(GOC, "out", f"v11L_{ma}_{idx:04d}.json")
+    try:
+        NEN_SAN = [x for x in (json.load(io.open(_pj, encoding="utf-8")).get("anhNens") or []) if x]
+        print(f"   ♻️ bản dài để lại {len(NEN_SAN)} nền cho ba short")
+    except Exception as e:
+        NEN_SAN = []
+        print(f"   ⚠ không đọc được nền bản dài ({str(e)[:40]}) — short dùng kho chung")
+
+    # Short = CHƯƠNG của chính bản dài: cùng chủ thể, cùng ảnh, chỉ khác đoạn nhịp.
     _cu = os.environ.get("KHONG_NEN_TAP")
     os.environ["KHONG_NEN_TAP"] = "1"
     try:
+        _tieu, _hook, _hp, _nhip = _r
+        _b = max(3, len(_nhip) // 3)
         for c in range(3):
+            _lat = _nhip[c * _b:(c + 1) * _b] or _nhip[:_b]
+            _ghim((_tieu, _hook, _hp, _lat))
             if mot_tap(ma, idx * 10 + c, False, 0):
                 n += 1
     finally:
+        NEN_SAN = []
         if _cu is None:
             os.environ.pop("KHONG_NEN_TAP", None)
         else:
             os.environ["KHONG_NEN_TAP"] = _cu
-    print(f"   📦 bộ {ma}/{idx}: {n}/4 clip")
+    print(f"   📦 bộ {ma}/{idx}: {n}/4 clip · chủ thể «{CHU_THE_TAP}»")
     return n
 
 

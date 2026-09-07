@@ -67,10 +67,13 @@ def _goi(u: str) -> dict:
     global _LUC
     cuoi = ""
     for lan in range(4):
-        cho = _NHIP - (time.time() - _LUC)
+        # Nhịp DÙNG CHUNG với `chu_de._goi`: ba nơi mỗi nơi giữ nhịp riêng thì tổng nhịp
+        # vẫn vượt trần (§13.7 — hạn mức là tài nguyên dùng chung, "số nhỏ" không phải bảo vệ).
+        import chu_de as _CD
+        cho = _CD.NHIP - (time.time() - _CD._LUC[0])
         if cho > 0:
             time.sleep(cho)
-        _LUC = time.time()
+        _CD._LUC[0] = time.time()
         try:
             r = urllib.request.Request(u, headers=UA)
             return json.load(urllib.request.urlopen(r, timeout=40))
@@ -164,6 +167,7 @@ def duyet(goc: str, sau: int = 2, tran_cat: int = 120) -> list:
     return dem[khoa]
 
 
+_LUC_BAI = [0.0]     # nhịp gọi riêng cho bước đọc BÀI VIẾT, xem `co_chuyen`
 SANG = os.path.join(GOC, "so_sang.json")      # chủ thể -> số câu nhân quả đã đo
 
 
@@ -193,13 +197,48 @@ def co_chuyen(gocs: list, san: int = 8, them: int = 6, sau: int = 2) -> list:
     """
     import chu_de as C
     da = _doc_sang()
-    het = []
+    # ── CHI PHÍ MỖI LƯỢT GỌI PHẢI CÓ TRẦN  (đo 7/9/2026) ────────────────────────────────
+    # Bản đầu duyệt CẢ BA gốc mỗi lần gọi. Đo thật: chỉ 1/3 gốc của `therules` có đệm, hai
+    # gốc kia phải đi hết cây (~100 hạng mục × 0,9 s × 2 lượt hỏi ≈ 3 phút MỖI GỐC), nên sau
+    # 5 phút chưa sàng nổi một chủ thể — và nếu lượt duyệt ấy lại đọc hỏng quá ngưỡng thì
+    # không đệm, tức lượt sau trả đúng chừng ấy tiền.
+    # Nay: dùng NGAY mọi gốc đã có đệm, và mỗi lượt chỉ mở THÊM MỘT gốc mới. Hồ dùng được
+    # ngay từ lượt đầu, và vẫn dày lên đều. §18.8 — chi phí phải tỉ lệ với PHẦN MỚI.
+    dem_dia = {}
+    if os.path.exists(DEM):
+        try:
+            dem_dia = json.load(io.open(DEM, encoding="utf-8"))
+        except Exception:
+            dem_dia = {}
+    het, chua_mo = [], []
     for g in gocs:
+        if dem_dia.get(f"{g}|{sau}"):
+            het.extend(x for x in dem_dia[f"{g}|{sau}"] if x not in het)
+        else:
+            chua_mo.append(g)
+    # Mở gốc mới CHỈ KHI hồ hiện có đã cạn. Bản trước mở thêm một gốc ở MỌI lượt gọi, và một
+    # lượt duyệt cây mất vài phút không in gì — nên bước sàng bị chặn đứng và sau 4 phút vẫn
+    # đúng 6 chủ thể được đo. Đo lại thì thấy tiến trình sống mà log rỗng: dấu hiệu của một
+    # lượt chờ dài, không phải của một tiến trình chết.
+    # Với "Defunct airlines" đã đệm 757 chủ thể thì không bao giờ cần mở thêm — hồ dư sức nuôi
+    # hàng nghìn tập trước khi phải đi tìm gốc mới.
+    if chua_mo and len(het) < 200:
+        g = chua_mo[0]
+        print(f"   🌳 hồ chỉ còn {len(het)} — mở thêm gốc «{g[:40]}»")
         het.extend(x for x in duyet(g, sau) if x not in het)
+    if not het:
+        return []
     dat = [x for x in het if da.get(x, -1) >= san]
     chua = [x for x in het if x not in da]
     moi = 0
     for ct in chua[:max(0, them)]:
+        # `bai_viet` đi qua CÙNG một API với `_goi` nhưng KHÔNG chia sẻ nhịp gọi của nó, nên
+        # bước sàng bắn liên tiếp và ăn 429: đo lượt đầu 4/6 bài đọc về 0 ký tự. Giãn cách ở
+        # đây vì `chu_de` còn phục vụ nhiều chỗ khác, không nên đổi nhịp toàn cục của nó.
+        cho = _NHIP - (time.time() - _LUC_BAI[0])
+        if cho > 0:
+            time.sleep(cho)
+        _LUC_BAI[0] = time.time()
         try:
             van = C.bai_viet(ct) or ""
         except Exception:
@@ -252,6 +291,35 @@ def con_lai(kenh: str, gocs: list, khuons: list, sau: int = 2) -> int:
     for g in gocs:
         ct.update(duyet(g, sau))
     return len(ct) * len(khuons) - len(da_dung(kenh))
+
+
+def tiep_tu(kenh: str, ct: list, khuons: list, so_luong: int = 1) -> list:
+    """Như `tiep`, nhưng bốc từ MỘT danh sách chủ thể cho sẵn.
+
+    ── VÌ SAO CẦN  (bắt được khi dựng bộ 1:3 đầu tiên, 8/9/2026) ─────────────────────────
+    `tiep` bốc cặp trên CẢ hồ (757 chủ thể), trong khi chỉ những chủ thể ĐÃ QUA cổng chuyện
+    mới dùng được — lúc ấy là 4. Xác suất 40 cặp đầu trúng một trong 4 chủ thể giữa 757 là
+    gần bằng không, nên `vi_sao` báo *"không chủ thể nào đủ chuyện"* và rơi về bộ sinh cũ,
+    dù hồ đã sàng ra chủ thể tốt. Cổng lọc đúng, phép BỐC sai nguồn.
+    Cùng họ §15.1: cắt trước lọc sau. Ở đây là bốc trước lọc sau, và tập cần giữ chỉ chiếm
+    0,5% hồ nên phép bốc gần như không bao giờ chạm tới nó.
+    """
+    if not ct or not khuons:
+        return []
+    P = len(ct) * len(khuons)
+    buoc = next((b for b in (10007, 7919, 4001, 1009, 997, 101, 97, 31, 7, 3, 1) if P % b), 1)
+    xong = da_dung(kenh)
+    bam = 0
+    for c in kenh:
+        bam = (bam * 131 + ord(c)) % 1000003
+    ra, i = [], 0
+    while len(ra) < so_luong and i < P:
+        k = (bam + i * buoc) % P
+        cap = (ct[k % len(ct)], khuons[k // len(ct)])
+        if cap not in xong and cap not in ra:
+            ra.append(cap)
+        i += 1
+    return ra
 
 
 def tiep(kenh: str, gocs: list, khuons: list, so_luong: int = 1, sau: int = 2) -> list:

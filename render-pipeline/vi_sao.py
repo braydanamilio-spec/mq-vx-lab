@@ -130,15 +130,14 @@ def sinh(ma: str, i: int):
     # chạy tối nay: 7/7 bị loại, 7 vòng gọi mạng cho một tập rồi vẫn phải rơi về bộ sinh cũ.
     # `co_chuyen` đệm kết quả đã đo và sàng thêm vài chủ thể mỗi lượt, nên chi phí tỉ lệ với
     # PHẦN MỚI chứ không với kích thước hồ (§18.8).
-    _dat = set(H.co_chuyen(gocs, san=SAN_NHAN_QUA, them=6))
+    _dat = H.co_chuyen(gocs, san=SAN_NHAN_QUA, them=6)
     _sang = H._doc_sang()
-    _ung = []
-    for chu_the, khuon in H.tiep(ma, gocs, khuons, so_luong=40):
-        if chu_the not in _dat:
-            continue
-        _ung.append((chu_the, khuon, _sang.get(chu_the, SAN_NHAN_QUA)))
-        if len(_ung) >= 6:
-            break
+    # Bốc cặp TỪ HỒ ĐÃ SÀNG, không từ cả hồ: bản trước bốc 40 cặp trên 757 chủ thể rồi lọc
+    # lấy cái nào đã qua cổng — với 4 chủ thể đạt thì 40 cặp ấy gần như không bao giờ trúng,
+    # nên `vi_sao` báo "không chủ thể nào đủ chuyện" và rơi về bộ sinh cũ DÙ hồ đã có hàng
+    # tốt. Cổng lọc đúng, phép bốc sai nguồn (§15.1: bốc trước lọc sau).
+    _ung = [(ct, kh, _sang.get(ct, SAN_NHAN_QUA))
+            for ct, kh in H.tiep_tu(ma, _dat, khuons, so_luong=6)]
     if not _ung:
         print(f"   ⚠ {ma}: không chủ thể nào trong 10 cặp đầu đủ chuyện — dùng bộ sinh cũ")
         return None
@@ -161,7 +160,8 @@ def sinh(ma: str, i: int):
             continue                     # không đủ tư liệu đúng chủ đề -> BỎ CẶP, đúng hành vi
         DA_CHON[(ma, i)] = {"chu_the": chu_the.split(" (")[0],
                             "khuon": khuon,
-                            "hinh_mau": C.hinh_mau(ho)}
+                            "hinh_mau": C.hinh_mau(ho),
+                            "r": r}          # giữ nguyên bộ nhịp để `bo_1_3` cắt short
         H.ghi(ma, chu_the, khuon)
         print(f"   🎯 «{chu_the}» × khuôn {khuons.index(khuon)} · {_nq} câu nhân quả")
         return r

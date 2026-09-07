@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 import urllib.parse
 import urllib.request
 
@@ -58,7 +59,21 @@ _CAU = re.compile(r"[^.\n]*?\b(?:\d{4}|\d[\d,\.]*\s*(?:" + _DV + r"))\b[^.\n]*\.
 _SO = re.compile(r"\b\d[\d,\.]*\b")
 
 
+_LUC = [0.0]
+# Nhịp tối thiểu giữa hai lệnh gọi Wikipedia. Đêm 8/9 em chạy song song ba thứ cùng gọi API
+# này — quét cây hạng mục, sàng chủ thể, và dựng tập — mỗi thứ có (hoặc không có) nhịp riêng,
+# nên tổng nhịp vượt xa mức Wikipedia chịu và MỌI lượt gọi trả `HTTP 429`. Lúc ấy `bai_viet`
+# trả 0 ký tự, cổng chuyện chấm 0 câu nhân quả, hồ đề tài ra rỗng — cả dây chuyền đọc ra
+# "không có dữ liệu" trong khi sự thật là "tôi tự chặn mình".
+# Nhịp phải là của TIẾN TRÌNH, không của từng nơi gọi: ba nơi mỗi nơi 0,9 giây vẫn ra 0,3.
+NHIP = float(os.environ.get("WIKI_NHIP") or 1.1)
+
+
 def _goi(url: str, timeout: int = 25) -> dict:
+    cho = NHIP - (time.time() - _LUC[0])
+    if cho > 0:
+        time.sleep(cho)
+    _LUC[0] = time.time()
     r = urllib.request.Request(url, headers=UA)          # §13.15: thiếu User-Agent -> CDN chặn 403
     return json.load(urllib.request.urlopen(r, timeout=timeout))
 
@@ -93,10 +108,23 @@ def bai_viet(ten: str) -> str:
             pass
     u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1"
          f"&prop=extracts&explaintext=1&titles={urllib.parse.quote(ten)}")
-    try:
-        p = list((_goi(u).get("query") or {}).get("pages", {}).values())
-        v = (p[0].get("extract") or "") if p else ""
-    except Exception:
+    # ── THỬ LẠI, VÀ NÓI RA LÝ DO  (8/9/2026) ────────────────────────────────────────────
+    # `except: return ""` nuốt sạch nguyên nhân, nên một lượt 429 chập chờn đọc ra y hệt
+    # "Wikipedia không có bài này" — và mọi phép đo phía sau (số câu nhân quả, cổng chuyện,
+    # hồ đề tài) đều nhận một số 0 KHÔNG CÓ MẪU SỐ (§15.2). Đo đêm 8/9: `bai_viet` trả 0 ký
+    # tự cho ba chủ thể trong khi lệnh gọi THÔ tới đúng URL ấy trả 39.420 ký tự vài giây sau
+    # — tức lỗi chập chờn, không phải bài không tồn tại. Một lần thử là chưa đủ.
+    v, cuoi = "", ""
+    for lan in range(3):
+        try:
+            p = list((_goi(u).get("query") or {}).get("pages", {}).values())
+            v = (p[0].get("extract") or "") if p else ""
+            break
+        except Exception as e:
+            cuoi = str(e)[:60]
+            time.sleep((5.0 if "429" in cuoi else 1.5) * (lan + 1))
+    if not v and cuoi:
+        print(f"   ⚠ bai_viet «{ten[:34]}» hỏng sau 3 lần: {cuoi}")
         return ""                      # hỏng thì KHÔNG ghi đệm — đệm một chuỗi rỗng là khoá
     if v:                              # cứng cái hỏng lại mãi mãi
         try:
