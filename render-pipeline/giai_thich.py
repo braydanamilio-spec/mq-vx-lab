@@ -5897,6 +5897,17 @@ BIEN_THE = {
 # Giọng giữ nguyên: câu ngắn, khẳng định, tiếng Anh Mỹ, 2–7 chữ. Câu dài hơn thì cảnh phải giữ
 # lâu hơn, và §12.11 đã đo rằng nhịp cắt là việc của khâu VIẾT.
 BIEN_THE_THEM = {
+    # Hai câu quy đổi thêm ngày 7/9 lặp MỖI CHƯƠNG ở bản dài, cách nhau 10 nhịp — cổng
+    # `không đọc lại cùng một câu trong vòng 12 nhịp` bắt đúng (§15.15). Sáu biến thể mỗi
+    # câu, không phải ba: đo hôm 3/9 cho thấy ba lựa chọn thì mỗi biến thể dùng lại 3–4 lần.
+    "Count them one a second.": (
+        "Now count them, one every second.", "One a second, start counting.",
+        "Say one number every second.", "Tick them off, one per second.",
+        "Count out loud, one each second.", "One item, one second, keep going."),
+    "Now the same, one a second.": (
+        "Same rhythm, one every second.", "Keep the same pace on the bigger pile.",
+        "One a second again, no faster.", "Same counting, much bigger number.",
+        "Do it again at one per second.", "Identical pace, different lifetime."),
 
 "Both, at this same second.": ("Both of them, this second.", "Two things, one moment.",
     "Both happening as you watch.", "The same second, both of them.", "Both, right this second.",
