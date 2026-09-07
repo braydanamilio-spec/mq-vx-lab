@@ -478,6 +478,39 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
             else:
                 ra = [x for i, x in enumerate(ra) if i not in set(_bo)]
             print(f"   ✂ {_tran_luot + len(_bo)} lượt -> {len(ra)} (bỏ lượt không mang số)")
+        # ── LUÂN PHIÊN PHẢI ĐƯỢC VÁ LẠI SAU KHI CẮT  (7/9/2026) ────────────────────────
+        # Luật 2 đòi hai người nói xen kẽ, và mô hình tuân thủ. Nhưng lượt cắt ngay trên bỏ
+        # những lượt KHÔNG mang chữ số — mà lượt không mang số gần như luôn là câu HỎI của
+        # vai A. Bỏ chúng đi thì hai lượt B dính vào nhau, và tai nghe ra một người tự nói
+        # với mình. Dựng thật `v11_hiddenfee_0004` ra đúng thế: lượt 2 và 3 cùng của B.
+        #
+        # Bộ cắt sinh ra lỗi này, nên bộ cắt phải vá lại — §13.12: máy sửa được thì máy sửa,
+        # đừng đốt một vòng gọi AI cho một chuyện máy làm được. Chỉ lượt MANG SỐ mới buộc
+        # thuộc về chuyên gia; lượt không có số thì ai nói cũng đúng vai, nên đổi được.
+        _so_cua = lambda x: any(c.isdigit() for c in x.get("chu", ""))
+        _bo2 = set()
+        for _k in range(1, len(ra)):
+            if _k - 1 in _bo2 or ra[_k].get("ai") != ra[_k - 1].get("ai"):
+                continue
+            _doi = "b" if ra[_k].get("ai") == "a" else "a"
+            if not _so_cua(ra[_k]) and (_k + 1 >= len(ra) or ra[_k + 1].get("ai") != _doi):
+                ra[_k]["ai"] = _doi
+            elif (_k - 1 > 0 and not _so_cua(ra[_k - 1])
+                  and ra[_k - 2].get("ai") != _doi):
+                # `_k - 1 > 0`: KHÔNG bao giờ lật lượt mở đầu. Luật 3 nói người HỎI mở màn,
+                # và một tập mở bằng lượt của chuyên gia thì không còn ai để hỏi — dựng thật
+                # ra "Tobias wonders why we pay extra?", tức chuyên gia tự thuật về người
+                # kia. Bản vá luân phiên không được phép đổi thứ nó không sinh ra để đổi.
+                ra[_k - 1]["ai"] = _doi
+            elif not _so_cua(ra[_k]) and _k != len(ra) - 1:
+                # Đổi vai không an toàn ở cả hai phía (đổi xong lại dính vào lượt kế). Lúc
+                # này BỎ hẳn lượt không mang số là đúng: nó vốn là lượt bị trần cắt, và giữ
+                # nó chỉ để nghe một người nói hai lần liên tiếp thì không đáng.
+                _bo2.add(_k)
+            elif not _so_cua(ra[_k - 1]) and _k - 1 != 0:
+                _bo2.add(_k - 1)
+        if _bo2:
+            ra = [x for _i, x in enumerate(ra) if _i not in _bo2]
         thieu = _du_so(loi, ra, man)
         if not thieu:
             return ra
