@@ -293,6 +293,9 @@ def t_prompt_nen_khong_ten_rieng():
     ma = "\n".join(ast.unparse(x) for x in than)
     ma = re.sub(r"(?m)^\s*#.*$", "", ma)
     assert "Setting: {chu_the}" not in ma, "prompt nền còn dán tên chủ thể vào"
+    # Và không được dán DANH SÁCH TỪ vào prompt: bộ 132 vẽ ra `known, / berlin / became,`
+    # từ chính vế `In it: {_chi}` — một danh sách từ đọc ra như tấm biển cần chép (§13.20).
+    assert "In it:" not in ma, "prompt nền còn dán danh sách danh từ vào"
     # chạy CHÍNH phép lọc của mã thật trên câu đã gây lỗi
     m = re.search(r"_dt = \[w for w in re\.findall\((.*?)\)\n(.*?)\]\[:4\]", src, re.S)
     assert m, "không tìm thấy phép lọc danh từ trong _nen_theo_tap"

@@ -1091,8 +1091,24 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         # `Setting: {chu_the}` đã bị BỎ: nó là nguồn tên riêng thứ hai, và nó THỪA — neo
         # cảnh đã suy từ hình mẫu của chính chủ thể (§19.10), tức đã mang đúng thế giới ấy
         # rồi. Giữ cái tên chỉ để mô hình viết nó ra thành chữ hỏng.
-        viec.append((i, f"{_neo}{_canh}. In it: {_chi}"
-                        f"{SAN_NEN_VAT}. {GU_NEN}"))
+        # ── VÀ BỎ NỐT DANH SÁCH DANH TỪ  (soi khung bộ 132, 8/9/2026) ──────────────────
+        # Bỏ tên riêng xong, nền VẪN có chữ: khung 3 hiện `known, / berlin / became,`. Cả 13
+        # nền là VẼ MỚI sau bản vá (đo mtime), nên không phải đệm cũ. Nguồn là chính vế
+        # `In it: known, became, major` — một DANH SÁCH TỪ đọc ra như một tấm biển cần chép,
+        # và mô hình chép. Lọc theo hoa/thường chỉ chặn được tên riêng, không chặn được việc
+        # đưa chữ vào.
+        #
+        # Có thể siết `_dt` về danh từ VẼ ĐƯỢC không? Từ vựng nơi chốn của repo chỉ 112 từ
+        # và toàn tên NƠI CHỐN (`hangar`, `apron`); `cargo · carrier · aviation · ticket`
+        # đều không có. Siết theo nó thì gần như mọi nhịp mất sạch chi tiết — tức bằng đúng
+        # việc bỏ vế này, chỉ vòng vo hơn. §13.22: đo xong rồi QUYẾT ĐỊNH KHÔNG LÀM cũng là
+        # một kết quả; ghi ra đây rằng chỗ này CHƯA ĐO ĐƯỢC cách giữ chi tiết mà không đưa
+        # chữ vào khung.
+        #
+        # Đa dạng theo nhịp KHÔNG mất: neo cảnh xoay theo `i % len(_nh)` (nơi chốn của chính
+        # hình mẫu) và khuôn hình xoay theo `i % len(_KHUON_NEN)` — hai trục người xem NHÌN
+        # THẤY (§14.9), không phải một danh sách từ mà mô hình đem viết lên tường.
+        viec.append((i, f"{_neo}{_canh}. {SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:
