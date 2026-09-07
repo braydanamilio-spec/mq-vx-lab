@@ -281,15 +281,23 @@ def t_lat_short_khong_mong():
     **3/3 bộ liên tiếp (123 · 126 · 127) mất đúng clip thứ tư** — 25% sản lượng, đều đặn và
     im lặng. Chốt này canh cả hai chiều: không mỏng, VÀ không trùng (thà ba clip thật còn
     hơn bốn clip có hai cái giống hệt nhau — §13.17)."""
-    import pilot_hai as P
-    for n in range(3, 40):
+    import inspect, re as _re, pilot_hai as P
+    san = P.SAN_LUOT
+    for n in range(san, 40):
         nh = [{"loi": f"s{i}"} for i in range(n)]
         ls = P._lat_short(nh)
-        assert all(len(x) >= 3 for x in ls), f"n={n}: có lát mỏng {[len(x) for x in ls]}"
+        assert all(len(x) >= san for x in ls), f"n={n}: lát mỏng {[len(x) for x in ls]}"
         van = [tuple(y["loi"] for y in x) for x in ls]
         assert len(set(van)) == len(van), f"n={n}: hai short trùng nội dung"
-        assert len(ls) == 3 or n < 7, f"n={n}: chỉ ra {len(ls)} short"
-    assert P._lat_short([{"loi": "a"}, {"loi": "b"}]) == [], "quá ít nhịp phải trả rỗng"
+        assert len(ls) == 3 or n < san * 2 + 1, f"n={n}: chỉ ra {len(ls)} short"
+    assert P._lat_short([{"loi": "a"}]) == [], "quá ít nhịp phải trả rỗng"
+    # MỘT hằng số, hai chỗ cưỡng chế: `doi_thoai` vứt bản nháp dưới sàn, `_lat_short` cắt
+    # theo sàn. Bộ 128 mất clip thứ tư vì hai con số ấy từng là 4 và 3 (§11).
+    src = inspect.getsource(P.doi_thoai)
+    assert _re.search(r"len\(ra\)\s*<\s*SAN_LUOT", src), \
+        "doi_thoai ghi cứng sàn lượt thay vì đọc SAN_LUOT"
+    assert "san: int = SAN_LUOT" in inspect.getsource(P._lat_short), \
+        "_lat_short ghi cứng sàn thay vì đọc SAN_LUOT"
 
 
 def t_bo_tien_to_chi_so():

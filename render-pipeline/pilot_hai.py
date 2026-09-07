@@ -563,6 +563,14 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
                   if s not in co and rut(s) and rut(s) not in cs and not _da_doc(s))
 
 
+# ── SÀN SỐ LƯỢT: MỘT CON SỐ, HAI CHỖ CƯỠNG CHẾ  (8/9/2026) ──────────────────────────────
+# `doi_thoai` vứt mọi bản nháp dưới bốn lượt, còn `_lat_short` cắt theo sàn BA nhịp. Hai sàn
+# nói về cùng một thứ mà không khớp nhau, nên mọi short ba nhịp đều bị `doi_thoai` loại sạch
+# rồi trả rỗng — đo được: bộ 128 vẫn mất clip thứ tư dù lát đã dày lên đúng 3 (bản vá trước
+# chữa được cái mỏng 2, không chữa được cái lệch sàn).
+# Một hằng số, hai chỗ đọc. §11: đừng bao giờ tạo nguồn sự thật thứ hai cho cùng một số.
+SAN_LUOT = 4
+
 def doi_thoai(loi: list, vai: list, man: list = None) -> list:
     keys = C._khoa_groq()
     man = man or [""] * len(loi)
@@ -651,7 +659,7 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
                        "ai": "b" if str(x.get("ai", "a")).lower().startswith("b") else "a",
                        "cx": str(x.get("cx") or "trung_tinh"),
                        "i": _i})
-        if len(ra) < 4:
+        if len(ra) < SAN_LUOT:
             continue
         # ── TRẦN SỐ LƯỢT: MÁY CẮT, KHÔNG ĐỐT MỘT VÒNG GỌI AI  (đo 6/9/2026) ─────────────
         # Luật 5 nói "giữ đúng số lượt bằng số câu dẫn, nhiều nhất hơn hai" — và chỉ CHẤM chứ
@@ -2111,7 +2119,7 @@ PHONG_KENH = {
 }
 
 
-def _lat_short(nhip: list, san: int = 3) -> list:
+def _lat_short(nhip: list, san: int = SAN_LUOT) -> list:
     """Cắt bộ nhịp của bản dài thành các đoạn cho short — mỗi đoạn ĐỦ DÀY.
 
     ── VÌ SAO KHÔNG PHẢI `nhip[c*b:(c+1)*b]`  (đo 8/9/2026) ─────────────────────────────
@@ -2241,10 +2249,24 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
     os.environ["KHONG_NEN_TAP"] = "1"
     try:
         _tieu, _hook, _hp, _nhip = _r
-        _lats = _lat_short(_nhip)
+        # ── CẮT TỪ BỘ NHỊP ĐÃ NỞ CỦA BẢN DÀI, KHÔNG TỪ BẢN THÔ  (8/9/2026) ───────────────
+        # `vi_sao.sinh` trả bộ nhịp THÔ — đo bộ 128: **8 nhịp**. Bản dài không dùng thẳng nó:
+        # `kich_ban(long=True)` nở ra **29 nhịp** bằng khối chương. Nhưng `bo_1_3` lại cắt
+        # short từ bản THÔ, nên mỗi short chỉ được 2–3 nhịp — dưới sàn bốn lượt của
+        # `doi_thoai`, và clip thứ tư chết đều đặn ở 4/4 bộ liên tiếp.
+        # §17.11 vốn đã nói short phải cắt từ BẢN DÀI. `kich_ban` tất định và không gọi mạng
+        # (bộ sinh vẫn đang ghim), nên hỏi lại nó là rẻ và cho đúng thứ bản dài đã kể.
+        try:
+            _nhip_dai = _G1.kich_ban(ma, idx, True, chuong or 3)[4] or _nhip
+        except Exception as e:
+            print(f"   ⚠ không lấy được nhịp bản dài ({str(e)[:40]}) — cắt từ bản thô")
+            _nhip_dai = _nhip
+        print(f"   ✂️ cắt short từ {len(_nhip_dai)} nhịp của bản dài "
+              f"(bản thô {len(_nhip)} nhịp)")
+        _lats = _lat_short(_nhip_dai)
         if len(_lats) < 3:
             print(f"   ⚠ chỉ {len(_nhip)} nhịp — dựng {len(_lats)} short thay vì 3 "
-                  f"(short mỏng hơn {3} nhịp không qua nổi cổng số)")
+                  f"(short mỏng hơn {SAN_LUOT} nhịp không qua nổi sàn lượt)")
         for c, _lat in enumerate(_lats):
             _ghim((_tieu_short(_tieu, _lat, c), _hook, _hp, _lat))
             if mot_tap(ma, idx * 10 + c, False, 0):
