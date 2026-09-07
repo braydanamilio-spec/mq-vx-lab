@@ -511,6 +511,34 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
                 _bo2.add(_k - 1)
         if _bo2:
             ra = [x for _i, x in enumerate(ra) if _i not in _bo2]
+        # ── HAI LƯỢT SỐ LIỀN NHAU: CHÈN MỘT CÂU HỎI, ĐỪNG ĐỔI VAI  (7/9/2026) ──────────
+        # `howhot` tập 4 ra BỐN lượt B liên tiếp, cả bốn đều mang số — không lượt nào đổi
+        # vai được (số phải do chuyên gia nói) và không lượt nào bỏ được (bỏ là mất một con
+        # số bắt buộc). Hai nhánh trên bó tay đúng ở ca này.
+        #
+        # Chỗ thiếu là một câu HỎI, và câu hỏi thì không mang dữ kiện nào nên máy viết được
+        # mà không vi phạm "AI/tay không bao giờ cấp một con số". Rút từ hồ và lệch pha theo
+        # kênh, đúng cách `_loi` đã giải bài lặp câu nối (§15.17): cùng hồ, mỗi kênh bắt đầu
+        # ở một chỗ, nên hai kênh dựng cùng vị trí không đọc cùng câu.
+        _NOI = ("And the next one?", "What about the other?", "How does that compare?",
+                "So what does that mean?", "And after that?", "Which one is bigger?",
+                "Where does that leave us?", "Then what?", "And the rest?",
+                "How much of a gap is that?")
+        # Lệch pha lấy từ TÊN VAI, không phải mã kênh: `doi_thoai` không nhận mã kênh, và
+        # tên vai còn tốt hơn — nó đổi theo cả kênh LẪN tập (cặp vai xoay mỗi tập), nên hai
+        # tập của cùng một kênh cũng không mở cùng một câu nối. Băm viết tường minh, không
+        # dùng `hash()` — `PYTHONHASHSEED` ngẫu nhiên thì máy anh và runner ra hai lịch khác
+        # nhau (§13.13, đã trả giá ở bộ Kling).
+        _hat = "".join(str(v.get("vai") or "") for v in vai)
+        _lech = sum(ord(c) * (k + 1) for k, c in enumerate(_hat)) % len(_NOI)
+        _ket = []
+        for _k, _x in enumerate(ra):
+            if (_ket and _x.get("ai") == _ket[-1].get("ai") == "b"
+                    and _so_cua(_x) and _so_cua(_ket[-1]) and len(_ket) + len(ra) - _k < 16):
+                _ket.append({"i": _x.get("i", 0), "ai": "a",
+                             "chu": _NOI[(_lech + len(_ket)) % len(_NOI)], "cx": "trung_tinh"})
+            _ket.append(_x)
+        ra = _ket
         thieu = _du_so(loi, ra, man)
         if not thieu:
             return ra
