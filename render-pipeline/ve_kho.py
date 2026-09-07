@@ -108,14 +108,19 @@ def _la_ngang(ma: str, i: int) -> bool:
     return False
 
 
-def mot_kenh(ma: str, ds: list, luong: int, ks, tran: int = 0) -> tuple:
-    """Vẽ những nền còn thiếu của một kênh. Trả (số vẽ mới, số đã có, số hỏng)."""
+def mot_kenh(ma: str, ds: list, luong: int, ks, tran: int = 0, loc=None) -> tuple:
+    """Vẽ những nền còn thiếu của một kênh. Trả (số vẽ mới, số đã có, số hỏng).
+
+    `loc(ma, i) -> bool` giới hạn cả hai đường (phủ mới và nâng cấp) vào một tập cảnh —
+    xem `--hinhmau` ở `main`."""
     from kich_hai import SAN_NEN
     os.makedirs(NEN, exist_ok=True)
     thieu = []
     cu_ngang = []
     co = 0
     for i, p in enumerate(ds):
+        if loc and not loc(ma, i):
+            continue
         if _co_anh(ma, i):
             co += 1
             if _la_ngang(ma, i):
@@ -211,6 +216,9 @@ def main():
     ap.add_argument("--luong", type=int, default=8)
     ap.add_argument("--vong", type=int, default=12,
                     help="mỗi VÒNG vẽ tối đa N nền cho MỖI kênh rồi sang kênh khác (0 = tắt)")
+    ap.add_argument("--hinhmau", default="",
+                    help="tên hình mẫu (chu_de.NEN_CUA_HINH_MAU), phẩy — chỉ vẽ nền thuộc "
+                         "nhóm chủ đề của chúng. Rỗng = mọi nhóm.")
     a = ap.parse_args()
 
     # ── VÌ SAO KHÔNG ĐỔI SANG MODEL RẺ  (anh quyết, 6/9/2026) ──────────────────────────
@@ -231,6 +239,31 @@ def main():
 
     kho = json.load(io.open(KHO, encoding="utf-8"))
     ds = [x.strip() for x in a.kenh.split(",") if x.strip()] or sorted(kho)
+
+    # ── CHỌN THEO HÌNH MẪU, KHÔNG CHỈ THEO KÊNH  (đo 7/9/2026) ─────────────────────────
+    # Từ khi nền được chọn theo HÌNH MẪU của chủ thể và tìm trong CẢ KHO (§19.10), "kênh nào
+    # mỏng" không còn là câu hỏi đúng — một kênh 42 nền vẫn rút được từ 1.808 nền chung.
+    # Câu hỏi đúng là "hình mẫu nào mỏng", và đo trên đúng đường chạy thật cho ra:
+    #
+    #     tau_thuy 165 · xe 127 · may_tinh 107 · may_anh 67 · may_bay 85 …
+    #     ten_lua   24 · bang_video 29 · dien_thoai 34        <- ba cái mỏng nhất
+    #
+    # Hai tập cùng nói về tên lửa rút từ 24 nền thì nhìn ra ngay là cùng một chỗ. Nên hạn mức
+    # phải chảy về TRỤC đang mỏng, không về kênh đang mỏng — §13.7: trần đặt trên đại lượng
+    # mình muốn chặn, và ở đây cả phép chọn cũng vậy.
+    loc = None
+    if a.hinhmau:
+        import chu_de as _CD
+        tu = tuple(t for h in a.hinhmau.split(",")
+                   for t in _CD.nhom_nen_cua(h.strip()))
+        if not tu:
+            raise SystemExit(f"⛔ --hinhmau {a.hinhmau!r} không có trong NEN_CUA_HINH_MAU")
+        _the = json.load(io.open(os.path.join(GOC, "nen_tag.json"), encoding="utf-8"))
+        hop = {k for k, v in _the.items() if any(t in str(v).lower() for t in tu)}
+        if not hop:
+            raise SystemExit(f"⛔ không cảnh nào thuộc nhóm của {a.hinhmau} — kiểm nen_tag.json")
+        loc = lambda ma, i: f"{ma}_{i:03d}" in hop            # noqa: E731
+        print(f"🎯 chỉ vẽ hình mẫu «{a.hinhmau}» -> {len(hop)} cảnh trong kho soạn")
     ks = A.khoa()
     print(f"🔑 {len(ks)} tài khoản CF · {A.suc_khoe() if hasattr(A, 'suc_khoe') else ''}")
 
@@ -243,7 +276,8 @@ def main():
     # cũng để lại một kho CÂN — thay vì một kho đầy nửa trên, trống nửa dưới.
     def _thieu(ma):
         pp = (kho.get(ma) or [])[:a.so] if a.so else (kho.get(ma) or [])
-        return sum(1 for i in range(len(pp)) if not _co_anh(ma, i))
+        return sum(1 for i in range(len(pp))
+                   if not _co_anh(ma, i) and (loc is None or loc(ma, i)))
 
     ds = sorted(ds, key=lambda m: -_thieu(m))
     print("   đói nhất: " + " · ".join(f"{m}:{_thieu(m)}" for m in ds[:6]) + " …")
@@ -275,7 +309,7 @@ def main():
             con = (TRAN[0] - tong["moi"]) if TRAN[0] else 0
             lo = a.vong or 0
             gh = min(x for x in (lo, con) if x) if (lo or con) else 0
-            m, c, h = mot_kenh(ma, p, a.luong, ks, gh)
+            m, c, h = mot_kenh(ma, p, a.luong, ks, gh, loc)
             tong["moi"] += m; tong["co"] += c; tong["hong"] += h
             tien += m
             if m == 0:
