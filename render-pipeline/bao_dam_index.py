@@ -39,6 +39,13 @@ CAN = [
     # health_guardian: .where(owner).where(status).order_by(created_at DESC).limit(20)
     ("render_jobs", [("owner", "ASCENDING"), ("status", "ASCENDING"),
                      ("created_at", "DESCENDING")]),
+    # health_guardian.heal_stale_jobs: .where(owner).where(status in …).where(<trường> < mốc)
+    # Hai truy vấn HẸP thay cho một lượt quét 400 tài liệu mỗi giờ (7/9/2026). Không có hai
+    # index này thì guardian lùi về quét rộng — vẫn chạy đúng, chỉ tốn 9.600 lượt đọc/ngày.
+    ("render_jobs", [("owner", "ASCENDING"), ("status", "ASCENDING"),
+                     ("updated_at", "ASCENDING")]),
+    ("render_jobs", [("owner", "ASCENDING"), ("status", "ASCENDING"),
+                     ("created_at", "ASCENDING")]),
 ]
 
 

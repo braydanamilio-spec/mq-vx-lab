@@ -173,6 +173,32 @@ def xa_ngan_sach_d1() -> None:
         pass
 
 
+# ── ĐỒNG HỒ PHẢI TỰ CHẠY, KHÔNG CHỜ AI NHỚ GỌI  (7/9/2026) ──────────────────────────────
+# Anh: *"chưa render đã cạn là sao, phải tìm cách fix chứ"*. Đọc sổ D1 bảy ngày liền: **rỗng
+# cả bảy**, trong khi `health_guardian` chạy 24 lượt/ngày. Số 0 ấy không có mẫu số (§15.2).
+#
+# Gốc: `xa_ngan_sach_d1()` là hàm DUY NHẤT ghi sổ, và nó được gọi từ ĐÚNG MỘT chỗ —
+# `run_render.py`, dây chuyền thế hệ 1 mà cron đã tắt. Nên mọi luồng nền còn sống
+# (guardian 24 · publish 12 · publish_social 12 · thumb_requests 12 · stats 4 · cleanup 2)
+# đều tiêu Firestore mà KHÔNG cái nào lên đồng hồ.
+#
+# Hậu quả kép, và cái thứ hai nặng hơn:
+#   · không ai biết cái gì tiêu — nên "cạn mà chưa render gì" không truy được;
+#   · `nap_nen_ngan_sach` đọc sổ ra 0 -> `phan_tram_da_dung()` trả 0% -> cái PHANH không
+#     bao giờ bóp. Đồng hồ xăng chỉ 0 thì tài xế đạp ga, đúng lúc bình đã cạn.
+#
+# Đây là §15.12 lật ngược: không phải trường ghi mà không ai đọc, mà là sổ ai cũng ĐỌC và
+# chỉ một người ĐÃ NGHỈ còn ghi. Chữa ở nơi biết chắc mọi tiến trình đều đi qua — chính
+# module này — thay vì đi sửa sáu tệp workflow rồi tệp thứ bảy lại quên.
+import atexit as _atexit
+
+
+@_atexit.register
+def _xa_khi_thoat() -> None:
+    if _NGAN_SACH["doc"] or _NGAN_SACH["ghi"]:      # không tiêu gì thì không gọi D1
+        xa_ngan_sach_d1()
+
+
 def _tinh_tien(loai: str, n: int = 1):
     _NGAN_SACH[loai] += max(0, int(n or 0))
     tran = TRAN_DOC_NGAY if loai == "doc" else TRAN_GHI_NGAY

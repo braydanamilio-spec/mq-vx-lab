@@ -52,9 +52,45 @@ def heal_stale_jobs() -> int:
         # TRẦN: vòng này quét job ĐANG hoạt động nên bình thường chỉ vài chục dòng — nhưng
         # "bình thường" không phải bảo vệ (§13.7). Một đợt job kẹt trạng thái là một đợt
         # đọc không trần, và nó xảy ra đúng lúc hệ đang hỏng, tức lúc hạn mức quý nhất.
-        q = (db.collection("render_jobs").where("owner", "==", OWNER)
-               .where("status", "in", list(active)).limit(400))
-        for d in q.stream():
+        # ── LỌC Ở FIRESTORE, ĐỪNG LỌC Ở PYTHON  (7/9/2026) ─────────────────────────────
+        # Anh: *"chưa render đã cạn là sao"*. Vòng này đọc tới 400 tài liệu MỖI GIỜ rồi ném
+        # đi gần hết: nó tìm job TREO, mà hệ lành thì không có cái nào. 400 × 24 = 9.600 lượt
+        # đọc/ngày — 19% trần free — để lấy về một danh sách rỗng. Guardian là luồng chạy dày
+        # nhất (24 lượt/ngày) nên nó là chỗ đắt nhất để đọc thừa.
+        #
+        # Điều kiện "treo" là một phép so trên `updated_at`/`created_at` — thứ Firestore lọc
+        # được. Đẩy phép lọc xuống truy vấn thì lượt đọc bằng đúng SỐ JOB TREO THẬT, tức
+        # thường là 0. Đúng §15.1 ở dạng khác: ở đó là cắt trước lọc, ở đây là lọc ở sai tầng.
+        #
+        # Hai truy vấn vì hai nhánh của điều kiện cũ: job MỚI có nhịp tim (`updated_at`), job
+        # CŨ chưa có trường ấy thì xét `created_at`. Firestore không hỏi được "thiếu trường",
+        # nên nhánh hai vẫn phải quét theo `created_at` — nhưng nó cũng chỉ trả về job THẬT SỰ
+        # quá hạn, không trả về mọi job đang sống.
+        #
+        # Thiếu composite index thì lùi về cách cũ và gọi `bao_dam_index` để lượt sau tự lành
+        # (§17.14: chỗ tự chữa đặt ở chỗ PHÁT HIỆN, trả tiền khi hỏng chứ không khi lành).
+        _co = db.collection("render_jobs").where("owner", "==", OWNER)
+        _hep = []
+        try:
+            _hep = [("updated_at", beat_cut), ("created_at", cutoff)]
+            _ds = []
+            for _tr, _moc in _hep:
+                _ds += list(_co.where("status", "in", list(active))
+                               .where(_tr, "<", _moc).limit(200).stream())
+            _thay = {d.id: d for d in _ds}.values()
+        except Exception as _ei:
+            print(f"   ℹ️ thiếu index cho truy vấn hẹp ({str(_ei)[:60]}) -> quét rộng lượt này")
+            try:
+                # `bao_dam()` KHÔNG nhận tham số — nó tự duyệt bảng `CAN` trong chính
+                # module ấy. Bản đầu của em gọi kèm ba đối số, và `TypeError` rơi vào
+                # `except` ngay dưới nên nó im lặng KHÔNG tạo index nào, mãi mãi. Đọc API
+                # trước khi gọi (§13.15) — hai index cần đã khai thẳng vào `CAN`.
+                import bao_dam_index as _BDI
+                _BDI.bao_dam()
+            except Exception as _e2:
+                print(f"   ℹ️ không tạo được index: {str(_e2)[:60]}")
+            _thay = list(_co.where("status", "in", list(active)).limit(400).stream())
+        for d in _thay:
             job = d.to_dict() or {}
             beat = job.get("updated_at")
             dead = (beat < beat_cut) if beat else ((job.get("created_at") or "9999") < cutoff)
