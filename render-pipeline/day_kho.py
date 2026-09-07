@@ -161,7 +161,13 @@ def main() -> int:
     # bao giờ được nhặt — bước đẩy quét, không thấy gì, in 0 rồi thoát 0. Cùng cái bẫy mà dòng
     # chú thích ngay trên đã ghi cho `v9_`.
     ap.add_argument("--mau",
-                    default="v3_*.mp4,v3L_*.mp4,v5_*.mp4,v5L_*.mp4,v9_*.mp4,v11_*.mp4",
+                    # `v10_` = 18 kênh PHIM v10 (bản dài). Nó KHÔNG có ở đây suốt, và luồng
+                    # `render_phim_18.yml` chỉ chạy được nhờ truyền tay `--mau 'v10_*.mp4'` —
+                    # tức bỏ đúng một cờ dòng lệnh là 18 luồng dựng xong rồi mất im lặng.
+                    # Mặc định phải phủ đủ MỌI tiền tố đang sản xuất; `--mau` để THU HẸP, không
+                    # phải để bù cho một danh sách thiếu (7/9/2026).
+                    default="v3_*.mp4,v3L_*.mp4,v5_*.mp4,v5L_*.mp4,"
+                            "v9_*.mp4,v10_*.mp4,v11_*.mp4",
                     help="mẫu tên video cần đẩy, cách nhau bằng dấu phẩy")
     ap.add_argument("--that", action="store_true", help="đẩy thật (mặc định chỉ in ra để xem)")
     a = ap.parse_args()

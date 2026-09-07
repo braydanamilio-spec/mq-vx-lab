@@ -139,8 +139,16 @@ jobs:
                "camera at standing eye level, floor clearly visible across the lower third, "
                "open space in the centre of the frame, muted palette, textless image.")
           tam = tempfile.mktemp(suffix=".json")
+          # ── ĐO CHO CÔNG BẰNG  (sửa 7/9/2026 sau khi đọc lượt chạy thật) ──────────────
+          # Bản đầu bắn 5 lệnh LIỀN NHAU và lấy khoá từ ĐẦU hồ — đúng hai lỗi đã mắc ở máy anh:
+          #   · liền nhau  -> tự chạm trần THEO PHÚT rồi đọc nó thành "Gemini không sống ở đây"
+          #   · khoá đầu hồ -> chính khoá mà `nen_kho`/`nen_tag` vừa tiêu ở hai bước trên
+          # Nên kết quả 429 của lượt 17:29 KHÔNG phán quyết được gì (§13.15: kiểm bài kiểm
+          # của mình trước). Nay lấy khoá từ CUỐI hồ và giãn 20 giây mỗi lệnh.
+          import time
           for n, m in enumerate(A.MODEL_GEM):
-              raw, e = A._gemini(m, P, gs[(n * 7) % len(gs)], "16:9", tam)
+              if n: time.sleep(20)
+              raw, e = A._gemini(m, P, gs[-1 - n * 7], "16:9", tam)
               if raw:
                   print(f"::notice::GEMINI SỐNG ở vùng runner — {m} vẽ được {len(raw)//1024} KB")
                   break
