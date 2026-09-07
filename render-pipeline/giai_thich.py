@@ -3048,6 +3048,24 @@ MOC_LON = [
 ]
 
 
+# ── QUY ĐỔI TÍNH ĐƯỢC, KHÔNG CẦN HẰNG SỐ RIÊNG CHO TỪNG ĐƠN VỊ  (7/9/2026) ────────────────
+# Đọc tay lời thoại `howmuch` như một người xem Mỹ thì bắt được: mô hình BỊA hai con số
+# ("one hundred ninety miles", "circle the earth forty times") và cả hai đều SAI. Nó bịa
+# không phải vì thích bịa — kịch bản cấp ĐÚNG HAI số cho CHÍN nhịp, nên nó không còn gì
+# thật để nói và lấp khoảng trống bằng đồ tự nghĩ.
+#
+# Chữa bằng cách cấp THÊM SỰ THẬT TÍNH ĐƯỢC, không phải bằng cách dặn nó viết hay hơn.
+#
+# Bảng có 41 đơn vị (hạt · viên · giọt · bước · đô la · sao · nguyên tử…), nên một quy đổi
+# riêng cho từng đơn vị là việc không bao giờ xong. Phép quy đổi dùng được cho MỌI đơn vị mà
+# không cần một hằng số nào: **thời gian đếm** — đếm mỗi giây một cái thì N cái mất N giây.
+# Nó vừa đúng với mọi thứ đếm được, vừa đúng là phép so kinh điển của ngách này (một triệu
+# giây là 12 ngày; một tỉ giây là 32 năm — chỗ trực giác con người gãy).
+def _dem_lau(v: float) -> tuple:
+    """(số, đơn vị) để đếm hết `v` thứ, mỗi giây một thứ. Dùng chính `_lau` đã có."""
+    return _lau(float(v) / 3600.0)          # `_lau` nhận GIỜ
+
+
 def sinh_howmuch(i):
     nho, vn, lon, vl, don, bt = _lay(MOC_LON, i)
     # ── MỘT DÒNG BẢNG PHẢI CHẢY VÀO CẢ TẬP, KHÔNG CHỈ VÀO TIÊU ĐỀ  (6/9/2026) ────────────
@@ -3135,6 +3153,25 @@ def sinh_howmuch(i):
               "a plain pale backdrop, nothing else",
               "a clean floor strip at the very bottom",
               "dramatic light from the upper left, restrained muted palette")),
+        ]
+    # Hai nhịp QUY ĐỔI, chỉ cho đơn vị KHÔNG phải thời gian (đơn vị thời gian đã được `_lau`
+    # quy đổi ngay ở `s1`/`s2` phía trên — quy đổi hai lần là nói cùng một điều hai lần).
+    # Đây là chỗ trực giác con người gãy, và là lý do cả ngách này tồn tại: hai từ nghe gần
+    # nhau, mà một cái là mười hai NGÀY còn một cái là ba mươi hai NĂM.
+    if not gio:
+        _d1, _u1 = _dem_lau(vn)
+        _d2, _u2 = _dem_lau(vl)
+        nhip += [
+    _n("so_lieu", f"Count them one a second.", so=_d1, don=_u1, bt="tien", dinh=True,
+       chu=f"to count {nhan_n} {don}",
+       ve=_ve("a simplified figure counting small items into a shallow tray",
+              "steady, unhurried, one at a time", "patient",
+              "a plain pale wall", "a clean floor strip", "restrained muted palette")),
+    _n("so_lieu", f"Now the same, one a second.", so=_d2, don=_u2, bt="tien", dinh=True,
+       chu=f"to count {nhan_l} {don}",
+       ve=_ve("the same figure, now grey-haired, still counting into the same tray",
+              "still steady, a lifetime later", "worn but unchanged in rhythm",
+              "the same plain wall", "the same floor strip", "restrained muted palette")),
         ]
     nhip += [
     _n("chart", "Same scale. Look again.", don=don,
