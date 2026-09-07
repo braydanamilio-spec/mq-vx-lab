@@ -103,7 +103,9 @@ def sau(mp4: str, so_mau: int = 6) -> list:
         dai = float(r.stdout.strip())
     except Exception:
         return ["không đọc được thời lượng"]
-    tmp = os.environ.get("TMPDIR", "/tmp")
+    # `environ.get(K, "mđ")` hai tham số: biến RỖNG phá mặc định (§15.19 đã trả giá, và cổng
+    # `selftest` bắt được ngay khi em viết lại nó lần này).
+    tmp = os.environ.get("TMPDIR") or "/tmp"
     loi = []
     for k in range(so_mau):
         t = dai * (k + 0.5) / so_mau
