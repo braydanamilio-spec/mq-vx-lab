@@ -4325,7 +4325,7 @@ def sinh_dayinlife(i):
 # Đưa ra ngoài không đổi một hành vi nào; nó chỉ làm dữ liệu NHÌN THẤY ĐƯỢC từ bên ngoài,
 # đúng điều kiện để nới. Cùng bài học §15.12: một trường chỉ được ghi mà không ai đọc
 # được thì coi như chưa tồn tại.
-DI_DAU = [("the thing you put in recycling", "hop",
+DI_DAU = [("your recycling", "hop",
        _ve("a plain blue recycling bin with its lid open",
            "standing at a suburban curb waiting for collection", "",
            "a quiet residential street, simplified houses receding, parked car far off",
