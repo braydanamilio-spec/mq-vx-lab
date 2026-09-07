@@ -584,6 +584,18 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
                 _bo2.add(_k - 1)
         if _bo2:
             ra = [x for _i, x in enumerate(ra) if _i not in _bo2]
+        # ── TẬP PHẢI MỞ BẰNG LƯỢT HỎI  (7/9/2026) ──────────────────────────────────────
+        # Luật 3 nói vai "a" ĐẶT CÂU HỎI và mở màn; đo 18 kênh thì `howlong` mở bằng lượt
+        # của chuyên gia. Một tập bắt đầu bằng câu trả lời thì không có câu hỏi nào để trả
+        # lời, và người xem mất đúng ba giây đầu — chỗ quyết định lướt hay ở lại (§13.16).
+        #
+        # Không LẬT vai lượt ấy: lật thì hoặc đụng lượt kế, hoặc biến chuyên gia thành người
+        # hỏi. Bỏ hẳn nó khi nó KHÔNG mang số bắt buộc là cách rẻ nhất và không mất dữ kiện
+        # nào — lượt sau vốn đã là lượt hỏi.
+        while (len(ra) > 2 and ra[0].get("ai") == "b"
+               and not any(c.isdigit() for c in ra[0].get("chu", ""))
+               and ra[1].get("ai") == "a"):
+            ra = ra[1:]
         # ── HAI LƯỢT SỐ LIỀN NHAU: CHÈN MỘT CÂU HỎI, ĐỪNG ĐỔI VAI  (7/9/2026) ──────────
         # `howhot` tập 4 ra BỐN lượt B liên tiếp, cả bốn đều mang số — không lượt nào đổi
         # vai được (số phải do chuyên gia nói) và không lượt nào bỏ được (bỏ là mất một con
