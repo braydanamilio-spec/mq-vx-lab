@@ -281,6 +281,17 @@ def cau_la_gi(van: str) -> str:
     c = re.sub(r",\s*(is|was|are|were)\b", r" \1", c)   # "Company, is" -> "Company is"
     c = " ".join(c.split()).replace(" ,", ",")
     c = c.split(". ")[0].rstrip(".") + "."
+    # ── DÀI QUÁ THÌ CẮT, ĐỪNG BỎ  (7/9/2026) ──────────────────────────────────────────
+    # Bản đầu trả rỗng khi câu đầu > 190 ký tự. Đo: `Blockbuster` và `Theranos` rơi vào đó,
+    # nên tập của chúng KHÔNG CÓ nhịp "đó là gì" — đúng cái lỗi anh nói *"xem ko hiểu"* —
+    # và hình mẫu cũng suy sai vì phải lùi về quét cả bài.
+    # Câu định nghĩa của Wikipedia luôn có mệnh đề chính ở ĐẦU; cắt ở dấu phẩy sau chỗ đủ
+    # dài thì giữ được định nghĩa mà bỏ phần đuôi liệt kê.
+    if len(c) >= 190:
+        for k in range(170, 59, -1):
+            if k < len(c) and c[k] in ",;":
+                c = c[:k].rstrip(",; ") + "."
+                break
     return c if 24 < len(c) < 190 else ""
 
 
@@ -308,3 +319,65 @@ def de_hieu(c: str) -> bool:
     if len(ten) >= 4:
         return False
     return True
+
+
+# ── HÌNH MẪU CỦA CHỦ THỂ — SUY MỘT LẦN CHO CẢ TẬP  (anh soi khung, 7/9/2026) ───────────────
+# Anh: *"hình ảnh chưa vẽ ra được ảnh liên quan tới nội dung khi nói"*. Khung dựng ra là quầy
+# thủ tục SÂN BAY trong khi lời nói về Kodak và phim ảnh.
+#
+# Gốc: bộ chọn đọc DANH TỪ TRONG TỪNG CÂU. Câu "Kodak began as an American public company
+# focused on film photography" không khớp danh từ nào trong bảng đạo cụ (bảng ấy chỉ có 7 mục
+# của ngách hài cũ), nên không vẽ gì và nền chọn bừa.
+#
+# Chữa: suy hình mẫu MỘT LẦN từ CHỦ THỂ, rồi mọi nhịp dùng chung. Cả tập nói về Kodak thì mọi
+# nhịp thuộc hình mẫu "máy ảnh" — kể cả câu không nhắc chữ camera.
+#
+# ── SỐ ĐO LÀM NỀN CHO THIẾT KẾ NÀY ─────────────────────────────────────────────────────────
+# 49 chủ thể mẫu gom về 10 hình mẫu, và hình mẫu KHÔNG tăng theo số chủ thể: thêm 1.000 chủ
+# thể vẫn rơi vào ~10–30 hình mẫu. Nên vẽ 30 đạo cụ là việc HỮU HẠN làm một lần, phủ được
+# không gian chủ thể vô hạn. Đó là lý do nguyên tắc anh nêu — *cái nào vẽ được thì phải vẽ* —
+# là hướng đúng về mặt kinh tế, không chỉ về mặt thẩm mỹ.
+HINH_MAU = [
+    ("may_anh",   r"\b(camera|photograph|photographic|film|imaging|lens|darkroom)\b"),
+    ("bang_video", r"\b(videocassette|videotape|VHS|cassette|tape format|camcorder)\b"),
+    ("may_bay",   r"\b(airliner|aircraft|airplane|aeroplane|jet|airship|aviation|flight)\b"),
+    ("ten_lua",   r"\b(spacecraft|space shuttle|rocket|launch vehicle|orbiter|satellite)\b"),
+    ("dien_thoai", r"\b(mobile phone|smartphone|cellular|handset|telephone|pager)\b"),
+    ("xe",        r"\b(personal transporter|self-balancing|scooter|two-wheel)\b"),
+    ("cua_hang",  r"\b(retailer|retail|store chain|rental (?:shop|chain|store)|"
+                  r"video rental|supermarket|franchise)\b"),
+    ("ong_nghiem", r"\b(health technology|blood test|biotechnology|pharmaceutical|"
+                   r"medical device|diagnostics|clinical)\b"),
+    ("may_tinh",  r"\b(computer|microcomputer|console|operating system|software|browser|"
+                  r"video game|website|social network)\b"),
+    ("cua_hang",  r"\b(retailer|retail|store chain|shop|supermarket|rental chain|franchise)\b"),
+    ("xe",        r"\b(automobile|car manufacturer|motor vehicle|scooter|motorcycle|truck)\b"),
+    ("lo_phan_ung", r"\b(nuclear|reactor|power plant|power station|energy company)\b"),
+    ("ong_nghiem", r"\b(biotechnology|blood test|pharmaceutical|drug|medical device|clinic|"
+                   r"laboratory|vaccine)\b"),
+    ("tau_thuy",  r"\b(ocean liner|ship|vessel|ferry|submarine|boat)\b"),
+    ("toa_nha",   r"\b(skyscraper|building|tower|bridge|stadium|hotel)\b"),
+    ("dong_xu",   r"\b(bank|currency|financial|investment|insurance|exchange)\b"),
+    ("sach",      r"\b(newspaper|magazine|publisher|encyclopedia|bookstore|periodical)\b"),
+    ("nguoi",     r"\b(politician|scientist|inventor|founder|writer|actor|musician|"
+                  r"physicist|engineer|entrepreneur)\b"),
+]
+
+
+def hinh_mau(ho: dict) -> str:
+    """Một hình mẫu cho CẢ TẬP. "" khi không nhận ra — và không đoán bừa.
+
+    Đọc CÂU ĐẦU BÀI trước: Wikipedia luôn mở bằng "X là một <loại>", nên loại nằm ngay đó.
+    Danh mục chỉ là đường lùi, vì phần lớn danh mục là rác bảo trì ("All articles with
+    unsourced statements", "CS1 maint") — đo thật trên 5 chủ thể, 4/6 danh mục đầu là rác.
+    """
+    van = ho.get("van") or ""
+    dau = cau_la_gi(van) or van[:300]
+    for ten, rx in HINH_MAU:
+        if re.search(rx, dau, re.I):
+            return ten
+    # đường lùi: quét rộng hơn trong 1.500 ký tự đầu (phần mô tả, trước khi vào lịch sử)
+    for ten, rx in HINH_MAU:
+        if re.search(rx, van[:1500], re.I):
+            return ten
+    return ""
