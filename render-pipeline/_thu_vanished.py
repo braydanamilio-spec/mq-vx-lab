@@ -29,4 +29,5 @@ G.BO_SINH[KENH] = lambda i, _r=_r: _r
 print(f"   ▶ {_r[0]}")
 
 import pilot_hai as P                                   # noqa: E402  (sau khi đã đăng ký)
+P.MOT_GIONG = True          # MỘT chuyên gia nói liên tục, hình đổi theo lời
 raise SystemExit(0 if P.mot_tap(KENH, 4, False) else 1)

@@ -120,6 +120,11 @@ RULES
 3. Speaker "a" ASKS: curious, sceptical, or complaining, and never supplies a figure of
    their own. Speaker "b" is the domain professional named in the cast — the surveyor, the
    accountant, the attorney, the ranger — and is the ONLY one who answers with figures.
+0a. A line marked [KEEP] says the thing everyone believes is wrong. Speaker "b" — the
+   expert — must be the one who says it, and the VERY NEXT turn must say what actually
+   happened instead. "People think X, but that's wrong" followed by anything other than
+   the real cause leaves the viewer with a hole where the answer should be, and that is
+   worse than never raising it.
 0. A narration line marked [KEEP] carries the whole point of the episode — usually the
    thing everyone believes that turns out to be wrong. Its turn must still say THAT claim,
    with its own nouns, not a summary of it. Compressing "the common belief that Kodak
@@ -561,12 +566,19 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
          f"NARRATION ({len(loi)} lines):\n" + "\n".join(dong))
     thieu: list = []
     for vong in range(3):
-        t = C._goi(LENH_THOAI, u if vong == 0 else u + (
+        t = C._goi(LENH_MOT_GIONG if MOT_GIONG else LENH_THOAI,
+                   u if vong == 0 else u + (
             "\n\nYour previous answer DROPPED these figures: " + ", ".join(thieu) +
             ". Each one is on a card the viewer will see. Rewrite so every one of them is "
             "spoken out loud, digits exactly as written above, in the turn for its own line. "
             "A viewer listening without watching must hear each figure."), keys)
         ds = C._tach_json(t) or []
+        # Mô hình chép cả SỐ THỨ TỰ của câu dẫn vào lời ("0. The real cause…"). Nó đang làm
+        # đúng thứ đề bài đánh số, và người xem thì nghe thấy "không chấm". Dọn ở đây, chỗ
+        # duy nhất biết chuỗi vừa về từ mô hình.
+        for _x in ds:
+            if isinstance(_x, dict):
+                _x["chu"] = re.sub(r"^\s*\d{1,2}\s*[.)]\s*", "", str(_x.get("chu", "")))
         def _chi_so(x, mac_dinh):
             """Chỉ số câu dẫn mà lượt này diễn. Sai kiểu / ngoài khoảng -> quay về ước lượng."""
             try:
@@ -635,99 +647,116 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         # xác nhận — vai không đổi. Đo `realcost`: gần như mọi lượt đều mang số nên đều bị
         # khoá vào B, và bộ vá luân phiên bó tay hoàn toàn (9 cặp dính trong bản giao đi).
         # Nới đúng một chỗ này mở lại chỗ xoay mà không đụng luật "số liệu do chuyên gia đưa".
-        _so_cua = lambda x: (any(c.isdigit() for c in x.get("chu", ""))
-                             and not str(x.get("chu", "")).strip().endswith("?"))
-        _bo2 = set()
-        for _k in range(1, len(ra)):
-            if _k - 1 in _bo2 or ra[_k].get("ai") != ra[_k - 1].get("ai"):
-                continue
-            _doi = "b" if ra[_k].get("ai") == "a" else "a"
-            if not _so_cua(ra[_k]) and (_k + 1 >= len(ra) or ra[_k + 1].get("ai") != _doi):
-                ra[_k]["ai"] = _doi
-            elif (_k - 1 > 0 and not _so_cua(ra[_k - 1])
-                  and ra[_k - 2].get("ai") != _doi):
-                # `_k - 1 > 0`: KHÔNG bao giờ lật lượt mở đầu. Luật 3 nói người HỎI mở màn,
-                # và một tập mở bằng lượt của chuyên gia thì không còn ai để hỏi — dựng thật
-                # ra "Tobias wonders why we pay extra?", tức chuyên gia tự thuật về người
-                # kia. Bản vá luân phiên không được phép đổi thứ nó không sinh ra để đổi.
-                ra[_k - 1]["ai"] = _doi
-            elif not _so_cua(ra[_k]) and _k != len(ra) - 1:
-                # Đổi vai không an toàn ở cả hai phía (đổi xong lại dính vào lượt kế). Lúc
-                # này BỎ hẳn lượt không mang số là đúng: nó vốn là lượt bị trần cắt, và giữ
-                # nó chỉ để nghe một người nói hai lần liên tiếp thì không đáng.
-                _bo2.add(_k)
-            elif not _so_cua(ra[_k - 1]) and _k - 1 != 0:
-                _bo2.add(_k - 1)
-        if _bo2:
-            ra = [x for _i, x in enumerate(ra) if _i not in _bo2]
-        # ── TẬP PHẢI MỞ BẰNG LƯỢT HỎI  (7/9/2026) ──────────────────────────────────────
-        # Luật 3 nói vai "a" ĐẶT CÂU HỎI và mở màn; đo 18 kênh thì `howlong` mở bằng lượt
-        # của chuyên gia. Một tập bắt đầu bằng câu trả lời thì không có câu hỏi nào để trả
-        # lời, và người xem mất đúng ba giây đầu — chỗ quyết định lướt hay ở lại (§13.16).
-        #
-        # Không LẬT vai lượt ấy: lật thì hoặc đụng lượt kế, hoặc biến chuyên gia thành người
-        # hỏi. Bỏ hẳn nó khi nó KHÔNG mang số bắt buộc là cách rẻ nhất và không mất dữ kiện
-        # nào — lượt sau vốn đã là lượt hỏi.
-        while (len(ra) > 2 and ra[0].get("ai") == "b"
-               and not any(c.isdigit() for c in ra[0].get("chu", ""))
-               and ra[1].get("ai") == "a"):
-            ra = ra[1:]
-        _NOI = ("And the next one?", "What about the other?", "How does that compare?",
-                "So what does that mean?", "And after that?", "Which one is bigger?",
-                "Where does that leave us?", "Then what?", "And the rest?",
-                "How much of a gap is that?")
-        # Lệch pha lấy từ TÊN VAI, không phải mã kênh: `doi_thoai` không nhận mã kênh, và
-        # tên vai còn tốt hơn — nó đổi theo cả kênh LẪN tập (cặp vai xoay mỗi tập), nên hai
-        # tập của cùng một kênh cũng không mở cùng một câu nối. Băm viết tường minh, không
-        # dùng `hash()` — `PYTHONHASHSEED` ngẫu nhiên thì máy anh và runner ra hai lịch khác
-        # nhau (§13.13, đã trả giá ở bộ Kling).
-        _hat = "".join(str(v.get("vai") or "") for v in vai)
-        _lech = sum(ord(c) * (k + 1) for k, c in enumerate(_hat)) % len(_NOI)
+        # ── MỘT GIỌNG THÌ TẮT HẲN BỘ LUÂN PHIÊN  (7/9/2026) ────────────────────────────
+        # Bộ vá luân phiên sinh ra để chữa "hai lượt liền cùng người". Ở chế độ một giọng thì
+        # MỌI cặp đều cùng người, nên nó nhét một câu nối vào GIỮA TỪNG CÂU — dựng thật ra 14
+        # lượt mà bảy lượt là "What about the other?". Một cơ chế đúng ở định dạng này là một
+        # cỗ máy phá ở định dạng kia (§12.5).
+        if not MOT_GIONG:
+            _so_cua = lambda x: (any(c.isdigit() for c in x.get("chu", ""))
+                                 and not str(x.get("chu", "")).strip().endswith("?"))
+            _bo2 = set()
+            for _k in range(1, len(ra)):
+                if _k - 1 in _bo2 or ra[_k].get("ai") != ra[_k - 1].get("ai"):
+                    continue
+                _doi = "b" if ra[_k].get("ai") == "a" else "a"
+                if not _so_cua(ra[_k]) and (_k + 1 >= len(ra) or ra[_k + 1].get("ai") != _doi):
+                    ra[_k]["ai"] = _doi
+                elif (_k - 1 > 0 and not _so_cua(ra[_k - 1])
+                      and ra[_k - 2].get("ai") != _doi):
+                    # `_k - 1 > 0`: KHÔNG bao giờ lật lượt mở đầu. Luật 3 nói người HỎI mở màn,
+                    # và một tập mở bằng lượt của chuyên gia thì không còn ai để hỏi — dựng thật
+                    # ra "Tobias wonders why we pay extra?", tức chuyên gia tự thuật về người
+                    # kia. Bản vá luân phiên không được phép đổi thứ nó không sinh ra để đổi.
+                    ra[_k - 1]["ai"] = _doi
+                elif not _so_cua(ra[_k]) and _k != len(ra) - 1:
+                    # Đổi vai không an toàn ở cả hai phía (đổi xong lại dính vào lượt kế). Lúc
+                    # này BỎ hẳn lượt không mang số là đúng: nó vốn là lượt bị trần cắt, và giữ
+                    # nó chỉ để nghe một người nói hai lần liên tiếp thì không đáng.
+                    _bo2.add(_k)
+                elif not _so_cua(ra[_k - 1]) and _k - 1 != 0:
+                    _bo2.add(_k - 1)
+            if _bo2:
+                ra = [x for _i, x in enumerate(ra) if _i not in _bo2]
+            # ── TẬP PHẢI MỞ BẰNG LƯỢT HỎI  (7/9/2026) ──────────────────────────────────────
+            # Luật 3 nói vai "a" ĐẶT CÂU HỎI và mở màn; đo 18 kênh thì `howlong` mở bằng lượt
+            # của chuyên gia. Một tập bắt đầu bằng câu trả lời thì không có câu hỏi nào để trả
+            # lời, và người xem mất đúng ba giây đầu — chỗ quyết định lướt hay ở lại (§13.16).
+            #
+            # Không LẬT vai lượt ấy: lật thì hoặc đụng lượt kế, hoặc biến chuyên gia thành người
+            # hỏi. Bỏ hẳn nó khi nó KHÔNG mang số bắt buộc là cách rẻ nhất và không mất dữ kiện
+            # nào — lượt sau vốn đã là lượt hỏi.
+            while (len(ra) > 2 and ra[0].get("ai") == "b"
+                   and not any(c.isdigit() for c in ra[0].get("chu", ""))
+                   and ra[1].get("ai") == "a"):
+                ra = ra[1:]
+            _NOI = ("And the next one?", "What about the other?", "How does that compare?",
+                    "So what does that mean?", "And after that?", "Which one is bigger?",
+                    "Where does that leave us?", "Then what?", "And the rest?",
+                    "How much of a gap is that?")
+            # Lệch pha lấy từ TÊN VAI, không phải mã kênh: `doi_thoai` không nhận mã kênh, và
+            # tên vai còn tốt hơn — nó đổi theo cả kênh LẪN tập (cặp vai xoay mỗi tập), nên hai
+            # tập của cùng một kênh cũng không mở cùng một câu nối. Băm viết tường minh, không
+            # dùng `hash()` — `PYTHONHASHSEED` ngẫu nhiên thì máy anh và runner ra hai lịch khác
+            # nhau (§13.13, đã trả giá ở bộ Kling).
+            _hat = "".join(str(v.get("vai") or "") for v in vai)
+            _lech = sum(ord(c) * (k + 1) for k, c in enumerate(_hat)) % len(_NOI)
 
-        # ── LƯỢT ĐẦU MANG SỐ THÌ KHÔNG BỎ ĐƯỢC — CHÈN CÂU HỎI VÀO TRƯỚC  (7/9/2026) ────
-        # Vòng trên chỉ bỏ được lượt mở đầu KHÔNG mang số. Dựng thật kênh "vì sao": lượt
-        # đầu là *"2013 was the year Kodak's decline became clear"* — mang số nên nó lọt,
-        # và tập mở bằng một câu TRẢ LỜI khi chưa ai hỏi gì.
-        # Bỏ nó là mất một con số bắt buộc; nên chèn một câu hỏi vào TRƯỚC nó. Câu hỏi
-        # không mang dữ kiện nào nên máy viết được mà không vi phạm luật "AI không cấp số".
-        if ra and ra[0].get("ai") == "b":
-            ra.insert(0, {"i": int(ra[0].get("i", 0)), "ai": "a", "cx": "trung_tinh",
-                          "chu": _NOI[_lech % len(_NOI)]})
-        # ── HAI LƯỢT SỐ LIỀN NHAU: CHÈN MỘT CÂU HỎI, ĐỪNG ĐỔI VAI  (7/9/2026) ──────────
-        # `howhot` tập 4 ra BỐN lượt B liên tiếp, cả bốn đều mang số — không lượt nào đổi
-        # vai được (số phải do chuyên gia nói) và không lượt nào bỏ được (bỏ là mất một con
-        # số bắt buộc). Hai nhánh trên bó tay đúng ở ca này.
-        #
-        # Chỗ thiếu là một câu HỎI, và câu hỏi thì không mang dữ kiện nào nên máy viết được
-        # mà không vi phạm "AI/tay không bao giờ cấp một con số". Rút từ hồ và lệch pha theo
-        # kênh, đúng cách `_loi` đã giải bài lặp câu nối (§15.17): cùng hồ, mỗi kênh bắt đầu
-        # ở một chỗ, nên hai kênh dựng cùng vị trí không đọc cùng câu.
-        _ket = []
-        for _k, _x in enumerate(ra):
-            if (_ket and _x.get("ai") == _ket[-1].get("ai") == "b"
-                    and _so_cua(_x) and _so_cua(_ket[-1])
-                    # ── KHÔNG ĐẶT TRẦN CHO CHÍNH BẢN SỬA  (7/9/2026) ─────────────────────
-                    # Bản trước chặn ở `_tran_luot + 2`, và loạt dựng 18 kênh cho thấy trần
-                    # ấy chặn đúng thứ cần: `howloud` có BẢY cặp dính mà chỉ nhét được hai
-                    # câu nối, giao đi bảy chỗ một người nói hai lần liên tiếp.
-                    #
-                    # Câu nối chỉ được chèn khi CÓ một cặp dính thật — nó không bao giờ nổ
-                    # bừa. Nên đặt trần lên nó là đặt trần lên CÁI CHỮA, không phải lên cái
-                    # phí. Giá phải trả là vài giây mỗi câu nối; giá của việc không chữa là
-                    # đúng lỗi anh chê từ đầu (*"nhầm vai"*). Đổi đúng chiều.
-                    and len(_ket) < 40):
-                _ket.append({"i": _x.get("i", 0), "ai": "a",
-                             "chu": _NOI[(_lech + len(_ket)) % len(_NOI)], "cx": "trung_tinh"})
-            _ket.append(_x)
-        ra = _ket
-        # ── ĐO GIỮ CHÂN NGAY TRÊN LỜI THOẠI ĐÃ DỰNG  (7/9/2026) ────────────────────────
-        # Anh: *"đã giữ chân người coi chưa"*. Hai chỗ hỏng đo được trên 18 tập, và cả hai
-        # chỉ nhìn thấy Ở ĐÂY — `cham_kich_ban` chấm CÂU DẪN, còn thứ người xem nghe là lời
-        # thoại do mô hình viết ở bước này. Em vừa suýt gắn hai trục ấy vào thước sai nguồn
-        # lần thứ ba trong ngày (§15.5); đặt phép đo cạnh thứ nó đo mới đúng chỗ.
-        #
-        # BÁO chứ không CHẶN: một tập ít nói "you" thì nhạt, không hỏng — chặn nó là tiêu
-        # một vòng gọi AI cho thứ luật 3c/3d trong lệnh dặn đã lo (§13.23, ba nấc).
+            # ── LƯỢT ĐẦU MANG SỐ THÌ KHÔNG BỎ ĐƯỢC — CHÈN CÂU HỎI VÀO TRƯỚC  (7/9/2026) ────
+            # Vòng trên chỉ bỏ được lượt mở đầu KHÔNG mang số. Dựng thật kênh "vì sao": lượt
+            # đầu là *"2013 was the year Kodak's decline became clear"* — mang số nên nó lọt,
+            # và tập mở bằng một câu TRẢ LỜI khi chưa ai hỏi gì.
+            # Bỏ nó là mất một con số bắt buộc; nên chèn một câu hỏi vào TRƯỚC nó. Câu hỏi
+            # không mang dữ kiện nào nên máy viết được mà không vi phạm luật "AI không cấp số".
+            if ra and ra[0].get("ai") == "b":
+                ra.insert(0, {"i": int(ra[0].get("i", 0)), "ai": "a", "cx": "trung_tinh",
+                              "chu": _NOI[_lech % len(_NOI)]})
+            # ── HAI LƯỢT SỐ LIỀN NHAU: CHÈN MỘT CÂU HỎI, ĐỪNG ĐỔI VAI  (7/9/2026) ──────────
+            # `howhot` tập 4 ra BỐN lượt B liên tiếp, cả bốn đều mang số — không lượt nào đổi
+            # vai được (số phải do chuyên gia nói) và không lượt nào bỏ được (bỏ là mất một con
+            # số bắt buộc). Hai nhánh trên bó tay đúng ở ca này.
+            #
+            # Chỗ thiếu là một câu HỎI, và câu hỏi thì không mang dữ kiện nào nên máy viết được
+            # mà không vi phạm "AI/tay không bao giờ cấp một con số". Rút từ hồ và lệch pha theo
+            # kênh, đúng cách `_loi` đã giải bài lặp câu nối (§15.17): cùng hồ, mỗi kênh bắt đầu
+            # ở một chỗ, nên hai kênh dựng cùng vị trí không đọc cùng câu.
+            _ket = []
+            for _k, _x in enumerate(ra):
+                if (_ket and _x.get("ai") == _ket[-1].get("ai") == "b"
+                        and _so_cua(_x) and _so_cua(_ket[-1])
+                        # ── KHÔNG ĐẶT TRẦN CHO CHÍNH BẢN SỬA  (7/9/2026) ─────────────────────
+                        # Bản trước chặn ở `_tran_luot + 2`, và loạt dựng 18 kênh cho thấy trần
+                        # ấy chặn đúng thứ cần: `howloud` có BẢY cặp dính mà chỉ nhét được hai
+                        # câu nối, giao đi bảy chỗ một người nói hai lần liên tiếp.
+                        #
+                        # Câu nối chỉ được chèn khi CÓ một cặp dính thật — nó không bao giờ nổ
+                        # bừa. Nên đặt trần lên nó là đặt trần lên CÁI CHỮA, không phải lên cái
+                        # phí. Giá phải trả là vài giây mỗi câu nối; giá của việc không chữa là
+                        # đúng lỗi anh chê từ đầu (*"nhầm vai"*). Đổi đúng chiều.
+                        and len(_ket) < 40):
+                    _ket.append({"i": _x.get("i", 0), "ai": "a",
+                                 "chu": _NOI[(_lech + len(_ket)) % len(_NOI)], "cx": "trung_tinh"})
+                _ket.append(_x)
+            ra = _ket
+            # ── ĐO GIỮ CHÂN NGAY TRÊN LỜI THOẠI ĐÃ DỰNG  (7/9/2026) ────────────────────────
+            # Anh: *"đã giữ chân người coi chưa"*. Hai chỗ hỏng đo được trên 18 tập, và cả hai
+            # chỉ nhìn thấy Ở ĐÂY — `cham_kich_ban` chấm CÂU DẪN, còn thứ người xem nghe là lời
+            # thoại do mô hình viết ở bước này. Em vừa suýt gắn hai trục ấy vào thước sai nguồn
+            # lần thứ ba trong ngày (§15.5); đặt phép đo cạnh thứ nó đo mới đúng chỗ.
+            #
+            # BÁO chứ không CHẶN: một tập ít nói "you" thì nhạt, không hỏng — chặn nó là tiêu
+            # một vòng gọi AI cho thứ luật 3c/3d trong lệnh dặn đã lo (§13.23, ba nấc).
+            # ── MỘT CHUYÊN GIA NÓI LIÊN TỤC  (anh đề xuất, 7/9/2026) ───────────────────────
+            # Định dạng hai người đối thoại là nguồn của phần lớn lỗi hôm nay: 16 cặp nói liền
+            # cùng người · câu hỏi đệm vô nghĩa · cú lật bị nén mất vì phải nhét câu 30 chữ vào
+            # lượt 5–10 chữ · và "nêu điều sai mà không nói điều đúng" khi câu trả lời rơi vào
+            # lượt của vai HỎI. Một giọng thì cả bốn biến mất, và hình đổi theo lời gánh phần
+            # kể chuyện — đúng định dạng chuẩn của ngách giải thích.
+            # Engine đã có sẵn cờ `hai`; chưa ai bật nó.
+            if MOT_GIONG:
+                for _x in ra:
+                    _x["ai"] = "b"
+
         _van = " ".join(x.get("chu", "") for x in ra)
         _ban = len(re.findall(r"\byou(?:['\u2019]\w+|r)?\b", _van, re.I))
         _chot = (ra[-1].get("chu") if ra else "") or ""
@@ -792,6 +821,38 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 
 
 # ══ DỰNG MỘT TẬP ═════════════════════════════════════════════════════════════════════════════
+MOT_GIONG = False        # bật: MỘT chuyên gia nói liên tục, hình đổi theo lời
+
+# ── LỆNH DẶN RIÊNG CHO MỘT GIỌNG  (anh đề xuất, 7/9/2026) ─────────────────────────────────
+# Bật `MOT_GIONG` mà vẫn dùng `LENH_THOAI` thì mô hình viết ĐỐI THOẠI: nó hỏi rồi tự đáp, và
+# ra những lượt trống rỗng — "2012" đứng một mình. Đúng thôi: lệnh dặn ấy nói "hai nhân vật".
+# Một giọng là một ĐỊNH DẠNG KHÁC, không phải một tuỳ chọn của định dạng cũ.
+LENH_MOT_GIONG = """You turn a narrated explainer script into what ONE expert says to camera.
+
+There is no second person. No questions asked to anyone. No interviewer. One voice, start to
+finish, explaining something to the viewer.
+
+RULES
+1. EVERY number, unit and dollar figure in the narration must appear word for word. Never
+   round, never change, never drop one. They are computed facts.
+1b. A number never stands alone as a line. "2012" is not a sentence; "By 2012 the printers
+   were gone" is. A figure must arrive attached to what it measures.
+2. One sentence per line, 7 to 14 words. Longer than that and the viewer loses the thread;
+   shorter and the figure has nowhere to land.
+3. A line marked [KEEP] says the thing everyone believes is wrong. Keep that claim with its
+   own nouns, and make the VERY NEXT line say what actually happened instead.
+4. Say "you" or "your" at least twice: tie it to the viewer's own life. The last line is not
+   a number — it is the sentence they repeat to someone tomorrow.
+5. Plain spoken American English. No "as you can see", no "let's dive in", no narrator
+   throat-clearing. Explain like someone who knows it, talking to one person.
+6. Every line MUST carry "i": the number of the narration line it delivers. Keep the same
+   order as the narration; never go backwards.
+
+Return ONLY a JSON array: [{"i":0,"ai":"b","chu":"...","cx":"tu_tin"}]
+"ai" is always "b". "cx" is one of: trung_tinh, tu_tin, nghi_ngo. Never excited, never angry.
+"""
+
+
 def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     """`chuong > 0` -> BẢN DÀI 16:9 (`KichComicWide`), tên `v11L_`.
 
@@ -1247,6 +1308,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         "noiIdx": noi_idx, "hook": (hook_phu or hook or tieu).upper()[:44],
         "anhNen": anh_nen, "sang": KC._sang_cua(anh_nen),
         "nhacVol": KC._am_nhac(KC.NHAC[de]),
+        **({"hai": False} if MOT_GIONG else {}),
     }
     pj = os.path.join(GOC, "out", f"{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)

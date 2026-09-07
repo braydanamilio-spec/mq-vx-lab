@@ -250,3 +250,61 @@ def kiem_menh_de(cau_ra: str, cau_nguon: str, san: float = 0.6) -> tuple[bool, s
     if bool(_PHU_DINH.search(cau_ra)) != bool(_PHU_DINH.search(cau_nguon)):
         return False, "lật chiều phủ định so với nguồn"
     return True, "đạt"
+
+
+# ── NGƯỜI XEM PHẢI BIẾT ĐÓ LÀ GÌ TRƯỚC KHI NGHE CÚ LẬT  (anh soi, 7/9/2026) ────────────────
+# Anh xem tập mẫu và nói *"xem ko hiểu"*. Đọc lại như người chưa biết Kodak thì rõ ngay: tập
+# MỞ BẰNG CÚ LẬT — "ai cũng tưởng Kodak bỏ lỡ máy ảnh số" — mà người xem chưa biết Kodak là
+# ai thì cú lật ấy lật cái gì? Rồi lao thẳng vào "chemical diversification", "inkjet markets".
+#
+# Gốc: em đưa CÂU BÁCH KHOA vào miệng nhân vật. Câu bách khoa viết cho người ĐỌC LẠI ĐƯỢC và
+# ĐÃ ĐỌC ĐOẠN TRÊN. Người xem lướt không có cả hai.
+#
+# Wikipedia luôn cho sẵn câu "X là gì" ở đầu bài — chỉ cần dọn rác ngoặc đơn (phiên âm, tên
+# khác, chữ Hy Lạp) là dùng được.
+_NGOAC = re.compile(r"\s*\([^()]*\)")
+_KEP = re.compile(r"\s*\[[^\[\]]*\]")
+
+
+def cau_la_gi(van: str) -> str:
+    """Một câu nói rõ chủ thể LÀ GÌ, lấy từ câu đầu bài và dọn sạch."""
+    c = (van or "").split("\n")[0]
+    for _ in range(3):
+        c = _NGOAC.sub("", c)
+        c = _KEP.sub("", c)
+    c = " ".join(c.split())
+    # Bỏ mệnh đề đệm của lối viết bách khoa: "referred to simply as X," · "also known as
+    # X," · "stylized as X,". Chúng đúng trong bài tra cứu và làm câu nói nghe lê thê.
+    c = re.sub(r",\s*(?:referred to (?:simply )?as|also known as|stylized as|"
+               r"commonly known as|formerly)\b[^,]*,", ",", c, flags=re.I)
+    c = re.sub(r",\s*,", ",", c)
+    c = re.sub(r",\s*(is|was|are|were)\b", r" \1", c)   # "Company, is" -> "Company is"
+    c = " ".join(c.split()).replace(" ,", ",")
+    c = c.split(". ")[0].rstrip(".") + "."
+    return c if 24 < len(c) < 190 else ""
+
+
+# ── CÂU KHÓ HIỂU THÌ BỎ, DÙ NÓ ĐÚNG ───────────────────────────────────────────────────────
+# "Under CEOs Colby Chandler and Kay Whitmore, Kodak instead attempted to diversify its
+# chemical operations" — đúng sự thật, và người xem lướt không theo kịp: hai cái tên lạ, một
+# thuật ngữ, một mệnh đề phụ. Tai nghe một lần thì không giữ được.
+_KHO = re.compile(r"\b(pursuant|thereof|whereby|notwithstanding|aforementioned|inter alia|"
+                  r"respectively|subsidiary|conglomerate|amortization|divestiture)\b", re.I)
+
+
+def de_hieu(c: str) -> bool:
+    """Câu này nghe MỘT LẦN có hiểu không.
+
+    Ba thước, và mỗi thước là một cách tai người mất dấu: quá nhiều mệnh đề · quá nhiều tên
+    riêng lạ · từ chuyên ngành. Không thước nào chắc chắn, nhưng cả ba cùng nghiêng về phía
+    BỎ — thà mất một câu đúng còn hơn giao một câu không ai theo kịp.
+    """
+    c = c or ""
+    if _KHO.search(c):
+        return False
+    if c.count(",") >= 3:
+        return False
+    ten = re.findall(r"\b[A-Z][a-z]{2,}\b", c[1:])       # bỏ chữ đầu câu
+    if len(ten) >= 4:
+        return False
+    return True

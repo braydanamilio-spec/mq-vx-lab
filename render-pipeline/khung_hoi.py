@@ -205,10 +205,11 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
     mô hình cấp một dữ kiện — nó chỉ được CHỌN (trả về chỉ số), nên cổng "số bịa" ở
     `pilot_hai` luôn xanh ở bộ này.
     """
+    import chu_de as _CD
     sach = []
     for c in (ho_so.get("tat_ca") or ho_so.get("cau") or []):
         r = _rut(c["cau"])
-        if not r or _co_tham_chieu_treo(r):
+        if not r or _co_tham_chieu_treo(r) or not _CD.de_hieu(r):
             continue
         r = _lau_sach(r)
         if r:
@@ -233,11 +234,55 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
         chon = [hua[0]] + con[:4] + [hua[1]]
     cau = [sach[k] for k in chon][:6]
 
+    # ── [KEEP] PHẢI GẮN VÀO CÂU CÚ LẬT, KHÔNG PHẢI CÂU ĐẦU DANH SÁCH  (7/9/2026) ─────────
+    # Bản trước gắn theo VỊ TRÍ (câu mô hình chọn đầu tiên). Dựng thật thì nó rơi vào "in
+    # September 2012, declining sales forced Kodak to announce an exit" — một kết cục, không
+    # phải cú lật. Cú lật là câu PHỦ ĐỊNH ĐIỀU NGƯỜI XEM ĐANG TIN, và nó tự khai ra bằng
+    # chính từ ngữ của nó ("misconception", "despite", "contrary"). Nhận theo NGHĨA, đừng
+    # nhận theo chỗ đứng (§15.8: danh sách từ không đo được khái niệm, nhưng ở đây khái niệm
+    # ấy CÓ dấu hiệu ngôn ngữ riêng — đó là khác biệt).
+    _LAT = _re.compile(r"\b(misconception|despite|contrary|in fact|actually|myth|"
+                       r"widely believed|often assumed|not because)\b", _re.I)
+    _k_lat = next((k for k, x in enumerate(cau) if _LAT.search(x["cau"])), 0)
+    _con = [x for k, x in enumerate(cau) if k != _k_lat]
+
+    # ── NÊU MỘT ĐIỀU SAI MÀ KHÔNG NÓI ĐIỀU ĐÚNG THÌ TỆ HƠN KHÔNG NÊU  (anh soi, 7/9/2026)
+    # Dựng thật: "People think Kodak ignored digital cameras, but that's wrong" — rồi tập
+    # nhảy sang 2012, hỏi về hoá chất, nhảy về 2007. Người xem KHÔNG BAO GIỜ biết cái gì
+    # thật sự giết Kodak. Đó đúng là *"xem ko hiểu"* anh nói.
+    # Ngay sau cú lật phải là NGUYÊN NHÂN THẬT — câu mang chữ chỉ nguyên nhân.
+    _NGUYEN_NHAN = _re.compile(r"\b(failed|failure|instead|because|led to|caused|forced|"
+                               r"abandoned|refused|lacked|without)\b", _re.I)
+    _nn = [x for x in _con if _NGUYEN_NHAN.search(x["cau"])]
+    _khac = [x for x in _con if x not in _nn]
+
+    # ── THỜI GIAN PHẢI ĐI MỘT CHIỀU ─────────────────────────────────────────────────────
+    # Bản trước ra 2012 -> 2007 -> phá sản. Tai người theo được một mạch thời gian, không
+    # theo được ba lần nhảy. Xếp phần bối cảnh theo NĂM tăng dần; câu không có năm giữ
+    # nguyên thứ tự mô hình đã chọn (nó chọn theo mạch, và mạch ấy đáng tin hơn phép sắp).
+    def _nam(x):
+        m = _re.search(r"\b(1[89]\d\d|20\d\d)\b", x["cau"])
+        return int(m.group()) if m else 10 ** 9
+    _khac = sorted(_khac, key=_nam)
+    cau = [cau[_k_lat]] + _nn[:2] + _khac
+
     dau = cau[0]
     hook = tieu.upper()[:52]
     hook_phu = dau["so"] or chu_the.upper()[:18]
 
-    nhip = [
+    # ── NHỊP 0 PHẢI NÓI RÕ ĐÓ LÀ GÌ  (anh: *"xem ko hiểu"*, 7/9/2026) ────────────────────
+    # Bản trước mở thẳng bằng CÚ LẬT ("ai cũng tưởng Kodak bỏ lỡ máy ảnh số"). Người xem
+    # chưa biết Kodak là ai thì cú lật ấy không lật được gì — nó rơi vào khoảng không.
+    # Một cú lật chỉ có lực khi người xem ĐANG GIỮ điều sắp bị lật.
+    _la_gi = _CD.cau_la_gi(ho_so.get("van") or "")
+    nhip = []
+    if _la_gi:
+        nhip.append(
+            _n("canh", _la_gi, du=True,
+               ve=_ve(f"a simplified figure holding one everyday object",
+                      "showing it to the viewer", "matter-of-fact",
+                      "a plain pale wall", "a clean floor strip", "restrained muted palette")))
+    nhip += [
         # `du=True`: nhịp này TỰ MANG nội dung của nó, `_day_du_y` không được chèn câu
         # viết tay của kênh vào (§ đo được: tập về Kodak dính câu về ranh giới đất).
         # `[KEEP]` — nhịp này là CÚ LẬT của tập, khâu nén lời thoại không được bỏ mệnh đề
