@@ -504,7 +504,23 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
     #
     # Giá: pixel gấp 1,78 lần -> render lâu hơn ~1,8 lần. Trần thời gian đang là 24,4 mẻ/ngày
     # trong khi hạn mức chỉ cho 1,6 — thời gian là thứ duy nhất mình đang thừa.
-    scale = float(os.environ.get("PHIM_SCALE") or 1.333)
+    # ── 1,333 KHÔNG PHẢI 4/3 — VÀ REMOTION ĐÒI SỐ NGUYÊN  (8/9/2026) ──────────────────
+    # Lượt 22:59 UTC chết **18/18 luồng**, mỗi luồng sau ~300 giây vẽ ảnh:
+    #     TypeError: The "height" prop passed to `stitchFramesToVideo()` must be an
+    #     integer, but is 1439.6399999999999
+    # `1.333` được gõ ra để biến 1080×1920 thành 1440×2560, nhưng 1080 × 1,333 = 1439,64.
+    # Đúng §13.1: *"1.333" không phải một tỉ lệ — nó là một con số.* Tỉ lệ là 4/3, và viết
+    # nó thành phân số thì Python cho đúng 1440,0 và 2560,0.
+    #
+    # Và kiểm NGAY ĐÂY thay vì để Remotion phát hiện: cả hai bản dựng PHIM v10 hỏng đêm nay
+    # đều hỏng ở một điều kiện RẺ mà bị kiểm MUỘN (lần trước là thư mục chưa tạo). Một phép
+    # thử chia hết tốn 0 giây; để nó rơi vào tay bộ dựng thì tốn 300 giây × 18 luồng.
+    scale = float(os.environ.get("PHIM_SCALE") or 0) or 4 / 3
+    _w0, _h0 = (1080, 1920) if comp.endswith("Doc") else (1920, 1080)
+    if not (float(_w0 * scale).is_integer() and float(_h0 * scale).is_integer()):
+        print(f"   ⚠ scale {scale} cho {_w0}×{_h0} ra cỡ LẺ "
+              f"({_w0 * scale}×{_h0 * scale}) — Remotion chỉ nhận số nguyên, dựng ở 1×")
+        scale = 1.0
     cmd = ["npx", "remotion", "render", "src/index.ts", comp, out,
            f"--props=./{os.path.relpath(pf, ENG)}", "--gl=swiftshader",
            f"--scale={scale}",

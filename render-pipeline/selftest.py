@@ -273,6 +273,34 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_scale_phim_ra_so_nguyen():
+    """`--scale` của PHIM v10 phải cho CỠ NGUYÊN ở cả hai khung.
+
+    Lượt 22:59 UTC ngày 7/9 chết 18/18 luồng, mỗi luồng sau ~300 giây vẽ ảnh:
+    `The "height" prop passed to stitchFramesToVideo() must be an integer, but is
+    1439.6399999999999`. `1.333` được gõ ra để biến 1080×1920 thành 1440×2560, nhưng
+    1080 × 1,333 = 1439,64 — §13.1: một con số gõ tay không phải một tỉ lệ.
+
+    Chốt đọc CHÍNH giá trị mã thật dùng (`ast`, bỏ chú thích — §17.15), rồi thử chia hết cho
+    cả `PhimDoc` lẫn `PhimNgang`."""
+    import ast, io as _io, os, re
+    duong = os.path.join(os.path.dirname(os.path.abspath(__file__)), "phim.py")
+    cay = ast.parse(_io.open(duong, encoding="utf-8").read())
+    gan = [n for n in ast.walk(cay)
+           if isinstance(n, ast.Assign) and any(
+               isinstance(t, ast.Name) and t.id == "scale" for t in n.targets)]
+    assert gan, "không tìm thấy chỗ đặt `scale` trong phim.py"
+    ma = ast.unparse(gan[0])
+    assert "4 / 3" in ma or "4/3" in ma, f"scale không còn là phân số 4/3: {ma}"
+    for w, h in ((1080, 1920), (1920, 1080)):
+        for x in (w * (4 / 3), h * (4 / 3)):
+            assert float(x).is_integer(), f"{w}×{h} × 4/3 ra cỡ lẻ {x}"
+    # và phải có phép kiểm chia hết NGAY TRONG mã, không chỉ ở chốt này
+    than = _io.open(duong, encoding="utf-8").read()
+    than = re.sub(r"(?m)^\s*#.*$", "", than)
+    assert "is_integer()" in than, "phim.py chưa tự kiểm cỡ trước khi gọi Remotion"
+
+
 def t_nhip_wiki_lien_tien_trinh():
     """Nhịp gọi Wikipedia phải ghìm được CẢ HAI tiến trình, không chỉ tiến trình mình.
 
@@ -2816,6 +2844,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("scale PHIM v10 cho cỡ nguyên", t_scale_phim_ra_so_nguyen)
     check("nhịp Wikipedia ghìm được cả hai tiến trình", t_nhip_wiki_lien_tien_trinh)
     check("prompt nền không mang tên riêng", t_prompt_nen_khong_ten_rieng)
     check("lát short không mỏng, không trùng", t_lat_short_khong_mong)
