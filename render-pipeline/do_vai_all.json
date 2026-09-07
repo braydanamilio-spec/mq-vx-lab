@@ -136,15 +136,15 @@
    "mu": "luoi_trai"
   },
   {
-   "ao": "#B9BFC4",
+   "ao": "#D9503F",
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#B9BFC4",
-   "kieuToc": "hoi",
+   "kieuToc": "re_ngoi",
    "kieuAo": "somi"
   },
   {
-   "ao": "#D9503F",
+   "ao": "#E8C24A",
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
@@ -290,7 +290,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
-   "kieuToc": "hoi",
+   "kieuToc": "duoi_ngua",
    "kieuAo": "somi"
   }
  ],
@@ -308,7 +308,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#D9503F",
-   "kieuToc": "hoi",
+   "kieuToc": "xoan",
    "kieuAo": "somi",
    "mu": "len"
   },
@@ -317,7 +317,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
-   "kieuToc": "xoan",
+   "kieuToc": "bob",
    "kieuAo": "polo",
    "rau": "ria"
   },
@@ -350,7 +350,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
-   "kieuToc": "bob",
+   "kieuToc": "bui",
    "kieuAo": "somi"
   }
  ],
@@ -400,7 +400,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#2A2A2A",
-   "kieuToc": "hoi",
+   "kieuToc": "duoi_ngua",
    "kieuAo": "thun"
   }
  ],
@@ -584,7 +584,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#2A2A2A",
-   "kieuToc": "hoi",
+   "kieuToc": "bob",
    "kieuAo": "somi"
   }
  ],
@@ -594,7 +594,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#8A8F94",
-   "kieuToc": "hoi",
+   "kieuToc": "re_ngoi",
    "kieuAo": "polo"
   },
   {
@@ -634,7 +634,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#E0C060",
-   "kieuToc": "re_ngoi",
+   "kieuToc": "roi",
    "kieuAo": "polo"
   },
   {
@@ -652,7 +652,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#2A2A2A",
-   "kieuToc": "hoi",
+   "kieuToc": "ngan",
    "kieuAo": "hoodie"
   },
   {
@@ -760,7 +760,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#8C4A2F",
-   "kieuToc": "hoi",
+   "kieuToc": "duoi_ngua",
    "kieuAo": "thun"
   },
   {
@@ -768,7 +768,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
-   "kieuToc": "duoi_ngua",
+   "kieuToc": "bui",
    "kieuAo": "somi"
   }
  ],
@@ -1021,7 +1021,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#6B4A2F",
-   "kieuToc": "ngan",
+   "kieuToc": "re_ngoi",
    "kieuAo": "somi",
    "kinh": true
   },
@@ -1030,7 +1030,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#2A2A2A",
-   "kieuToc": "re_ngoi",
+   "kieuToc": "roi",
    "kieuAo": "thun"
   },
   {
@@ -1038,7 +1038,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#6B4A2F",
-   "kieuToc": "hoi",
+   "kieuToc": "ngan",
    "kieuAo": "somi"
   },
   {
@@ -1046,7 +1046,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
-   "kieuToc": "roi",
+   "kieuToc": "xoan",
    "kieuAo": "somi",
    "rau": "quai"
   },

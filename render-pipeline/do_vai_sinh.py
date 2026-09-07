@@ -50,8 +50,15 @@ TOC_RO = [("pigtails","duoi_ngua"),("braids","duoi_ngua"),("braid","duoi_ngua"),
           ("curly","xoan"),("wavy","xoan"),("bald","trocs"),("shaved","trocs"),
           ("buzz","ngan"),("crew cut","ngan"),("cropped","ngan"),("bob","bob"),
           ("side-part","re_ngoi"),("side part","re_ngoi"),("parted","re_ngoi"),
-          ("shaggy","roi"),("messy","roi"),("tousled","roi"),("slicked","hoi"),
-          ("neat","hoi"),("long straight","roi")]
+          ("shaggy","roi"),("messy","roi"),("tousled","roi"),
+          # `hoi` LÀ HÓI, không phải "chải gọn"  (7/9/2026)
+          # Engine vẽ `hoi` bằng hai túm tóc hai bên với đỉnh đầu trống, và `DienVienQue`
+          # gộp thẳng `trocs` với `hoi` vào một nhánh — tức cùng một dáng đầu hói. Nên ánh
+          # xạ `"neat" -> hoi` và `"slicked" -> hoi` vẽ hói cho bốn vai được tả là CÓ tóc:
+          # *"neat black hair"*, *"slicked back silver hair"*, *"neat brown hair"*.
+          # Chữ trong bảng đọc thuận tai ("gọn gàng") nên không ai nghi; nghĩa THẬT của nó
+          # nằm ở engine, không ở tên biến (§15.25: chú thích và mã nói hai điều thì ĐO).
+          ("slicked","re_ngoi"), ("neat","ngan"), ("long straight","roi")]
 RAU = [("moustache","ria"),("beard","de"),("sideburns","quai")]
 MU  = [("ball cap","luoi_trai"),("hard hat","luoi_trai"),("helmet","luoi_trai"),
        ("cap","luoi_trai"),("beanie","len"),("cowboy","cao_bo")]
@@ -120,13 +127,28 @@ def mot_kenh(ma, ds):
     # ── RẢI CHỖ CÒN TRỐNG  ────────────────────────────────────────────────────────────────
     # Đi theo thứ tự dàn vai, mỗi lần lấy giá trị CHƯA DÙNG trong kênh này. Tất định: cùng dàn
     # vai luôn ra cùng bộ đồ, nên dựng lại một tập cũ không đổi hình.
+    # ── TÓC HÓI/TRỌC CHỈ ĐƯỢC RẢI KHI CÂU TẢ NÓI THẾ  (7/9/2026) ──────────────────────────
+    # Anh soi khung và bắt được một nhân vật nữ đội tạo hình hói. Chỗ lệch chỉ số đã vá ở
+    # `pilot_hai`, nhưng rà tiếp thì còn NĂM ca nữa nằm ngay trong bảng: `Maya` tả *"long
+    # black hair"*, `Dr Quintero` tả *"hair to the shoulders"* — cả hai bị rải trúng `hoi`.
+    #
+    # Gốc: vòng rải này chỉ lo KHÔNG TRÙNG NHAU, nên nó rút từ cả `TOC_ALL` kể cả `hoi` và
+    # `trocs`. Đa dạng là ràng buộc đúng, nhưng nó không phải ràng buộc DUY NHẤT — một kiểu
+    # tóc mâu thuẫn với câu tả thì đa dạng cỡ nào cũng vẫn sai (§17.2: một giá trị chịu hai
+    # ràng buộc mà công thức chỉ mã hoá một).
+    #
+    # `_ro` ở trên ĐÃ gán `trocs` cho ai được tả là bald/shaved, nên chỗ này chỉ còn những
+    # vai KHÔNG được tả là hói — và với họ thì hai kiểu ấy luôn sai, bất kể giới. Loại chúng
+    # khỏi hồ rải; hồ vẫn còn bảy kiểu, đủ cho dàn vai đông nhất (8 người).
+    _CAM_RAI = {"hoi", "trocs"}
     for truong, moi in (("kieuAo", AO_ALL), ("kieuToc", TOC_ALL)):
         da = {d[truong] for d in tho if d[truong]}
-        con = [x for x in moi if x not in da]
+        _hop = [x for x in moi if not (truong == "kieuToc" and x in _CAM_RAI)]
+        con = [x for x in _hop if x not in da]
         k = 0
         for d in tho:
             if not d[truong]:
-                d[truong] = con[k % len(con)] if con else moi[k % len(moi)]
+                d[truong] = con[k % len(con)] if con else _hop[k % len(_hop)]
                 k += 1
     # ── MÀU PHẢI CÁCH NHAU ĐỦ ĐỂ MẮT THẤY, KHÔNG CHỈ KHÁC CHUỖI  (soi khung 6/9/2026) ────
     # Bản cũ so `d["ao"] in dung` — phép so CHUỖI BẰNG NHAU. Nên `#3A3A3A` và `#2A2A2A` đi lọt:

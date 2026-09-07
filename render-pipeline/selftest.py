@@ -8238,6 +8238,20 @@ def t_trang_phuc_dung_vai():
                     xau.append(f"{ma} tập{idx}: {v['vai']} (nữ) có râu")
                 if k < len(do_ma) and do_ma[k].get("ao") != do.get("ao"):
                     xau.append(f"{ma} tập{idx}: {v['vai']} mặc đồ của vai khác")
+    # ── TÓC KHÔNG ĐƯỢC MÂU THUẪN VỚI CÂU TẢ  (7/9/2026) ────────────────────────────
+    # Sau khi vá chỗ lệch chỉ số, rà tiếp bảng thì còn NĂM vai nữ được tả là tóc dài
+    # (*"long black hair"*, *"hair to the shoulders"*) mà bị vẽ HÓI, cộng bốn vai nam
+    # được tả *"neat black hair"* / *"slicked back silver hair"* cũng vẽ hói.
+    # Hai gốc khác nhau: vòng rải chỗ trống chỉ lo KHÔNG TRÙNG nên rút cả `hoi`/`trocs`;
+    # và bảng ánh xạ dịch `"neat"`/`"slicked"` thành `hoi` — trong khi engine vẽ `hoi`
+    # bằng hai túm tóc hai bên với đỉnh đầu trống, tức HÓI thật.
+    _HOI = _re.compile(r"\b(bald|shaved|thinning|receding|buzz ?cut|crew cut|"
+                       r"close-cropped|cropped)\b", _re.I)
+    for ma in sorted(_GU.VAI):
+        do_ma = bang.get(ma) or []
+        for i, v in enumerate(_GU.dan_vai_khai(ma)[:len(do_ma)]):
+            if do_ma[i].get("kieuToc") in ("hoi", "trocs") and not _HOI.search(v["ta"]):
+                xau.append(f"{ma}/{v['vai']}: vẽ hói mà câu tả nói có tóc")
     assert not xau, "trang phục lệch vai: " + "; ".join(sorted(set(xau))[:3])
 
 
