@@ -79,7 +79,7 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
     u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&generator=images"
          f"&titles={urllib.parse.quote(chu_the)}&gimlimit=40&prop=imageinfo"
          "&iiprop=url|extmetadata&iiextmetadatafilter=License|LicenseShortName|"
-         "UsageTerms|AttributionRequired|ImageDescription")
+         "UsageTerms|AttributionRequired|ImageDescription|Categories|ObjectName")
     try:
         d = _goi(u)
     except Exception:
@@ -103,11 +103,46 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
             continue
         if not _tu_do(em):
             continue
-        ra.append({"ten": ten, "url": url,
+        cat = str((em.get("Categories") or {}).get("value", ""))
+        ten_ob = str((em.get("ObjectName") or {}).get("value", ""))
+        ra.append({"ten": ten, "url": url, "cat": cat, "ob": ten_ob,
                    "giay_phep": str((em.get("LicenseShortName") or {}).get("value", "?"))})
-        if len(ra) >= toi_da:
-            break
-    return ra
+    return _dung_chu_the(ra, chu_the)[:toi_da]
+
+
+def _dung_chu_the(ds: list, chu_the: str) -> list:
+    """Giữ ảnh NÓI VỀ chính chủ thể; bỏ ảnh chỉ đứng cạnh nó trong bài.
+
+    ── VÌ SAO KHÔNG LIỆT KÊ TỪ  (7/9/2026) ───────────────────────────────────────────────
+    `GeorgeEastman2.jpg` lọt qua bộ lọc chân dung vì tên tệp là một TÊN NGƯỜI — không chứa
+    `portrait`, `headshot` hay bất kỳ từ nào trong danh sách. Thêm "GeorgeEastman" vào danh
+    sách thì mai `Akio Morita` (Betamax) lại lọt: danh sách ngoại lệ là danh sách vô hạn
+    (§13.9). Phải tìm LUẬT sinh ra ngoại lệ.
+
+    Đo trên 4 chủ thể thì luật ấy nằm sẵn trong `Categories` của Wikimedia:
+
+        Eastman Kodak HQ 1900   -> `... | Kodak | Featured pictures of New York ...`
+        GeorgeEastman2          -> `Retouched pictures | PD-Bain | George Eastman | ...`
+
+    Ảnh CỦA chủ thể được xếp vào hạng mục mang tên chủ thể; ảnh của một người/vật liên quan
+    thì xếp theo tên NGƯỜI/VẬT ấy. Đó là câu hỏi "hình này nói về ai", đúng thứ cần hỏi.
+
+    Nới một lần sau khi đọc tay các ca bị loại: *"Two women holding a sign … Take a Kodak
+    with you"* là quảng cáo Kodak 1917 THẬT nhưng hạng mục chỉ ghi `Autochromes; Fashion in
+    1917`. Tên tệp thì có chữ Kodak. Nên xét cả TÊN và ObjectName — vẫn loại `GeorgeEastman2`
+    (tên không có "kodak") và `Lockheed L-2000 mockup` khi hỏi về Concorde (một máy bay KHÁC,
+    đúng thứ anh gọi là "râu ông nọ cắm cằm bà kia").
+
+    Lọc sạch trơn thì TRẢ NGUYÊN danh sách: "không ảnh nào đúng chủ thể" và "phép lọc của tôi
+    không với tới" trông giống hệt nhau, và bỏ hết luôn là hướng sai (§15.6).
+    """
+    kho = [k for k in re.split(r"[^a-z0-9]+", chu_the.split(" (")[0].lower())
+           if len(k) > 2 and k not in ("the", "and", "for")]
+    if not kho:
+        return ds
+    giu = [a for a in ds
+           if any(k in (a["cat"] + " " + a["ten"] + " " + a["ob"]).lower() for k in kho)]
+    return giu or ds
 
 
 def tai_ve(anh: dict) -> str:
