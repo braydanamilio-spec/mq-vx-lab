@@ -106,13 +106,47 @@ DA_CHON: dict = {}
 #
 # Danh sách này cố ý HẸP và chỉ nhắm thứ có NGƯỜI CHẾT. Tai nạn không chết người, công ty phá
 # sản, sản phẩm khai tử — vẫn nhận, vì đó đúng là ngách "vì sao nó biến mất".
+# ── CỔNG GIỌNG: BIỂU THỨC ĐỌC LÊN RẤT CHẮC MÀ BẮT ĐƯỢC 1/16  (8/9/2026) ─────────────────
+# Bản đầu viết `\b(massacre|atrocit|terror|casualt|hijack|...)\b`. Nửa danh sách là GỐC TỪ
+# định để khớp mọi hậu tố (`atrocit` -> atrocities), nhưng `\b` đóng ở cuối chặn đúng điều
+# đó: sau `atrocit` là `i`, không phải ranh giới từ. Nửa còn lại chỉ khớp dạng SỐ ÍT.
+#
+# Đo trên 16 chủ thể bạo lực rõ ràng: **1/16 bị chặn**. Lọt cả «September 11 attacks»,
+# «Munich massacres», «Terrorism in Italy» — và lọt đúng chủ thể mà bộ 125 đã dựng thành
+# video: «1973 Rome airport attacks and hijacking» (34 người chết), vì `hijack` không khớp
+# `hijacking`. Anh đã bắt lỗi này một lần rồi với «1971 Iraq poison grain disaster».
+#
+# Cùng họ §15.3, chiều ngược lại: ở đó `\w*` sau gốc NGẮN nuốt nhầm; ở đây `\b` sau gốc
+# DÀI không nuốt gì. Nên gốc dài và riêng cho bạo lực thì mở `\w*`, gốc mơ hồ thì liệt kê
+# đúng dạng thật (§15.3 nguyên văn).
+#
+# VÀ CHI PHÍ HAI PHÍA KHÔNG BẰNG NHAU — đây là chỗ cổng này khác mọi cổng khác trong repo.
+# §13.8 dạy "cổng bắt oan tệ hơn cổng không bắt", đúng khi bắt oan tiêu một vòng gọi AI.
+# Ở đây bắt oan tiêu MỘT CHỦ THỂ trong hồ 3.112 cái mà chỉ cần 17 — gần như bằng 0. Bỏ lọt
+# thì ra một video có người dẫn hoạt hình tươi cười kể chuyện 34 người chết. Nên cổng này
+# CỐ Ý nghiêng về phía chặn, và đó là một quyết định, không phải một sự cẩu thả.
 _KHONG_HOP = re.compile(
-    r"\b(massacre|genocide|atrocit|holocaust|lynching|execution|"
-    r"murder|homicide|manslaughter|assassinat|suicide|"
-    r"poisoning|poison\s+\w+\s+disaster|famine|epidemic|pandemic|plague|"
-    r"terror|bombing|shooting|hijack|hostage|kidnap|"
-    r"casualt|fatalit|death toll|mass grave|"
-    r"abuse|assault|trafficking|slavery)\b", re.I)
+    # gốc dài, chỉ dùng cho bạo lực -> mở hậu tố
+    r"\b(?:massacre\w*|genocid\w*|atrocit\w*|holocaust\w*|lynch\w*|"
+    r"murder\w*|homicid\w*|manslaughter|assassinat\w*|"
+    r"terror\w*|hijack\w*|hostage\w*|kidnap\w*|"
+    r"casualt\w*|fatalit\w*|massacr\w*|"
+    r"famine\w*|epidemic\w*|pandemic\w*|plague\w*|"
+    r"traffick\w*|slaver\w*|torture\w*|execution\w*|"
+    # gốc MƠ HỒ -> liệt kê đúng dạng ("shoot" còn nghĩa quay phim, "bomb" còn nghĩa thất bại,
+    # "abuse" còn nghĩa lạm dụng quyền, "attack" còn nghĩa cạnh tranh)
+    r"bombing|bombings|bombed|bombard\w*|"
+    r"shooting|shootings|gunman|gunmen|"
+    r"suicide|suicides|poisoning|poisonings|"
+    r"death\s+toll|mass\s+grave\w*|"
+    r"(?:sexual|child|physical|domestic)\s+abuse\w*|"
+    r"terrorist\s+attack\w*|armed\s+attack\w*|air\s+attack\w*)\b", re.I)
+
+# TÊN chủ thể được soi CHẶT HƠN phần thân bài: trong một tiêu đề, "attack" và "disaster" gần
+# như luôn nghĩa đen, còn trong văn xuôi chúng là ẩn dụ kinh doanh thường gặp ("attacked the
+# low-cost market"). Một biểu thức cho hai loại chuỗi là chỗ §12.5 đã trả giá nhiều lần.
+_TEN_CAM = re.compile(r"\b(?:attack\w*|disaster\w*|crash\w*|derailment\w*|"
+                      r"sinking|shipwreck\w*|explosion\w*|fire\s+of\s+\d{4})\b", re.I)
 
 
 def hop_dinh_dang(chu_the: str, van: str = "") -> bool:
@@ -121,7 +155,7 @@ def hop_dinh_dang(chu_the: str, van: str = "") -> bool:
     Xét TÊN trước (rẻ), rồi vài trăm chữ đầu bài viết — phần mở đầu Wikipedia luôn nói ngay
     quy mô thương vong nếu có.
     """
-    if _KHONG_HOP.search(chu_the or ""):
+    if _KHONG_HOP.search(chu_the or "") or _TEN_CAM.search(chu_the or ""):
         return False
     if van and _KHONG_HOP.search(van[:1200]):
         return False

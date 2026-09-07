@@ -273,6 +273,50 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_cong_giong_bao_luc():
+    """CỔNG GIỌNG phải chặn chủ thể có thương vong — thử ĐỦ HAI CHIỀU (§13.11).
+
+    Bản trước đọc lên rất chắc và bắt được **1/16**: nửa danh sách là gốc từ (`atrocit`,
+    `casualt`, `terror`) mà `\b` đóng ở cuối chặn đúng mọi hậu tố, nửa còn lại chỉ khớp số
+    ít. Nó cho «1973 Rome airport attacks and hijacking» (34 người chết) đi thẳng vào một
+    bộ 4 clip có người dẫn hoạt hình tươi cười.
+
+    Chốt này giữ CẢ HAI chiều vì cổng ấy CỐ Ý nghiêng về phía chặn (bỏ một chủ thể trong hồ
+    3.112 gần như miễn phí; bỏ lọt thì mất cả bộ) — nên chiều "không bắt oan" là chiều dễ
+    mất nhất khi ai đó nới tiếp."""
+    import vi_sao as V
+    xau = ["1973 Rome airport attacks and hijacking", "Munich massacres", "Nazi atrocities",
+           "September 11 attacks", "Terrorism in Italy", "Bombings of 1974", "Mass shootings",
+           "Civilian casualties", "Fatalities at sea", "Assassinated leaders", "Child abuses",
+           "Lockerbie bombing", "1971 Iraq poison grain disaster", "Tenerife airport disaster"]
+    lot = [t for t in xau if V.hop_dinh_dang(t)]
+    assert not lot, f"cổng giọng BỎ LỌT chủ thể có thương vong: {lot[:3]}"
+    tot = ["Eastman Kodak", "Concorde", "Air Berlin", "ATA Airlines", "Polaroid", "Betamax",
+           "Pan Am", "Blockbuster", "Segway", "Napster", "MoviePass", "Air California"]
+    oan = [t for t in tot if not V.hop_dinh_dang(t)]
+    assert not oan, f"cổng giọng BẮT OAN chủ thể lành: {oan}"
+    # thân bài: hai trật tự từ của con số thương vong, và một câu SẠCH có số
+    assert not V.hop_dinh_dang("X", "A runway collision in which 10 people died.")
+    assert not V.hop_dinh_dang("X", "The airline folded after a crash killed 47 passengers.")
+    assert V.hop_dinh_dang("X", "The company sold 47 million cameras, then lost to digital.")
+
+
+def t_short_khong_trung_tieu_de():
+    """Ba short của MỘT bộ phải có ba tiêu đề khác nhau.
+
+    Đo bộ 125: ba tệp `.tai.json` mang tiêu đề YouTube giống hệt nhau từng ký tự, vì
+    `bo_1_3` truyền cùng `_tieu` cho cả ba lượt `_ghim`."""
+    import pilot_hai as P
+    nhip = [{"loi": f"Chapter {k}: the airline lost licence number {k} that winter."}
+            for k in range(9)]
+    b = 3
+    ra = [P._tieu_short("DAI", nhip[c * b:(c + 1) * b], c) for c in range(3)]
+    assert len(set(ra)) == 3, f"ba short trùng tiêu đề: {ra}"
+    # đoạn không có câu dùng được -> vẫn phải khác nhau, không được rơi về một chuỗi
+    ro = [P._tieu_short("DAI", [{"loi": "1972."}], c) for c in range(3)]
+    assert len(set(ro)) == 3, f"nhánh dự phòng cho ba tiêu đề trùng: {ro}"
+
+
 def t_gop_so_nen():
     """GỘP SỔ KHO NỀN KHI HAI LƯỢT ĐỤNG NHAU (8/9/2026) — thử ĐỦ HAI CHIỀU (§13.11).
 
@@ -2615,6 +2659,8 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("cổng giọng chặn chủ thể có thương vong", t_cong_giong_bao_luc)
+    check("ba short một bộ không trùng tiêu đề", t_short_khong_trung_tieu_de)
     check("gộp sổ kho nền khi hai lượt đụng nhau", t_gop_so_nen)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)

@@ -1692,6 +1692,14 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
                 co = (_hop + _muon)[:60]
             else:
                 print(f"   🎯 nhóm «{_nh}» chỉ có {len(_hop)}+{len(_muon)} nền — dùng cả kho")
+    except _DungChon:
+        # ĐƯỜNG THÀNH CÔNG, KHÔNG PHẢI LỖI (8/9/2026). `_DungChon` được NÉM CÓ CHỦ Ý ngay
+        # sau khi hình mẫu đã chọn xong `co` — nó là câu `break` của khối try này. Nhưng
+        # `except Exception` ở dưới bắt luôn, và một Exception không tham số cho `str(e)`
+        # rỗng, nên log in ra `⚠ không đọc được nen_tag.json ()` ở 4/4 clip của bộ 125
+        # trong khi việc chọn nền đã chạy ĐÚNG. Đúng §18.11: một dòng cảnh báo nói sai
+        # nguyên nhân dẫn người đọc đi sửa thứ không hỏng — và em suýt đi sửa nó thật.
+        pass
     except Exception as e:
         print(f"   ⚠ không đọc được nen_tag.json ({str(e)[:40]}) — dùng cả kho")
     # ── CHỌN PHÒNG: BƯỚC NGUYÊN TỐ CÙNG NHAU, KHÔNG PHẢI LIỀN KỀ  (6/9/2026) ──────────────
@@ -2083,6 +2091,30 @@ PHONG_KENH = {
 }
 
 
+def _tieu_short(tieu_dai: str, lat: list, c: int) -> str:
+    """Tiêu đề của MỘT short = mệnh đề của CHÍNH đoạn ấy, không phải tiêu đề bản dài.
+
+    Đo trên bộ 125: ba short mang tiêu đề YouTube GIỐNG NHAU TỪNG KÝ TỰ —
+    *"1973 Rome airport attacks and hijacking came back. You missed it."* ×3. Hai cái hại,
+    và cái thứ hai nặng hơn:
+      · ba video của cùng một kênh cạnh tranh nhau trong tìm kiếm, không cái nào thắng;
+      · đó đúng trục *"kịch bản/khuôn chuyện giống hệt nhau"* mà luật YouTube nêu tên
+        (§13.17) — và nó giống hệt nhau ở chỗ người xem NHÌN THẤY ĐẦU TIÊN.
+    §17.11 đã viết sẵn câu trả lời: *"Tiêu đề = chính TÊN CHƯƠNG"*. Ở đây không có tên
+    chương, nhưng mỗi short LÀ một chương, nên tên nó là mệnh đề mở của chính nó.
+
+    Rơi về tiêu đề bản dài kèm số thứ tự khi đoạn không có câu nào đọc được — thà một hậu
+    tố xấu còn hơn ba tiêu đề trùng nhau (§15.6: không biết thì nói ra, đừng đoán).
+    """
+    for n in (lat or []):
+        cau = str((n or {}).get("loi") or "").strip()
+        cau = re.split(r"(?<=[.!?])\s", cau)[0].strip(" .!?")
+        # bỏ câu dẫn quá ngắn (một con số, một tiếng đệm) và câu quá dài để làm tiêu đề
+        if 18 <= len(cau) <= 92 and len(cau.split()) >= 4:
+            return cau[0].upper() + cau[1:]
+    return f"{tieu_dai} — {c + 1}"
+
+
 def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
     """MỘT BỘ = 1 bản dài + 3 short, DÙNG CHUNG một bộ ảnh VÀ một chủ thể. Trả số clip.
 
@@ -2151,7 +2183,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
         _b = max(3, len(_nhip) // 3)
         for c in range(3):
             _lat = _nhip[c * _b:(c + 1) * _b] or _nhip[:_b]
-            _ghim((_tieu, _hook, _hp, _lat))
+            _ghim((_tieu_short(_tieu, _lat, c), _hook, _hp, _lat))
             if mot_tap(ma, idx * 10 + c, False, 0):
                 n += 1
     finally:
