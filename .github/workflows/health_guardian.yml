@@ -133,3 +133,22 @@ jobs:
           OWNER_UID: ${{ secrets.OWNER_UID }}
           STALE_HOURS_OVERRIDE: ${{ github.event.inputs.stale_hours }}
         run: python render-pipeline/health_guardian.py
+
+      # ── BẢNG GẮN KÊNH  (7/9/2026) ────────────────────────────────────────────────────
+      # Chạy ở ĐÂY chứ không ở máy anh: bảng cần đọc `connections` trên Firestore, mà máy
+      # anh không có khoá dịch vụ nên mọi ô đều ra "chưa kiểm được" — một bảng không kết
+      # luận được gì thì không phải một bảng.
+      # `|| true` được phép ở bước này vì nó chỉ BÁO CÁO, không giao hàng: hỏng thì mất một
+      # dòng thông tin, không mất tệp nào (§13.3 — `|| true` chỉ cấm ở mắt xích cuối).
+      - name: Kênh nào đã gắn, kênh nào chưa
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B: ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          GH_TOKEN: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+        run: |
+          pip install --quiet pyyaml
+          python render-pipeline/kiem_gan_kenh.py || true

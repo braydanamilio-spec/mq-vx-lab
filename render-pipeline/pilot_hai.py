@@ -341,9 +341,51 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
     # được đọc trong một lượt khai `i` ấy. Đây là điều luật của anh nói từ đầu — *"số trên màn
     # hình phải được đọc lên"* — chỉ khác là giờ nó kiểm được theo từng màn hình, không phải
     # theo cả tập.
+    # ── LƯỢT ĐỌC ĐÚNG SỐ NHƯNG KHAI SAI NHỊP: SỬA, ĐỪNG BẮT VIẾT LẠI  (7/9/2026) ─────────
+    # Dựng thật `realcost` tập 4: cổng báo thiếu `$331K` và `48,358`, mà đọc lời thoại lên thì
+    # CẢ HAI đều được nói đúng — chỉ là lượt ấy khai `i` trỏ sang nhịp khác. Hậu quả đúng thứ
+    # anh chê: *"nói số liệu thì không hiện, hiện thì không nói"*. Cổng bắt đúng, nhưng nó
+    # tiêu HAI vòng gọi AI rồi vẫn giao bản hỏng — máy sửa được thì máy sửa (§13.12).
+    #
+    # BẢN ĐẦU CỦA CHÍNH BẢN VÁ NÀY LÀ MỘT CỖ MÁY ĐOÁN, và log dựng thật chỉ ra ngay: nó kéo
+    # `$14` qua bốn nhịp liên tiếp (0 -> 2 -> 3 -> 10) và đẩy `3,500` đi rồi kéo về. Hai lỗi:
+    #   · phép "khớp duy nhất" đếm số LƯỢT nói con số ấy, trong khi thứ cần duy nhất là số
+    #     NHỊP muốn nó — `$14` là chủ đề cả tập nên nhịp nào cũng muốn;
+    #   · không có sổ nên một lượt bị dời nhiều lần, mỗi vòng lặp một lần.
+    # Nay: một lượt chỉ được dời ĐÚNG MỘT LẦN, và chỉ khi con số ấy có ĐÚNG MỘT nhịp đang
+    # thiếu nó — hai điều kiện, và thiếu điều kiện nào thì để cổng chặn, đừng đoán.
+    if man and any("i" in (x or {}) for x in thoai):
+        _thieu_o = {}                       # con số -> [nhịp đang thiếu nó]
+        for _i, _m in enumerate(man):
+            _ds = [x.strip() for x in _SO.findall(_m or "") if any(c.isdigit() for c in x)]
+            if not _ds:
+                continue
+            _noi = " ".join(t.get("chu", "") for t in thoai if int(t.get("i", -1)) == _i)
+            if not _da_doc_trong(_ds[0], _noi):
+                _thieu_o.setdefault(_ds[0], []).append(_i)
+        _da_doi = set()
+        for _x, _nhips in _thieu_o.items():
+            if len(_nhips) != 1:
+                continue                    # hai nhịp cùng thiếu -> không biết cho ai, để cổng chặn
+            _dich = _nhips[0]
+            _ung = [k for k, t in enumerate(thoai)
+                    if k not in _da_doi and _da_doc_trong(_x, t.get("chu", ""))
+                    and int(t.get("i", -1)) != _dich]
+            # Chỉ dời lượt mà nhịp GỐC của nó không cần chính nó: dời đi để chữa nhịp này mà
+            # làm hỏng nhịp kia thì chỉ là chuyển chỗ cái lỗi.
+            _ung = [k for k in _ung
+                    if not any(_da_doc_trong(y, thoai[k].get("chu", ""))
+                               for y in _thieu_o if y != _x)]
+            if len(_ung) == 1:
+                _cu = int(thoai[_ung[0]].get("i", -1))
+                thoai[_ung[0]]["i"] = _dich
+                _da_doi.add(_ung[0])
+                print(f"   ↔ lượt đọc «{_x}» khai nhịp {_cu} -> sửa về {_dich}")
+
     _co_i = any("i" in (x or {}) for x in thoai)
     if _co_i and man:
         thieu_nhip = []
+        _da_doi_hoi = set()
         for _i, _m in enumerate(man):
             if not _m:
                 continue
@@ -365,6 +407,16 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
             if not _noi:
                 continue
             for _x in _goc:
+                # CHỈ đòi ở nhịp ĐẦU TIÊN hiện con số ấy. Luật 1c của `LENH_THOAI` dặn mô
+                # hình *"nói mỗi con số ĐÚNG MỘT LẦN, đừng lặp lại con số lượt trước đã nói"*,
+                # trong khi bản cũ của cổng đòi MỌI nhịp mang thẻ `$14` đều phải có lượt đọc
+                # `$14` — mà `realcost` hiện `$14` ở ba nhịp vì đó là chủ đề cả tập. Hai luật
+                # trong cùng một hệ đánh nhau, và cái thua là mô hình: nó làm đúng lệnh dặn
+                # rồi bị cổng đánh trượt, tiêu hai vòng gọi AI rồi vẫn giao bản kèm cảnh báo.
+                # Thẻ lặp là cùng một sự thật; người xem nghe một lần và thấy ba lần là đúng.
+                if _x in _da_doi_hoi:
+                    continue
+                _da_doi_hoi.add(_x)
                 if not _da_doc_trong(_x, _noi):
                     thieu_nhip.append(_x)
         # THAY THẾ phép kiểm cả-tập, không bổ sung vào nó. Bản đầu `return` chỉ khi có thiếu
@@ -470,7 +522,22 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         if len(ra) > _tran_luot:
             _giu = [i for i, x in enumerate(ra) if any(c.isdigit() for c in x["chu"])]
             _giu = set(_giu) | {0, len(ra) - 1}
-            _bo = [i for i in range(len(ra)) if i not in _giu][: len(ra) - _tran_luot]
+            # ── ĐỪNG BỎ LƯỢT ĐANG NGĂN HAI LƯỢT CÙNG NGƯỜI DÍNH NHAU  (7/9/2026) ────────
+            # Lượt không mang số gần như luôn là câu HỎI của vai A, và bỏ nó đi thì hai lượt
+            # của chuyên gia dính vào nhau. Bản trước chữa ở phía SAU (chèn lại một câu hỏi),
+            # nhưng ngân sách chèn có hạn: `realcost` cắt xong còn SÁU cặp dính mà chỉ nhét
+            # được hai câu nối, ra bốn cặp dính trong bản giao đi.
+            # Chữa ở chính chỗ gây ra: xếp những lượt mà bỏ đi sẽ tạo cặp dính xuống CUỐI
+            # danh sách ứng viên, chỉ dùng tới chúng khi không còn gì khác để bỏ. Rẻ hơn
+            # nhiều so với chèn bù, và không tốn thêm một lượt nào.
+            _ung = [i for i in range(len(ra)) if i not in _giu]
+            def _pha(i):
+                t, s2 = i - 1, i + 1
+                while t in _giu and t >= 0 and False: t -= 1
+                return (0 <= t and s2 < len(ra)
+                        and ra[t].get("ai") == ra[s2].get("ai"))
+            _ung.sort(key=_pha)                      # False (không phá) lên trước
+            _bo = _ung[: len(ra) - _tran_luot]
             if len(ra) - len(_bo) > _tran_luot:          # vẫn dư -> cắt tiếp phần giữa
                 _con = [x for i, x in enumerate(ra) if i not in set(_bo)]
                 _con = _con[:_tran_luot - 1] + [_con[-1]]
@@ -534,7 +601,13 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         _ket = []
         for _k, _x in enumerate(ra):
             if (_ket and _x.get("ai") == _ket[-1].get("ai") == "b"
-                    and _so_cua(_x) and _so_cua(_ket[-1]) and len(_ket) + len(ra) - _k < 16):
+                    and _so_cua(_x) and _so_cua(_ket[-1])
+                    # Trần phải là CHÍNH ngân sách lượt, không phải một hằng tự đặt: bản đầu
+                    # viết `< 16` — một con số không có nguồn (§13.1) — nên `realcost` ra 16
+                    # lượt trong khi trần là 14, và video dài 66 giây so với trung vị 27.
+                    # Cho phép đúng HAI lượt nối trên trần: mỗi lượt nối chữa một cặp dính
+                    # nhau, và quá hai cặp thì lỗi nằm ở khâu viết chứ không phải khâu chèn.
+                    and len(_ket) + len(ra) - _k < _tran_luot + 2):
                 _ket.append({"i": _x.get("i", 0), "ai": "a",
                              "chu": _NOI[(_lech + len(_ket)) % len(_NOI)], "cx": "trung_tinh"})
             _ket.append(_x)

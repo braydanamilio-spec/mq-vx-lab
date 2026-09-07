@@ -58,6 +58,37 @@ def _the(ma: str, tieu: str, ten: str) -> list:
     return [ten.lower().replace(" ", ""), ma, "explained"] + rieng
 
 
+_NEN_KENH: dict = {}
+
+
+def _co_nen(ma: str, nen: str) -> bool:
+    """Kênh `ma` đã nối nền tảng `nen` chưa — đọc thẳng `config/channels.yaml`.
+
+    Không tìm thấy tệp thì trả True cho `youtube` và False cho hai nền còn lại: đó là hiện
+    trạng đo được, và đoán "có" cho một nền chưa nối là đúng cái lỗi hàm này sinh ra để chữa.
+    """
+    if not _NEN_KENH:
+        import yaml as _y, io as _io, os as _o
+        _NEN_KENH["_"] = {}
+        for _p in (_o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))),
+                                "MM0-AutoPublisher", "config", "channels.yaml"),
+                   _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))),
+                                "_autopublisher", "config", "channels.yaml")):
+            try:
+                _d = _y.safe_load(_io.open(_p, encoding="utf-8")) or {}
+            except Exception:
+                continue
+            _ks = _d.get("channels") or _d
+            _it = _ks.items() if isinstance(_ks, dict) else [(x.get("display_name"), x) for x in _ks]
+            for _k, _v in _it:
+                _NEN_KENH[str(_k).upper()] = {
+                    n: bool((_v.get(n) or {}) and any((_v.get(n) or {}).values()))
+                    for n in ("youtube", "facebook", "instagram")}
+            break
+    h = _NEN_KENH.get(str(ma).upper())
+    return bool(h[nen]) if h else (nen == "youtube")
+
+
 def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
              dai_giay: float, long: bool, nhip: list) -> dict:
     """Ba bộ chữ RIÊNG cho ba nền tảng — không phải một bộ dùng chung.
@@ -122,8 +153,23 @@ def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
                       "the": the},
         # DICT, không phải danh sách: `day_kho` duyệt bằng `.items()` và lọc theo giá trị.
         # Nói RA nền tảng nào nhận được, thay vì để khâu đăng phát hiện bằng một lượt hỏng.
-        "dang_duoc": {"youtube": True, "facebook": True,
-                      "instagram": dai_giay <= IG_MAX_GIAY},
+        # ── MỘT NỀN TẢNG "NHẬN ĐƯỢC" KHI CẢ HAI ĐIỀU KIỆN CÙNG ĐÚNG  (7/9/2026) ──────────
+        # Bản trước ghi cứng `facebook: True` và chỉ xét ĐỘ DÀI cho Instagram — tức mã hoá
+        # đúng MỘT trong hai ràng buộc (§17.2). Ràng buộc còn lại là: KÊNH CÓ NỐI nền tảng
+        # ấy chưa. Đo `config/channels.yaml`: youtube 18/18, facebook **0/18**,
+        # instagram **0/18**. Nên mọi video đang được đẩy kèm `--platforms
+        # youtube,facebook,instagram` sang hai nền tảng không kênh nào đăng nổi.
+        #
+        # Hại không phải "một dòng thừa": mỗi dòng ấy là một lượt ĐỌC + một lượt GHI Firestore
+        # ở mỗi lượt `publish_social` (12 lượt/ngày) chỉ để đánh dấu "Page chưa kết nối".
+        # Chú thích ngay trên đã nói đúng ý định — *"nói RA nền tảng nào nhận được, thay vì
+        # để khâu đăng phát hiện bằng một lượt hỏng"* — mã chỉ làm được một nửa.
+        #
+        # Đọc `channels.yaml` chứ không khai bảng thứ hai (§13.5): thêm khoá FB/IG vào tệp ấy
+        # là hai nền tảng tự bật, không phải sửa mã.
+        "dang_duoc": {"youtube": _co_nen(ma, "youtube"),
+                      "facebook": _co_nen(ma, "facebook"),
+                      "instagram": _co_nen(ma, "instagram") and dai_giay <= IG_MAX_GIAY},
         "dang_duoc_ds": nen,
     }
 
