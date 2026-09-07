@@ -273,6 +273,25 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_lat_short_khong_mong():
+    """Không lát short nào được mỏng hơn sàn, và không hai lát nào trùng nhau.
+
+    `max(3, n // 3)` đọc lên như một SÀN nhưng chỉ áp cho hai lát đầu — lát cuối nhận phần
+    CÒN LẠI. Đo bộ thật: `n = 8` -> `3 · 3 · 2`, và hai nhịp không qua nổi cổng số, nên
+    **3/3 bộ liên tiếp (123 · 126 · 127) mất đúng clip thứ tư** — 25% sản lượng, đều đặn và
+    im lặng. Chốt này canh cả hai chiều: không mỏng, VÀ không trùng (thà ba clip thật còn
+    hơn bốn clip có hai cái giống hệt nhau — §13.17)."""
+    import pilot_hai as P
+    for n in range(3, 40):
+        nh = [{"loi": f"s{i}"} for i in range(n)]
+        ls = P._lat_short(nh)
+        assert all(len(x) >= 3 for x in ls), f"n={n}: có lát mỏng {[len(x) for x in ls]}"
+        van = [tuple(y["loi"] for y in x) for x in ls]
+        assert len(set(van)) == len(van), f"n={n}: hai short trùng nội dung"
+        assert len(ls) == 3 or n < 7, f"n={n}: chỉ ra {len(ls)} short"
+    assert P._lat_short([{"loi": "a"}, {"loi": "b"}]) == [], "quá ít nhịp phải trả rỗng"
+
+
 def t_bo_tien_to_chi_so():
     """Tiền tố chỉ số rò ra BỐN dạng — chốt giữ cả bốn, và giữ chiều KHÔNG bắt oan.
 
@@ -2696,6 +2715,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("lát short không mỏng, không trùng", t_lat_short_khong_mong)
     check("bỏ tiền tố chỉ số đủ bốn dạng", t_bo_tien_to_chi_so)
     check("cổng giọng chặn chủ thể có thương vong", t_cong_giong_bao_luc)
     check("ba short một bộ không trùng tiêu đề", t_short_khong_trung_tieu_de)

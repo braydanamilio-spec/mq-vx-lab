@@ -2111,6 +2111,47 @@ PHONG_KENH = {
 }
 
 
+def _lat_short(nhip: list, san: int = 3) -> list:
+    """Cắt bộ nhịp của bản dài thành các đoạn cho short — mỗi đoạn ĐỦ DÀY.
+
+    ── VÌ SAO KHÔNG PHẢI `nhip[c*b:(c+1)*b]`  (đo 8/9/2026) ─────────────────────────────
+    Bản cũ tính `_b = max(3, len(nhip) // 3)` rồi cắt ba lát liền nhau. `max(3, …)` đọc lên
+    như một SÀN, nhưng nó chỉ áp cho hai lát đầu: lát cuối nhận phần CÒN LẠI, và phần còn
+    lại có thể mỏng hơn chính cái sàn ấy.
+
+    Đo trên bộ thật: `len(nhip) = 8` -> `_b = 3` -> ba lát **3 · 3 · 2**. Hai nhịp không đủ
+    cho cổng số, nên short thứ ba chết với `❌ không dựng được lời thoại` — **3/3 bộ liên
+    tiếp (123 · 126 · 127) mất đúng clip thứ tư**, tức 25% sản lượng, đều đặn và im lặng.
+    (Bản dài không dính vì `kich_ban(long=True)` nở 8 nhịp thành 32 bằng khối chương.)
+
+    Nay ba cửa sổ đều dày `k = max(san, ceil(n/3))` và cửa sổ cuối NEO VÀO ĐUÔI, nên khi
+    `n` không chia hết cho ba thì phần chồng nhau rơi vào GIỮA hai short chứ không rơi vào
+    độ dày. Chồng một nhịp giữa hai chương liền nhau là chuyện thường của phép cắt chương;
+    một short cụt thì không cứu được.
+
+    Ít nhịp quá thì trả ÍT short hơn, không trả short trùng nhau: `n = 5` mà ép ba cửa sổ
+    dày 3 sẽ cho hai lát y hệt — và hai video giống hệt nhau đúng là thứ luật YouTube nêu
+    tên (§13.17). Thà ba clip thật còn hơn bốn clip có hai cái trùng.
+    """
+    n = len(nhip or [])
+    if n < san:
+        return []
+    so = 3 if n >= san * 2 + 1 else (2 if n >= san + 2 else 1)
+    k = max(san, -(-n // 3))
+    dau = []
+    for c in range(so):
+        d = min(c * k, n - k) if so > 1 else 0
+        dau.append(max(0, d if c < so - 1 else n - k))
+    ra, da = [], set()
+    for d in dau:
+        khoa = (d, d + k)
+        if khoa in da:
+            continue
+        da.add(khoa)
+        ra.append(nhip[d:d + k])
+    return ra
+
+
 def _tieu_short(tieu_dai: str, lat: list, c: int) -> str:
     """Tiêu đề của MỘT short = mệnh đề của CHÍNH đoạn ấy, không phải tiêu đề bản dài.
 
@@ -2200,9 +2241,11 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
     os.environ["KHONG_NEN_TAP"] = "1"
     try:
         _tieu, _hook, _hp, _nhip = _r
-        _b = max(3, len(_nhip) // 3)
-        for c in range(3):
-            _lat = _nhip[c * _b:(c + 1) * _b] or _nhip[:_b]
+        _lats = _lat_short(_nhip)
+        if len(_lats) < 3:
+            print(f"   ⚠ chỉ {len(_nhip)} nhịp — dựng {len(_lats)} short thay vì 3 "
+                  f"(short mỏng hơn {3} nhịp không qua nổi cổng số)")
+        for c, _lat in enumerate(_lats):
             _ghim((_tieu_short(_tieu, _lat, c), _hook, _hp, _lat))
             if mot_tap(ma, idx * 10 + c, False, 0):
                 n += 1
@@ -2213,7 +2256,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
             os.environ.pop("KHONG_NEN_TAP", None)
         else:
             os.environ["KHONG_NEN_TAP"] = _cu
-    print(f"   📦 bộ {ma}/{idx}: {n}/4 clip · chủ thể «{CHU_THE_TAP}»")
+    print(f"   📦 bộ {ma}/{idx}: {n}/{1 + len(_lats)} clip · chủ thể «{CHU_THE_TAP}»")
     return n
 
 
