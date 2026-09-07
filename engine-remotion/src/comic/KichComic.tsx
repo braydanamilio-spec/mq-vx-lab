@@ -102,6 +102,10 @@ const caoBong = (chu: string, la: boolean, hook: number): number => {
   return (18 + dong * fs * 1.12 + 44 + 24) * (hook > 0 ? 1.5 : 1);
 };
 
+// Cú nảy của bong bóng khi vào. Bất kỳ chỗ nào TÍNH CỠ bong bóng đều phải chia cho nó,
+// nếu không phần dôi ra bị mép ô cắt mất (xem `rong` ngay dưới).
+const NAY_BONG = 1.06;
+
 const BongThoai: React.FC<{
   chu: string; tu: Tu[]; giay: number; W: number; H: number;
   ben: "trai" | "phai"; duoi?: "trai" | "phai"; hep?: boolean;
@@ -119,7 +123,17 @@ const BongThoai: React.FC<{
     [tu, s0, e0],
   );
   const _duoi = duoi || ben;
-  const rong = hep ? Math.min(W * 0.46, W - 40) : Math.min(W * 0.86, W - 56);
+  // ── CỠ BONG BÓNG PHẢI CHỪA CHỖ CHO CÚ NẢY  (soi khung bộ 133, 8/9/2026) ─────────────
+  // Khung 76%: bong bóng ô trái bị cắt mất chữ đầu (`…filed / …arely`), ô phải bị cắt mất
+  // chữ cuối (`one 737` cụt). Ô có `overflow: hidden`, còn `sc` nảy lên **1,06** giữa cú
+  // vào — bong bóng vốn đã rộng bằng đúng lòng ô, nên 6% dôi ra rơi thẳng ra ngoài mép.
+  // Bên `phai` neo `transformOrigin: right top` nên phần dôi đi sang TRÁI; bên `trai` thì
+  // ngược lại. Đó là lý do hai ô cạnh nhau cụt ở hai đầu khác nhau.
+  //
+  // Đúng họ §6: *một kích thước chịu hai ràng buộc mà công thức chỉ mã hoá một* — công
+  // thức cũ mã hoá "vừa lòng ô" mà bỏ quên "còn phải nảy 6%". Chia cho chính hệ số nảy,
+  // đọc thẳng từ `NAY_BONG` chứ không chép lại con số (§11: đừng tạo nguồn thứ hai).
+  const rong = (hep ? Math.min(W * 0.46, W - 40) : Math.min(W * 0.86, W - 56)) / NAY_BONG;
   const caoToiDa = hep ? H * 0.62 : H * 0.3;
   // HOOK: bong bóng của lượt MỞ MÀN bắt đầu to gấp rưỡi rồi co về cỡ thật trong một giây.
   // Anh chấm hạng mục hook 55/100 và đúng: giây 0 của bản trước là một câu setup cỡ thường,
@@ -127,7 +141,8 @@ const BongThoai: React.FC<{
   // bịa thêm chữ — chữ vẫn là lời thoại thật, vẫn khớp tiếng, chỉ chiếm chỗ như một tấm bìa.
   const phongHook = hook > 0 ? trn(1.5, 1, muot(kep(hook))) : 1;
   const fs = coChu(chu, rong - 36, caoToiDa - 30, la ? 62 : 52) * phongHook;
-  const sc = p < 0.55 ? trn(0.72, 1.06, muot(p / 0.55)) : trn(1.06, 1, muot((p - 0.55) / 0.45));
+  const sc = p < 0.55 ? trn(0.72, NAY_BONG, muot(p / 0.55))
+                      : trn(NAY_BONG, 1, muot((p - 0.55) / 0.45));
   const nghieng = ben === "trai" ? -1.2 : 1.2;
 
   return (
