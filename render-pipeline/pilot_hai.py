@@ -262,6 +262,31 @@ def so_tren_man(n: dict) -> str:
     return ""
 
 
+def _da_doc_trong(x: str, van: str) -> bool:
+    """Con số `x` có được đọc trong đoạn `van` không — chữ số HOẶC dạng đọc bằng chữ."""
+    g = van.lower().replace("\u2019", "'")
+    for _d in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+        g = g.replace(_d, "-")
+    v = re.sub(r"[^\d.]", "", x).rstrip(".")
+    if not v:
+        return True
+    if re.sub(r"[^\d.]", "", x).rstrip(".") in re.sub(r"[^\d.]", "", g):
+        return True
+    if x.lower() in g:
+        return True
+    if "." in v:
+        ng, _, le = v.partition(".")
+        le = le.rstrip("0")
+        if ng.isdigit() and le.isdigit() and len(le) == 1:
+            c = _doc_so(int(ng))
+            return bool(c) and f"{c} point {_doc_so(int(le))}" in g
+        v = ng
+    if not v.isdigit() or len(v) > 12:
+        return False
+    c = _doc_so(int(v))
+    return bool(c) and c in g
+
+
 def _du_so(loi: list, thoai: list, man: list = None) -> list:
     """Con số nào ĐANG HIỆN trên màn (hoặc có trong lời dẫn) mà lời thoại không đọc.
 
@@ -298,6 +323,48 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
                     return 0.0
             ds = [max(ds, key=_v)]
         goc |= set(ds)
+    # ── ĐÒI THEO TỪNG NHỊP, KHÔNG ĐÒI "Ở ĐÂU ĐÓ TRONG TẬP"  (7/9/2026) ─────────────────
+    # Bản cũ gom mọi lời thoại thành MỘT chuỗi rồi hỏi "con số này có xuất hiện không". Nên
+    # một tập nói `$213K` ở lượt 9 vẫn tính là ĐỦ cho cái thẻ đang hiện ở lượt 1 — người xem
+    # thì thấy thẻ ở lượt 1 và nghe số ở lượt 9. Đo: sau khi đã sửa chỗ ĐẶT thẻ, vẫn còn 27%
+    # thẻ rơi vào lượt không đọc nó, và toàn bộ phần còn lại là dạng này: mô hình diễn nhịp ấy
+    # bằng một câu HỎI, con số để dành cho lượt sau.
+    #
+    # Nay mỗi lượt đã khai `i` (nhịp nó diễn), nên đòi được ĐÚNG CHỖ: con số của nhịp `i` phải
+    # được đọc trong một lượt khai `i` ấy. Đây là điều luật của anh nói từ đầu — *"số trên màn
+    # hình phải được đọc lên"* — chỉ khác là giờ nó kiểm được theo từng màn hình, không phải
+    # theo cả tập.
+    _co_i = any("i" in (x or {}) for x in thoai)
+    if _co_i and man:
+        thieu_nhip = []
+        for _i, _m in enumerate(man):
+            if not _m:
+                continue
+            # CHỈ con số CHÍNH của thẻ. `so_tren_man` ghép `so` + `don`, mà `don` hay chứa
+            # số của đơn vị (*"$213K over 30 years"*) — đòi đọc cả `30` là bắt oan: `30 years`
+            # là ngữ cảnh, không phải con số thẻ đang khoe. Bản đầu của cổng này đòi cả hai và
+            # trượt ngay ca đúng đầu tiên.
+            _ds = [x.strip() for x in _SO.findall(_m) if any(c.isdigit() for c in x)]
+            _goc = {_ds[0]} if _ds else set()
+            if " and " in _m and len(_ds) >= 3:
+                _goc = set(_ds)
+                def _v(x):
+                    try:
+                        return float(re.sub(r"[^\d.]", "", x) or 0)
+                    except Exception:
+                        return 0.0
+                _goc = {max(_goc, key=_v)}
+            _noi = " ".join(x.get("chu", "") for x in thoai if int(x.get("i", -1)) == _i)
+            if not _noi:
+                continue
+            for _x in _goc:
+                if not _da_doc_trong(_x, _noi):
+                    thieu_nhip.append(_x)
+        # THAY THẾ phép kiểm cả-tập, không bổ sung vào nó. Bản đầu `return` chỉ khi có thiếu
+        # rồi rơi xuống phép cũ khi đạt — nên phép cũ (gom cả tập, đòi cả số trong ĐƠN VỊ) lại
+        # bắt oan đúng ca vừa được xác nhận là đúng. Một phép đo chặt hơn mà để phép lỏng hơn
+        # chạy sau thì kết quả là phép lỏng quyết định.
+        return sorted(set(thieu_nhip))
     co = " ".join(x.get("chu", "") for x in thoai)
     # ── SỐ ĐỌC BẰNG CHỮ CŨNG LÀ ĐỌC  (đo 6/9/2026) ─────────────────────────────────────
     # Mô hình đôi khi viết *"one hundred ten decibels"* thay vì *"110 decibels"*. Với người
@@ -659,78 +726,43 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     # một-đổi-một (12 câu -> 12 lượt). Nên nhịp thứ i ứng với lượt thứ i. Ánh xạ theo VỊ TRÍ
     # đúng theo cấu trúc, không phụ thuộc vào việc câu thoại có tình cờ chứa con số hay không.
     # Từ khoá chỉ còn là bản tinh chỉnh: nếu lượt lân cận có đúng con số thì dịch sang lượt đó.
-    # ── GÁN THẺ SỐ: HAI LƯỢT, KHỚP THẬT ĐI TRƯỚC  (anh nghe ra, 7/9/2026) ───────────────
-    # Anh: *"nhiều khi nói số liệu thì ko hiện số liệu mà hiện số liệu lại ko nói"*. Đo 3 tập:
-    # **10 lượt đọc số mà không thẻ nào hiện**, và **5/13 thẻ rơi vào lượt không đọc nó** —
-    # thẻ luôn nằm TRƯỚC một lượt so với câu đọc nó.
+    # ── GÁN THẺ SỐ: DUYỆT THEO LƯỢT, KHÔNG DUYỆT THEO THẺ  (vòng ba, 7/9/2026) ─────────
+    # Ba vòng trước đều cùng một hình dạng: cầm một cái THẺ rồi đi TÌM lượt hợp với nó — bằng
+    # vị trí tỉ lệ, rồi so chữ số, rồi so dạng đọc bằng chữ, rồi tra chỉ số mô hình khai. Mỗi
+    # vòng nới thêm một ít và vẫn lệch, vì phép tìm luôn có thể chọn nhầm khi hai nhịp mang hai
+    # con số gần nhau (`212,537` và `$213K` là CÙNG một số tiền, và mô hình đọc cả hai thành
+    # "two hundred thirteen thousand").
     #
-    # Bản trước đã biết tìm lượt khớp, nhưng ngay sau đó có `while so_lieu[j]: j += 1` — nên
-    # khi ô vừa khớp đã bị một thẻ TRƯỚC chiếm, thẻ này bị đẩy sang ô kế, tức ra khỏi đúng chỗ
-    # nó vừa tìm được. Duyệt theo thứ tự nhịp làm thẻ đến sớm giành mất ô của thẻ đến sau.
+    # §16.3: sửa vòng thứ ba mà vẫn cùng họ lỗi thì thứ sai là CÁCH TIẾP CẬN. Lật ngược vòng
+    # lặp — duyệt theo LƯỢT THOẠI, và mỗi lượt lấy thẻ của chính câu dẫn mà nó KHAI là đang
+    # diễn. Không còn phép tìm nào để chọn nhầm: quan hệ lượt->câu dẫn do mô hình khai, quan hệ
+    # câu dẫn->thẻ do `giai_thich` sinh. Hai quan hệ đã có, chỉ cần nối.
     #
-    # Chữa bằng THỨ TỰ, không bằng thêm điều kiện: lượt một chỉ đặt những thẻ tìm được lượt
-    # ĐỌC ĐÚNG con số của nó (không đẩy đi đâu cả); lượt hai mới rải phần còn lại vào ô trống
-    # theo tỉ lệ. Khớp thật luôn thắng phép ước lượng — trước đây thì ngược lại.
+    # Nhiều lượt cùng một câu dẫn (hỏi rồi đáp) thì thẻ về lượt CUỐI — thẻ thuộc câu trả lời,
+    # không thuộc câu hỏi. Đó cũng là chỗ khung đứng lâu nhất.
     so_lieu = [None] * len(cau)
     import phim as P
-    co_lop = [(i, P.lop_du_lieu(n)) for i, n in enumerate(nhip)]
-    co_lop = [(i, l) for i, l in co_lop if l]
-
-    def _vi_tri_ti_le(i_nhip):
-        return min(len(cau) - 1, round(i_nhip * (len(cau) - 1) / max(1, len(nhip) - 1)))
-
-    def _doc_o(t, sc, chu):
-        if not (0 <= t < len(cau)) or so_lieu[t]:
-            return False
-        g = cau[t][0].lower()
-        for _d in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
-            g = g.replace(_d, "-")
-        if sc and sc in re.sub(r"[^0-9A-Za-z]", "", g):
-            return True
-        return bool(chu) and chu in g
-
-    # ── LƯỢT KHÔNG: TRA THEO CHỈ SỐ MÔ HÌNH KHAI  (triệt để, 7/9/2026) ─────────────────
-    # Mọi phép so chuỗi phía dưới đều là ĐOÁN: chúng cố suy ra "lượt thoại nào diễn câu dẫn
-    # nào" sau khi việc đã rồi. Nay mô hình khai thẳng `i` cho từng lượt, nên chỗ đặt thẻ là
-    # một phép TRA CỨU. Trong các lượt cùng khai một câu dẫn, ưu tiên lượt THẬT SỰ đọc con số
-    # (một câu dẫn thường tách thành "hỏi" rồi "đáp", và thẻ thuộc về câu đáp).
-    _con = []
-    for i, lop in co_lop:
-        _thoi = str(lop.get("so") or "")
-        _sc = re.sub(r"[^0-9A-Za-z]", "", _thoi)[:6].lower()
-        _cs = re.sub(r"[^\d]", "", _thoi)
-        _chu = _doc_so(int(_cs)) if _cs.isdigit() and 0 < len(_cs) <= 12 else ""
-        ung = [t for t, c in enumerate(chi_dan) if c == i and not so_lieu[t]]
-        dat = next((t for t in ung if _doc_o(t, _sc, _chu)), None)
-        if dat is None and ung:
-            dat = ung[-1]                       # không lượt nào đọc số -> lượt CUỐI của câu ấy
-        if dat is None:
-            _con.append((i, lop))
-        else:
-            so_lieu[dat] = lop
-    _con2, _con = _con, []
-    for i, lop in _con2:                        # LƯỢT MỘT — khớp chuỗi trong cửa sổ ±3
-        _thoi = str(lop.get("so") or "")
-        _sc = re.sub(r"[^0-9A-Za-z]", "", _thoi)[:6].lower()
-        _cs = re.sub(r"[^\d]", "", _thoi)
-        _chu = _doc_so(int(_cs)) if _cs.isdigit() and 0 < len(_cs) <= 12 else ""
-        j = _vi_tri_ti_le(i)
-        dat = None
-        if _sc or _chu:
-            for d in (0, 1, -1, 2, -2, 3, -3):
-                if _doc_o(j + d, _sc, _chu):
-                    dat = j + d
-                    break
-        if dat is None:
-            _con.append((i, lop))
-        else:
-            so_lieu[dat] = lop
-    for i, lop in _con:                        # LƯỢT HAI — rải phần còn lại vào ô trống
-        j = _vi_tri_ti_le(i)
-        while j < len(cau) and so_lieu[j]:
-            j += 1
-        if j < len(cau):
-            so_lieu[j] = lop
+    lop_cua = {}
+    for _i, _n in enumerate(nhip):
+        _l = P.lop_du_lieu(_n)
+        if _l:
+            lop_cua[_i] = _l
+    # lượt CUỐI trong nhóm cùng khai một câu dẫn
+    cuoi_cua = {}
+    for t, c in enumerate(chi_dan):
+        cuoi_cua[c] = t
+    for t, c in enumerate(chi_dan):
+        if cuoi_cua.get(c) == t and c in lop_cua:
+            so_lieu[t] = lop_cua[c]
+    # Câu dẫn có thẻ mà KHÔNG lượt nào khai (mô hình bỏ qua câu ấy): rải vào ô trống gần nhất
+    # theo tỉ lệ, để không mất hẳn một con số khỏi hình.
+    _da = {c for t, c in enumerate(chi_dan) if so_lieu[t]}
+    for _i in sorted(set(lop_cua) - _da):
+        j2 = min(len(cau) - 1, round(_i * (len(cau) - 1) / max(1, len(nhip) - 1)))
+        while j2 < len(cau) and so_lieu[j2]:
+            j2 += 1
+        if j2 < len(cau):
+            so_lieu[j2] = lop_cua[_i]
     _ns = sum(1 for x in so_lieu if x)
     print(f"   🔢 {_ns} lượt có lớp số liệu")
     props = {

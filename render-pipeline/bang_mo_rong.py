@@ -150,8 +150,24 @@ def _bt(ten, mac_dinh):
     # "cof**fee**" khớp `fee` -> `tien`, và "**house**cat" khớp `house` -> `nha`. Gốc từ ngắn
     # nằm lọt trong một từ dài hơn là cái bẫy đã trả giá ba lần trong một buổi ở bộ thiên nhiên.
     t = ten.lower()
+    # ── MỘT CHỮ HAI NGHĨA VẬT LÝ: LOẠI THEO QUY LUẬT, KHÔNG THEO DANH SÁCH  (7/9/2026) ──
+    # `plant` cho `cay`. Đúng với *"everyone watered plants"*, *"a $7 plant pot"*; sai hẳn với
+    # *"the industrial plant whistle"* — nhà máy, không phải cái cây. §13.22 đã ghi: một chữ
+    # có hai nghĩa vật lý là chữ không dùng làm khoá được.
+    #
+    # Bỏ hẳn `plant` thì hỏng 4 để chữa 1 (đo: 5 chuỗi chứa chữ ấy, 4 đúng là cây). Nên loại
+    # theo QUY LUẬT SINH RA ngoại lệ: nghĩa "nhà máy" luôn có một bổ ngữ đứng TRƯỚC nói rõ nó
+    # là cơ sở công nghiệp. Đó là một lớp ĐÓNG — liệt kê hết được, khác hẳn danh sách ngoại lệ
+    # vô hạn ở §13.9. Cùng cách đã dùng cho từ số đứng sau từ số (`seventy-five` -> không đếm).
+    _NHA_MAY = (r"(?:industrial|power|processing|manufacturing|chemical|nuclear|treatment|"
+                r"bottling|assembly|recycling|packing|sewage|desalination)\s+")
     for bt, tu in G._BT_TU:
-        if any(re.search(r"\b" + re.escape(w) + r"e?s?\b", t) for w in tu):
+        for w in tu:
+            m = re.search(r"\b" + re.escape(w) + r"e?s?\b", t)
+            if not m:
+                continue
+            if w == "plant" and re.search(_NHA_MAY + r"plants?\b", t):
+                continue                      # "industrial plant" = nhà máy, không phải cây
             return bt
     return mac_dinh
 

@@ -8742,6 +8742,38 @@ def _nhan(t: str, toi_da: int = 11) -> str:
     return con[:toi_da]
 
 
+# ── HOOK PHẢI ĐỌC HẾT TRONG BA GIÂY ĐẦU  (anh giao, 7/9/2026) ───────────────────────────────
+# `cham_kich_ban` trừ điểm hook quá 8 chữ ở 7 kênh. Em từng quyết định KHÔNG sửa vì "8" là
+# hằng số tự đặt không nguồn — và anh bảo làm. Anh đúng ở chỗ quan trọng hơn cái ngưỡng: đọc
+# tay 7 hook ấy thì phần thừa đều là **bổ ngữ đuôi** không mang thông tin hook cần
+# (*"AT ITS CLOSEST"*, *"THIS YEAR"*, *"RIGHT NOW"*) hoặc **mở đầu rỗng** (*"THERE IS"*).
+#
+# Nên không đi chỉnh ngưỡng, cũng không sửa 18 bộ sinh: cắt đúng hai lớp vô nghĩa ấy, ở MỘT
+# chỗ, và chỉ khi câu thật sự quá dài. Cả hai đều là lớp ĐÓNG nên liệt kê hết được (§13.9).
+# Không bao giờ cắt xuống dưới 4 chữ, và không đụng câu đã ngắn — hook 6 chữ mà bị cắt tiếp
+# thì mất chủ thể, tệ hơn hẳn một hook 9 chữ.
+_HOOK_DAU = re.compile(r"^(?:there\s+(?:is|are)|this\s+is|here\s+is)\s+", re.I)
+_HOOK_DUOI = re.compile(
+    r"\s+(?:at\s+its\s+closest|this\s+year|right\s+now|each\s+day|every\s+day|"
+    r"per\s+year|every\s+year|in\s+a\s+year|on\s+average|in\s+the\s+us|"
+    r"at\s+the\s+moment|these\s+days)\s*(\?|!|\.)?$", re.I)
+
+
+def _gon_hook(h: str, tran: int = 8) -> str:
+    t = " ".join(str(h or "").split())
+    if len(t.split()) <= tran:
+        return t
+    for _ in range(2):
+        m = _HOOK_DUOI.search(t)
+        if not m or len((t[:m.start()] + (m.group(1) or "")).split()) < 4:
+            break
+        t = t[:m.start()] + (m.group(1) or "")
+    d = _HOOK_DAU.sub("", t)
+    if len(d.split()) >= 4:
+        t = d[0].upper() + d[1:] if d else t
+    return " ".join(t.split())
+
+
 def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     """Danh sách nhịp HOÀN CHỈNH của một tập — gồm cả nhịp hook và ba lượt rải bố cục.
 
@@ -8979,7 +9011,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
             _n.pop("canh_ve", None)
             _n.pop("ve", None)
 
-    return k, tieu, hook, hook_phu, nhip, muc
+    return k, tieu, _gon_hook(hook), hook_phu, nhip, muc
 
 
 TAP_SO = os.path.join(GOC, "out", "so_tap_gt.json")
