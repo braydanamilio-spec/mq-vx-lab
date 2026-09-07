@@ -1108,7 +1108,10 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         # Đa dạng theo nhịp KHÔNG mất: neo cảnh xoay theo `i % len(_nh)` (nơi chốn của chính
         # hình mẫu) và khuôn hình xoay theo `i % len(_KHUON_NEN)` — hai trục người xem NHÌN
         # THẤY (§14.9), không phải một danh sách từ mà mô hình đem viết lên tường.
-        viec.append((i, f"{_neo}{_canh}. {SAN_NEN_VAT}. {GU_NEN}"))
+        _vat = _VAT_HINH_MAU.get(DAO_CU_TAP or "", ())
+        _do = (f"Objects in view: {_vat[i % len(_vat)]} and "
+               f"{_vat[(i + 3) % len(_vat)]}. ") if _vat else ""
+        viec.append((i, f"{_neo}{_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:
@@ -2218,6 +2221,49 @@ def _lat_short(nhip: list, san: int = SAN_LUOT) -> list:
 # muốn dài hơn thì phải lấy thêm câu nhân quả cho mỗi chủ thể, không phải đọc lại câu cũ.
 # §19.4: khi lời thoại rỗng, đi xem kịch bản có đủ sự thật không — đừng bơm cho dài.
 CHUONG_KHONG_LAP = 1
+
+# ── ĐỒ VẬT THEO HÌNH MẪU, KHÔNG THEO CÂU  (8/9/2026) ────────────────────────────────────
+# Bỏ danh sách danh từ lấy từ câu dẫn thì nền hết chữ nguệch ngoạc (bộ 133 · 134 sạch 8/8 và
+# 6/6 khung), nhưng nghèo hẳn đi: đo lưới bộ 133 có **6/8 khung là hành lang hoặc tường
+# trơn**. Anh dặn "nền liên quan videos", nên trống là hỏng đúng trục anh quan tâm.
+#
+# Chỗ hở của bản trước nằm ở NGUỒN chữ, không ở việc có chi tiết: chữ lấy từ CÂU thì mang
+# theo tên riêng và động từ, và mô hình đem viết lên tường. Đồ vật do MÌNH soạn thì không
+# bao giờ là tên riêng, và toàn là vật THẤY ĐƯỢC — thứ mô hình khuếch tán vẽ giỏi nhất thay
+# vì viết ra (§12.7: nó hỏng ở CHUỖI, không hỏng ở đồ vật).
+#
+# Mười bốn hình mẫu, mỗi cái sáu vật, xoay hai vật một nhịp theo `i` — nên hai nhịp liền
+# nhau khác nhau ở thứ người xem NHÌN THẤY (§14.9), mà không nhịp nào mang chữ của câu.
+_VAT_HINH_MAU = {
+    "may_anh":     ("enlargers", "developing trays", "film reels", "tripods",
+                    "print racks", "light boxes"),
+    "bang_video":  ("tape decks", "monitor walls", "cable spools", "mixing desks",
+                    "rack units", "cue lights"),
+    "may_bay":     ("jet bridges", "baggage carts", "boarding gates", "tow tractors",
+                    "wing sections", "trolley bins"),
+    "ten_lua":     ("launch gantries", "fuel lines", "console rows", "test stands",
+                    "cable trays", "blast shields"),
+    "dien_thoai":  ("assembly benches", "component trays", "solder stations",
+                    "conveyor belts", "test jigs", "parts bins"),
+    "may_tinh":    ("server racks", "patch panels", "desk terminals", "cable bundles",
+                    "cooling ducts", "tape drives"),
+    "cua_hang":    ("shelf rows", "checkout counters", "stock trolleys", "price rails",
+                    "basket stacks", "window displays"),
+    "xe":          ("lifts and ramps", "tool chests", "tyre stacks", "engine hoists",
+                    "parts shelves", "oil drums"),
+    "lo_phan_ung": ("turbine halls", "pipe runs", "control desks", "valve banks",
+                    "gauge panels", "walkway rails"),
+    "ong_nghiem":  ("fume hoods", "sample racks", "centrifuges", "glass cabinets",
+                    "bench sinks", "sterile trays"),
+    "tau_thuy":    ("gantry cranes", "container stacks", "mooring bollards", "loading ramps",
+                    "cargo nets", "dock ladders"),
+    "toa_nha":     ("reception desks", "lift banks", "glass partitions", "planter rows",
+                    "seating clusters", "signage rails"),
+    "dong_xu":     ("teller counters", "quote boards", "desk terminals", "vault doors",
+                    "queue rails", "document trays"),
+    "sach":        ("shelf stacks", "reading tables", "card catalogues", "print presses",
+                    "paper reams", "desk lamps"),
+}
 
 _DA_TIEU: set = set()
 

@@ -296,6 +296,17 @@ def t_prompt_nen_khong_ten_rieng():
     # Và không được dán DANH SÁCH TỪ vào prompt: bộ 132 vẽ ra `known, / berlin / became,`
     # từ chính vế `In it: {_chi}` — một danh sách từ đọc ra như tấm biển cần chép (§13.20).
     assert "In it:" not in ma, "prompt nền còn dán danh sách danh từ vào"
+    # Chi tiết nền nay lấy từ bảng đồ vật MÌNH soạn theo hình mẫu, không từ câu dẫn. Bảng ấy
+    # phải phủ đủ mọi hình mẫu (thiếu một cái là nhịp ấy về nền trơn, §15.12) và không được
+    # chứa từ viết hoa — tên riêng là thứ FLUX đem viết lên tường (bộ 131).
+    import chu_de as _C
+    nm = getattr(_C, "NEN_CUA_HINH_MAU", {})
+    thieu = [k for k in nm if k not in P._VAT_HINH_MAU]
+    assert not thieu, f"hình mẫu chưa có bảng đồ vật: {thieu}"
+    hoa = [w for v in P._VAT_HINH_MAU.values() for w in " ".join(v).split() if w[:1].isupper()]
+    assert not hoa, f"bảng đồ vật có từ viết HOA (tên riêng): {hoa[:5]}"
+    it = [k for k, v in P._VAT_HINH_MAU.items() if len(v) < 6]
+    assert not it, f"hình mẫu có dưới 6 vật nên hai nhịp liền nhau sẽ trùng: {it}"
     # chạy CHÍNH phép lọc của mã thật trên câu đã gây lỗi
     m = re.search(r"_dt = \[w for w in re\.findall\((.*?)\)\n(.*?)\]\[:4\]", src, re.S)
     assert m, "không tìm thấy phép lọc danh từ trong _nen_theo_tap"
