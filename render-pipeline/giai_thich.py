@@ -7217,6 +7217,24 @@ def _hai_nhip_du_lieu(ma: str, idx: int, bt: str) -> list:
     ]
 
 
+def _be_doi(c: str) -> str:
+    """Bẻ một câu thành hai dòng thẻ chữ, cắt ở ranh giới TỪ gần giữa nhất.
+
+    Cắt theo số ký tự giữa chừng một từ thì thẻ hiện ra chữ cụt; cắt ở dấu cách gần giữa
+    nhất giữ được cả hai dòng đọc thành câu.
+    """
+    tu = str(c or "").strip().split()
+    if len(tu) < 4:
+        return " ".join(tu) + "|"
+    giua = len(" ".join(tu)) / 2
+    d = 0; tot = 1; lech = 1e9
+    for k in range(1, len(tu)):
+        d += len(tu[k - 1]) + 1
+        if abs(d - giua) < lech:
+            lech = abs(d - giua); tot = k
+    return " ".join(tu[:tot]) + "|" + " ".join(tu[tot:])
+
+
 def _day_du_y(ma: str, nhip: list, idx: int = 0) -> list:
     """Chèn nhịp quy đổi + hệ quả cho kênh mỏng. Không đụng kênh đã đủ dài."""
     them = THEM_NHIP.get(ma)
@@ -7234,8 +7252,20 @@ def _day_du_y(ma: str, nhip: list, idx: int = 0) -> list:
     # nhịp ấy phải là nhịp đáng nhất, không phải nhịp đầu danh sách.
     can = max(0, SAN_NHIP - len(nhip))
     moi = [
-        _n("so_lieu", quy, so=(nhip[0].get("so") or ""), don=(nhip[0].get("don") or ""),
-           bt=bt, dinh=True),
+        # ── KHÔNG MƯỢN SỐ CỦA NHỊP 0 CHO MỘT CÂU VIẾT TAY  (7/9/2026) ──────────────────
+        # Bản trước đặt `so=nhip[0]["so"]` lên câu quy đổi, tức gán con số của MỘT nhịp cho
+        # câu của một nhịp KHÁC. Đọc tay 16 kênh thì hai ca mâu thuẫn thẳng:
+        #   whatweighs  thẻ «180 POUNDS» cạnh "It would take a hundred people to lift."
+        #   hiddenfee   thẻ «$12»        cạnh "Under a tenth of it is the thing itself."
+        # Mô hình thoại đọc đúng thứ nó được đưa và cho ra "Under a tenth, that's twelve
+        # dollars" — một câu vô nghĩa mà không cổng nào bắt được, vì chữ đúng và số đúng,
+        # chỉ là chúng thuộc về hai nhịp khác nhau (§18.6).
+        #
+        # Câu quy đổi là câu KHẲNG ĐỊNH, không phải một dữ kiện mới — §12.11 quy tắc E nói
+        # đúng chỗ này: lời chuyển sang khẳng định thì hình chuyển sang thẻ chữ. Và bỏ thẻ
+        # số ở đây còn chữa luôn việc đọc lại một con số đã đọc (luật 1c của `LENH_THOAI`,
+        # đúng thứ anh chê "hiện số liệu mà không nói, nói mà không hiện").
+        _n("the_chu", quy, the=_be_doi(quy), bt=bt, dinh=True),
         # Hình lấy từ CHÍNH câu này, không mượn của nhịp trước. Mượn thì hai nhịp liền
         # nhau cùng hình, và `_rai_hinh` cố ý GIỮ hình trùng thay vì gán một hình sai
         # (đúng luật "lặp một hình đúng còn hơn thay bằng hình sai") — nên trùng ở đây
@@ -8019,16 +8049,25 @@ def _khong_de_trong(nhip: list) -> None:
             n["tu"] = ((_tu_truoc + 1) % 5) if _tu_truoc is not None else 0
             n["cam"] = "ngac_nhien"
             continue
+        # ── NHỊP CUỐI KHÔNG ĐƯỢC CỨU BẰNG THẺ CHỮ  (7/9/2026) ──────────────────────────
+        # §12.12: *"thẻ chữ giữ 3 giây ở cú chốt -> đóng bằng CẢNH, câu chốt để phụ đề nói"*.
+        # Lượt cứu này không biết nó đang đứng ở đâu trong tập, nên nó lật cả nhịp đóng của
+        # `howmuch` thành thẻ chữ — cổng chấm bắt đúng chỗ ấy và trừ kênh này xuống 92/100,
+        # kênh duy nhất dưới 95. Thẻ chữ là cách cứu ĐÚNG ở giữa tập và SAI ở nhịp cuối.
+        _cuoi = i == len(nhip) - 1
         # 1 — thử mọi mệnh đề, không chỉ mệnh đề đầu
-        for _c in re.split(r"[.!?]", (n.get("loi") or "")):
+        for _c in ([] if _cuoi else re.split(r"[.!?]", (n.get("loi") or ""))):
             _c = _c.strip()
             if _c and len(_c.split()) <= 9:
                 n["khuon"] = "the_chu"
                 n["the"] = _c
                 break
         else:
-            # 2 — mượn con số của một nhịp khác trong tập
-            _ng = next((x for x in nhip if x.get("so") and x.get("don")), None)
+            # 2 — mượn con số của một nhịp khác trong tập.
+            # KHÔNG dùng ở nhịp cuối: gán con số của nhịp khác cho câu chốt là đúng họ lỗi
+            # vừa chữa ở `_day_du_y` — chữ đúng, số đúng, và chúng thuộc về hai nhịp khác
+            # nhau, nên lượt thoại đọc lên thành một câu vô nghĩa (§6, §18.6).
+            _ng = None if _cuoi else next((x for x in nhip if x.get("so") and x.get("don")), None)
             if _ng:
                 n["khuon"] = "so_lieu"
                 n["so"], n["don"] = _ng["so"], _ng["don"]
@@ -8148,6 +8187,26 @@ def _giu_chan(nhip: list) -> None:
             continue
         if str(b["bt"]).startswith("nguoi") and a.get("tu") is not None:
             b["tu"] = (int(a["tu"]) + 2) % 5
+        elif b is nhip[-1]:
+            # ── NHỊP CUỐI ĐƯỢC MIỄN KHỬ TRÙNG  (7/9/2026) ────────────────────────────────
+            # Mục 2 ngay trên CỐ Ý cho nhịp cuối mang hình của nhịp đầu — đó là cú kết ghép
+            # vòng, thứ §13.19 dựng ra để người xem xem lại. Rồi mục 1b thấy "trùng" và gỡ
+            # hình ấy đi, gỡ xong không còn gì vẽ nên lật sang thẻ chữ — tức tập đóng bằng
+            # một tấm biển, đúng thứ §12.12 cấm. Đo: `howmuch` 92/100, kênh DUY NHẤT dưới 95,
+            # và lý do ghi trong cổng chấm là "kết bằng THẺ CHỮ".
+            #
+            # Hai luật trong cùng một hàm đánh nhau, và luật chạy sau thắng luật chạy
+            # trước dù luật chạy trước mới là luật cố ý.
+            #
+            # Nhưng MIỄN HẲN cũng sai: bản đầu của bản vá này `continue` thẳng, và cổng
+            # `gu hình` bắt ngay `nguoi_ss` hai nhịp liền ở 3 tập howmuch. Cổng đúng — hai
+            # khung người giống hệt nhau vẫn là bốn giây đứng hình, dù khung sau là cú kết.
+            # Cách thoát dùng ĐÚNG lối §17.5 mà cổng đã mở sẵn: NGƯỜI được lặp nếu TƯ THẾ
+            # khác. Đổi `nguoi_ss` sang `nguoi` rồi cấp một tư thế khác thì giữ được cả ba
+            # thứ — có hình để vẽ (không rơi về thẻ chữ), khung cuối vẫn vọng lại khung đầu,
+            # và hai khung liền nhau vẫn khác nhau.
+            b["bt"] = "nguoi"
+            b["tu"] = ((int(a.get("tu") or 0)) + 2) % 5
         else:
             b.pop("bt", None)
             # GỠ HÌNH MÀ KHÔNG THAY GÌ VÀO LÀ ĐẺ RA KHUNG TRỐNG — đúng thứ anh soi ra hai

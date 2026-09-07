@@ -110,8 +110,13 @@ RULES
 2. One line per turn, 5 to 10 words — measured, not estimated: a 13-word turn wraps to
    four balloon lines and swallows the top third of the panel. Speakers alternate; the same person never speaks twice
    in a row.
-3. The first speaker is the one who is curious or complaining. The second is the one who
-   knows the number.
+3. Speaker "a" ASKS: curious, sceptical, or complaining, and never supplies a figure of
+   their own. Speaker "b" is the domain professional named in the cast — the surveyor, the
+   accountant, the attorney, the ranger — and is the ONLY one who answers with figures.
+3b. Speaker "b" talks like a working analyst being interviewed, not like a host: states the
+   figure, then one clause of what it means, and stops. No exclamation marks, no "wow", no
+   "get this", no rhetorical questions back, no selling. Confidence comes from being brief
+   and specific, and specificity comes from the figure they were given.
 4. Plain spoken American English. Contractions are fine. No narrator voice, no "as you can
    see", nobody explains what the audience is looking at.
 5. Keep the same number of turns as there are narration lines, or at most two more.
@@ -124,7 +129,9 @@ RULES
 Return ONLY a JSON array: [{"i":0,"ai":"a","chu":"...","cx":"trung_tinh"}]
 "ai" is "a" for the first character and "b" for the second.
 "cx" is one of exactly these: trung_tinh, bat_ngo, tu_tin, nghi_ngo, vui, buon.
-Use bat_ngo when the line lands a big figure, tu_tin when it explains, trung_tinh otherwise. This is an explainer channel, not a comedy: never angry.
+Speaker "a" may use bat_ngo when a figure surprises them. Speaker "b" uses ONLY tu_tin or
+trung_tinh — a professional does not gasp at their own data. This is an explainer channel,
+not a comedy: never angry, never giddy.
 """
 
 # `re.I` ở đây là một lỗi, không phải một tiện ích: hậu tố `K/M/B` viết HOA (xem `_tien`:
@@ -649,6 +656,42 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     # Đây là thứ biến phép đặt thẻ từ ƯỚC LƯỢNG thành TRA CỨU.
     chi_dan = [int(x.get("i", k)) for k, x in enumerate(thoai)]
     kieuA, kieuB, ghiA, ghiB, ga, gb = KC.vai_va_giong(kk)
+    # ── NGỮ ĐIỆU CHUYÊN GIA CHO VAI TRẢ LỜI  (anh giao, 7/9/2026) ────────────────────────
+    # Anh: *"giọng điệu ngữ điệu phân tích chuyên gia chuyên nghiệp"*. Vai đã đúng người có
+    # nghề, nhưng GIỌNG thì vẫn tra `GIONG_VAI[(gioi, tuoi)]` — tức một nhà thống kê 49 tuổi
+    # đọc y hệt một người qua đường 49 tuổi. Người xem Mỹ nhận ra chất chuyên gia bằng CÁCH
+    # NÓI trước khi kịp nghe nội dung: chậm hơn, trầm hơn, và đều — vì người biết chắc thì
+    # không cần nói nhanh để giữ lượt.
+    #
+    # Đặt ở đây chứ không ở `GIONG_VAI`: bảng ấy khai theo GIỚI và TUỔI, không biết ai là
+    # chuyên gia (§15.3 — nơi CHỌN và nơi biết BẢN SẮC phải là một). Và cộng vào nền chứ
+    # không ghi đè, để `_dieu` vẫn nhấn nhá được theo câu hỏi / câu chốt bên trên nền ấy.
+    def _uy(g, dr, dp):
+        try:
+            r = int(str(g[1]).replace("%", "").replace("+", "") or 0)
+            h = int(str(g[2]).replace("Hz", "").replace("+", "") or 0)
+        except Exception:
+            return g
+        r = max(-24, min(20, r + dr)); h = max(-26, min(26, h + dp))
+        return (g[0], f"{r:+d}%", f"{h:+d}Hz")
+
+    def _tran_uy(g):
+        """Trần TUYỆT ĐỐI cho vai trả lời, đặt SAU phép trừ.
+
+        Chỉ trừ đi một lượng thì nền cao vẫn ra cao: chuyên gia 31 tuổi tra vào giọng
+        `("nu","tre")` nền `+12%/+14Hz`, trừ xong còn `+3%/+7Hz` — vẫn là giọng tươi, tức
+        đúng chỗ hỏng vẫn nguyên (§12.4: nhất quán quanh một mốc SAI vẫn sai). Trần tuyệt
+        đối thì mọi nền đều rơi xuống dưới ngưỡng nghe-ra-là-chuyên-gia.
+        """
+        try:
+            r = int(str(g[1]).replace("%", "").replace("+", "") or 0)
+            h = int(str(g[2]).replace("Hz", "").replace("+", "") or 0)
+        except Exception:
+            return g
+        return (g[0], f"{min(r, 0):+d}%", f"{min(h, 0):+d}Hz")
+
+    gb = _tran_uy(_uy(gb, -9, -7))   # chuyên gia: chậm lại, hạ giọng, và không bao giờ vượt nền
+    ga = _uy(ga, +2, +2)             # người hỏi: nhỉnh hơn, để KHOẢNG CÁCH nghe ra được
     # ── TIỀN TỐ `v11_`, KHÔNG PHẢI `pilot_`  (6/9/2026) ──────────────────────────────────
     # `day_kho.py --mau` mặc định quét `v3_* · v3L_* · v5_* · v5L_* · v9_*`. Tệp tên `pilot_*`
     # KHÔNG nằm trong danh sách ấy, nên bước đẩy sẽ quét, không thấy gì, in "0 video vào hàng
@@ -687,6 +730,13 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
                 "quan_tam": "tu_tin", "hoai_nghi": "nghi_ngo", "ngac nhien": "bat_ngo"}
         _cx = str(cx or "trung_tinh").strip().lower()
         _cx = _cx if _cx in _HOP else _DOI.get(_cx, "trung_tinh")
+        # Chuyên gia KHÔNG kinh ngạc trước con số của chính mình. `bat_ngo` (+16Hz) và `vui`
+        # (+10Hz) đọc lên thành giọng người dẫn game show, đúng thứ anh chê là "giống channel
+        # funny". Cảm xúc cao trào là của người HỎI; người trả lời có hai nốt: chắc chắn và
+        # trung tính. Chặn ở đây — nơi cảm xúc được chuẩn hoá — thay vì dặn thêm trong lệnh
+        # dặn, vì một ràng buộc tuyệt đối phải làm cho KHÔNG THỂ vi phạm (§14.12).
+        if ai == 1 and _cx in ("bat_ngo", "vui", "so", "tuc"):
+            _cx = "tu_tin"
         # Người nghe phản ứng theo THỨ ĐANG NGHE, không theo số thứ tự lượt:
         _co_so = any(ch.isdigit() for ch in chu)
         _hoi = chu.strip().endswith("?")
