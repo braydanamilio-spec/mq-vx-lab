@@ -2167,6 +2167,24 @@ def _lat_short(nhip: list, san: int = SAN_LUOT) -> list:
     return ra
 
 
+# ── SỐ CHƯƠNG CỦA BẢN DÀI: THÊM CHƯƠNG KHÔNG THÊM NỘI DUNG  (8/9/2026) ──────────────────
+# Soi lưới bộ 130: khung 2 và khung 7 giống nhau TỪNG CHỮ, khung 3 và khung 8 cũng vậy, và
+# hai khung còn tự khai ra bằng chữ *"repeats"* / *"again"*. Đo thẳng `kich_ban(long=True)`:
+#
+#     gốc  8 nhịp · chương 1 -> 13 nhịp · 13 câu KHÁC NHAU · lặp  0
+#                  · chương 3 -> 32 nhịp · 14 câu KHÁC NHAU · lặp 18
+#     gốc 20 nhịp · chương 1 -> 25 nhịp · 25 câu KHÁC NHAU · lặp  0
+#                  · chương 3 -> 68 nhịp · 26 câu KHÁC NHAU · lặp 42
+#
+# Số câu KHÁC NHAU gần như KHÔNG ĐỔI theo số chương (13->14, 25->26): thêm chương chỉ kéo
+# dài thời lượng bằng cách đọc lại. Bản 186 giây đang giao đi có **56% số lượt là câu lặp
+# nguyên văn** — đúng lỗi "bốn cảnh lặp vòng" §15.15 đã ghi cho ODDS, quay lại ở đường mới.
+#
+# Nên số chương = 1. Bản dài ngắn đi (≈75 giây) và đó là SỰ THẬT về lượng tư liệu đang có;
+# muốn dài hơn thì phải lấy thêm câu nhân quả cho mỗi chủ thể, không phải đọc lại câu cũ.
+# §19.4: khi lời thoại rỗng, đi xem kịch bản có đủ sự thật không — đừng bơm cho dài.
+CHUONG_KHONG_LAP = 1
+
 _DA_TIEU: set = set()
 
 
@@ -2201,7 +2219,7 @@ def _tieu_short(tieu_dai: str, lat: list, c: int) -> str:
     return f"{tieu_dai} — {c + 1}"
 
 
-def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
+def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
     """MỘT BỘ = 1 bản dài + 3 short, DÙNG CHUNG một bộ ảnh VÀ một chủ thể. Trả số clip.
 
     ── VÌ SAO ĐÂY LÀ MẶC ĐỊNH  (anh dặn ghi nhớ, 7/9/2026) ───────────────────────────────
@@ -2274,7 +2292,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
         # §17.11 vốn đã nói short phải cắt từ BẢN DÀI. `kich_ban` tất định và không gọi mạng
         # (bộ sinh vẫn đang ghim), nên hỏi lại nó là rẻ và cho đúng thứ bản dài đã kể.
         try:
-            _nhip_dai = _G1.kich_ban(ma, idx, True, chuong or 3)[4] or _nhip
+            _nhip_dai = _G1.kich_ban(ma, idx, True, chuong or CHUONG_KHONG_LAP)[4] or _nhip
         except Exception as e:
             print(f"   ⚠ không lấy được nhịp bản dài ({str(e)[:40]}) — cắt từ bản thô")
             _nhip_dai = _nhip
@@ -2311,7 +2329,7 @@ def main() -> int:
                     help="dựng MỘT BỘ 1 long + 3 short dùng chung bộ ảnh (mặc định nên dùng)")
     a = ap.parse_args()
     if a.bo:
-        return 0 if bo_1_3(a.kenh, a.tu, a.chuong or 3) >= 1 else 1
+        return 0 if bo_1_3(a.kenh, a.tu, a.chuong or CHUONG_KHONG_LAP) >= 1 else 1
     return 0 if mot_tap(a.kenh, a.tu, not a.khong_ve_nen, a.chuong) else 1
 
 

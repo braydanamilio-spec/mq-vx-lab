@@ -51,6 +51,21 @@ def truoc(props: dict) -> list:
     if lap:
         loi.append(f"{lap} cặp nhịp liền nhau DÙNG CHUNG một nền")
 
+    # 2b. LỜI KHÔNG ĐƯỢC LẶP NGUYÊN VĂN. Soi lưới bộ 130: khung 2 và khung 7 giống nhau TỪNG
+    #     CHỮ, khung 3 và khung 8 cũng vậy — bản dài 186 giây nói đi nói lại 14 câu.
+    #     Gốc: `kich_ban(long=True, chuong=3)` kéo dài thời lượng bằng cách ĐỌC LẠI, không
+    #     bằng cách thêm nội dung (đo: chương 1 -> 13/13 câu khác nhau · chương 3 -> 14/32).
+    #     Cổng này canh SẢN PHẨM chứ không canh tham số, nên nó vẫn bắt được nếu mai có
+    #     đường nào khác bơm thời lượng bằng cùng một mẹo (§15.3).
+    _noi = [" ".join(str((x or {}).get("nar") or (x or {}).get("chu") or "").lower().split())
+            for x in nh]
+    _noi = [t for t in _noi if len(t) > 24]
+    if _noi:
+        _lap_van = len(_noi) - len(set(_noi))
+        if _lap_van > max(1, len(_noi) * 0.10):
+            loi.append(f"{_lap_van}/{len(_noi)} lượt LẶP NGUYÊN VĂN "
+                       f"({len(set(_noi))} câu khác nhau) — tập đang kéo dài bằng cách đọc lại")
+
     # 3. LỜI THOẠI KHÔNG ĐƯỢC MANG DẤU NỘI BỘ hay tiền tố chỉ số. Đã rò ba dạng khác nhau
     #    trong một ngày (`0.` · `i7:` · `1 Kodak`), nên cổng phải quét ở đây chứ không tin
     #    vào phép dọn ở khâu trên (§19.17).
