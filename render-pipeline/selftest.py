@@ -273,6 +273,41 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_nhip_wiki_tu_noi_khi_bi_chan():
+    """Gặp 429 thì nhịp phải NỚI cho cả máy, và rút dần về khi trót lọt.
+
+    Đưa đồng hồ ra tệp đã cắt 429 từ **4,7 xuống 2,0 lượt mỗi vòng sàng** (đo trên log thật:
+    118 dòng/25 vòng -> 26 dòng/13 vòng), nhưng chưa hết — 1,1 giây vẫn có lúc quá nhanh.
+    Không đoán một con số mới (§13.1): đọc chính lời từ chối. Và nới trong TỆP, vì bên bị
+    chặn không nhất thiết là bên gây ra — hai tiến trình dùng chung một IP thì phải cùng
+    chậm lại."""
+    import time, chu_de as C
+    cu = None
+    try:
+        cu = open(C._LUC_TEP).read()
+    except Exception:
+        pass
+    try:
+        open(C._LUC_TEP, "w").write(f"0 {C.NHIP}")
+        C._nong_nhip()
+        _, n1 = C._doc_so_tep(open(C._LUC_TEP))
+        assert n1 > C.NHIP * 1.5, f"429 không nới nhịp: {C.NHIP} -> {n1}"
+        for _ in range(30):
+            C._nong_nhip()
+        _, n2 = C._doc_so_tep(open(C._LUC_TEP))
+        assert n2 <= C._NHIP_TRAN, f"nhịp vượt trần: {n2} > {C._NHIP_TRAN}"
+        # rút dần: mỗi lượt trót lọt kéo nhịp về phía nền, không nhảy cóc
+        open(C._LUC_TEP, "w").write(f"{time.time() - 99} {C.NHIP * 3}")
+        C._cho_nhip()
+        _, n3 = C._doc_so_tep(open(C._LUC_TEP))
+        assert C.NHIP <= n3 < C.NHIP * 3, f"không rút dần về nhịp nền: {n3}"
+    finally:
+        try:
+            open(C._LUC_TEP, "w").write(cu if cu else f"0 {C.NHIP}")
+        except Exception:
+            pass
+
+
 def t_scale_phim_ra_so_nguyen():
     """`--scale` của PHIM v10 phải cho CỠ NGUYÊN ở cả hai khung.
 
@@ -2844,6 +2879,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("nhịp Wikipedia tự nới khi bị chặn", t_nhip_wiki_tu_noi_khi_bi_chan)
     check("scale PHIM v10 cho cỡ nguyên", t_scale_phim_ra_so_nguyen)
     check("nhịp Wikipedia ghìm được cả hai tiến trình", t_nhip_wiki_lien_tien_trinh)
     check("prompt nền không mang tên riêng", t_prompt_nen_khong_ten_rieng)

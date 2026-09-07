@@ -87,20 +87,39 @@ NHIP = float(os.environ.get("WIKI_NHIP") or 1.1)
 _LUC_TEP = os.path.join(tempfile.gettempdir(), "mm0_wiki_nhip")
 
 
+# ── NHỊP TỰ NỚI KHI BỊ CHẶN, VÀ NỚI CHO CẢ MÁY  (8/9/2026) ─────────────────────────────
+# Đưa đồng hồ ra tệp đã cắt 429 từ **4,7 xuống 2,0 lượt mỗi vòng sàng** (đo trên chính log:
+# 118/25 vòng -> 26/13 vòng). Giảm 57% nhưng chưa hết — tức 1,1 giây vẫn có lúc quá nhanh.
+#
+# Không đi đoán một con số mới: Wikipedia không công bố ngưỡng cho lượt gọi ẩn danh, nên mọi
+# con số gõ tay ở đây đều là §13.1 lặp lại. Thay vào đó ĐỌC chính lời từ chối — gặp 429 thì
+# nới nhịp, qua trót lọt thì rút dần về. Và nới trong TỆP, vì bên bị chặn không nhất thiết
+# là bên gây ra: hai tiến trình dùng chung một IP thì phải cùng chậm lại.
+_NHIP_TRAN = 12.0
+
+
+def _doc_so_tep(f):
+    try:
+        f.seek(0)
+        phan = (f.read() or "").split()
+        return float(phan[0]), (float(phan[1]) if len(phan) > 1 else NHIP)
+    except Exception:
+        return 0.0, NHIP
+
+
 def _cho_nhip() -> None:
     try:
         import fcntl
         with open(_LUC_TEP, "a+") as f:
             fcntl.flock(f, fcntl.LOCK_EX)
-            try:
-                f.seek(0)
-                truoc = float((f.read() or "0").strip() or 0)
-            except Exception:
-                truoc = 0.0
-            cho = NHIP - (time.time() - truoc)
-            if 0 < cho <= NHIP:
+            truoc, nhip = _doc_so_tep(f)
+            nhip = min(max(nhip, NHIP), _NHIP_TRAN)
+            cho = nhip - (time.time() - truoc)
+            if 0 < cho <= nhip:
                 time.sleep(cho)
-            f.seek(0); f.truncate(); f.write(str(time.time())); f.flush()
+            # rút dần về nhịp nền sau mỗi lượt trót lọt — nới thì nhanh, rút thì chậm
+            f.seek(0); f.truncate()
+            f.write(f"{time.time()} {max(NHIP, nhip * 0.97)}"); f.flush()
         _LUC[0] = time.time()
         return
     except Exception:
@@ -111,10 +130,28 @@ def _cho_nhip() -> None:
     _LUC[0] = time.time()
 
 
+def _nong_nhip() -> None:
+    """Bị 429 thì nới nhịp cho CẢ MÁY, không chỉ cho tiến trình gặp nó."""
+    try:
+        import fcntl
+        with open(_LUC_TEP, "a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            truoc, nhip = _doc_so_tep(f)
+            f.seek(0); f.truncate()
+            f.write(f"{time.time()} {min(_NHIP_TRAN, max(NHIP, nhip) * 1.8)}"); f.flush()
+    except Exception:
+        pass
+
+
 def _goi(url: str, timeout: int = 25) -> dict:
     _cho_nhip()
     r = urllib.request.Request(url, headers=UA)          # §13.15: thiếu User-Agent -> CDN chặn 403
-    return json.load(urllib.request.urlopen(r, timeout=timeout))
+    try:
+        return json.load(urllib.request.urlopen(r, timeout=timeout))
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            _nong_nhip()                 # 429 là hàng rào có chủ ý (§19.20) — nghe nó, đừng đoán
+        raise
 
 
 _DEM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_dem_wiki")
