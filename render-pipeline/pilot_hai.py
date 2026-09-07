@@ -51,9 +51,16 @@ import phim_gu as GU                           # noqa: E402
 # ══ NỀN: VẼ MỘT LẦN, DÙNG MÃI ════════════════════════════════════════════════════════════════
 # Đây là chỗ đổi hẳn kinh tế của cả hệ. v10 vẽ 97 ảnh MỖI TẬP; ở đây bốn ảnh cho CẢ KÊNH, và
 # tập thứ một nghìn vẫn dùng đúng bốn ảnh ấy. Chi phí ảnh của một tập -> 0.
+# ── CẤM CHỮ BẰNG CÂU PHỦ ĐỊNH LÀ ĐẶT HÀNG CHỮ  (soi khung 8/9/2026) ─────────────────────────
+# Đuôi cũ là `"no text, no letters, no signage anywhere"` — BA danh từ chỉ chữ đứng liền nhau.
+# FLUX không có negative prompt (§17.6 đã trả giá với `no circular vignette, no round badge,
+# no border` -> ra đúng một vignette tròn), nên ba chữ ấy là ba lần ĐẶT HÀNG.
+# Soi bản dài `ATA Airlines`: nền hiện `"ATA a…"` và `"MILLION CASH TRANSEC…"` — chữ loằng
+# ngoằng, thứ người xem đọc ra "nghiệp dư" trong nửa giây (§13.20).
+# Chữa bằng câu KHẲNG ĐỊNH tả bề mặt TRỐNG, không nhắc tới chữ.
 GU_NEN = ("Flat 2D cartoon background painting for an animated sitcom, clean vector-like "
-          "shapes, soft even lighting, muted friendly palette, no hard shadows, no people, "
-          "no text, no letters, no signage anywhere.")
+          "shapes, soft even lighting, muted friendly palette, soft shadows only, "
+          "every surface blank and unmarked, plain smooth walls and panels.")
 
 
 def ve_nen(de: str, phong: list, ks=None) -> int:

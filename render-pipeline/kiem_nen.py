@@ -40,9 +40,22 @@ MENH_LENH = {
 CAM_NGHICH = [
     r"no furniture", r"nothing in the (?:middle|cent(?:er|re))", r"without any furniture",
     r"no objects in the cent(?:er|re)", r"empty of furniture",
+    # 8/9/2026 — CẤM CHỮ BẰNG PHỦ ĐỊNH cũng là viết nghịch, và đắt hơn `no furniture`: chữ
+    # loằng ngoằng trong khung là thứ người xem đọc ra "nghiệp dư" nhanh nhất (§13.20).
+    r"no text", r"no letters", r"no signage", r"no words", r"without any text",
 ]
 # Tệp có dựng prompt vẽ nền
-TEP = ["nen_cf.py", "kich_v2.py", "kich_hai.py"]
+# ── DANH SÁCH CHÉP TAY LÀ CỔNG CHE LỖI  (§13.2, và nó vừa che một lỗi thật) ─────────────────
+# Ba tên trên là danh sách gõ tay, và `pilot_hai.py` — nơi dựng prompt nền cho CẢ 18 kênh của
+# bộ mới — không có trong đó. Nên đuôi `"no text, no letters, no signage"` sống ở đấy nhiều
+# ngày mà cổng chưa bao giờ soi tới, dù cổng sinh ra đúng để bắt loại câu ấy.
+# Nay TỰ TÌM: mọi tệp .py khai `GU_NEN` hoặc `SAN_NEN`, cộng ba tên cũ để không mất phạm vi.
+TEP = sorted({*["nen_cf.py", "kich_v2.py", "kich_hai.py"],
+              *[f for f in os.listdir(os.path.dirname(os.path.abspath(__file__)))
+                if f.endswith(".py")
+                and re.search(r"^(GU_NEN|SAN_NEN)\w*\s*=",
+                              io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), f),
+                                      encoding="utf-8", errors="ignore").read(), re.M)]})
 
 
 def _doc_ma(s: str) -> str:
@@ -75,8 +88,13 @@ def main() -> int:
         # cần soi, mà im lặng thì trông y hệt "không có vấn đề".
         if not re.search(r"_cf_flux_image|flux-1-schnell|fetch_image\(|GU_NEN|SAN_NEN|NEN_V3", s):
             continue
-        thieu = [ten for ten, mau in MENH_LENH.items()
-                 if not any(re.search(m, s, re.I) for m in mau)]
+        # Tệp IMPORT `SAN_NEN` từ `kich_hai` là tệp làm ĐÚNG thứ cổng này khuyên ("đừng viết
+        # lại"), nên không được tính là thiếu mệnh lệnh — bốn mệnh lệnh nằm trong hằng số nó
+        # nhập về. Bản đầu của phạm vi mở rộng tố oan `pilot_hai.py` đúng vì lý do ấy, và cổng
+        # bắt oan tệ hơn cổng không bắt (§13.8).
+        _nhap = re.search(r"from\s+kich_hai\s+import[^\n]*SAN_NEN", s)
+        thieu = [] if _nhap else [ten for ten, mau in MENH_LENH.items()
+                                  if not any(re.search(m, s, re.I) for m in mau)]
         # Câu viết NGHỊCH tính là lỗi ngang với thiếu mệnh lệnh: nó không những không cấm được
         # gì, mà còn chủ động vẽ ra đúng thứ định cấm.
         nghich = sorted({re.search(c, s, re.I).group(0) for c in CAM_NGHICH if re.search(c, s, re.I)})

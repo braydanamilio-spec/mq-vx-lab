@@ -1394,7 +1394,7 @@ def _chu_de_ai(ten_kenh: str, tieu_de: str, nhan_cot: list, keys) -> str:
         f"Channel: {ten_kenh}\nVideo title: {tieu_de}\nChart labels: {cot}\n\n"
         "Reply with ONE short English phrase (max 12 words) describing the physical place or "
         "objects that best match WHAT THIS VIDEO IS ABOUT — not where a presenter would stand.\n"
-        "Hard rules: no brand names, no proper nouns, no people, no text or signage in the "
+        "Hard rules: no brand names, no proper nouns, no people, every surface blank and unmarked in the "
         "scene. Describe objects and a place only.\n"
         "Reply with the phrase alone, nothing else."
     )
@@ -1454,7 +1454,7 @@ def canh_moi_cau_ai(ten_kenh: str, tieu_de: str, cau_noi: list, keys,
            f"data came from still happens in that world — show the place the subject lives, not "
            f"an office or a server room.\n" if the_gioi else "")
         + "Keep all scenes inside one coherent world so cuts between them feel natural.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible and the line where floor meets the far wall visible. The camera stands back far enough that no single object fills more than a third of the frame; furniture at normal size for a room a standing adult walks through. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
-        "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
+        "Hard rules: no brand names, no proper nouns, no people, every surface blank and unmarked, all "
         "packaging blank. Objects and places only.\n"
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
     )
@@ -1594,7 +1594,7 @@ def _noi_theo_chu_de(chu_de: str, ten_kenh: str, keys) -> str:
                "Name ONE real physical place where a person could plausibly be standing while "
                "talking about this. Describe it in 8-14 words as a room or outdoor spot with "
                "furniture, for a background artist.\n"
-               "No people, no text, no charts, no numbers in the description.\n"
+               "No people, every surface blank and unmarked, no charts, no numbers in the description.\n"
                'Return STRICT JSON only: {"noi": "..."}')
         for kk in _xoay(keys):
             try:
@@ -1646,7 +1646,7 @@ def ve_nen_v3(k: dict, DS, keys, chu_de: str = "") -> list:
         gu = getattr(_KHG, "SAN_NEN", "") + ", " + _KHG.GU_NEN
     except Exception:
         gu = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
-              "bold clean outlines, simple flat colours, no people, no text, no signage, "
+              "bold clean outlines, simple flat colours, no people, every surface blank and unmarked, plain unmarked panels, "
               "wide establishing shot, slightly stylised perspective")
     # Nhánh dự phòng (không import được `kich_hai`) cũng phải có lệnh ép bố cục — nếu không,
     # ngày nào import hỏng là ngày ấy nền quay về không sàn mà chẳng ai biết.

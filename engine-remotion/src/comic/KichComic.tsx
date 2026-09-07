@@ -570,6 +570,10 @@ const Panel: React.FC<{
            nhãn cột nằm đúng chỗ cái đầu — đã đo ở khung 16,0s của pilot realcost. */
         <SoPanel lop={soLieu} w={w} h={h} p={kep(trong / 0.9)} mau={mau} phu={mauPhu}
                  tran={yChan - CAO_NGUOI * (doiNguoi ? caoMax : (noiA ? caoA : caoB)) * k}
+                 /* Bong bóng ở bên nào thì số dạt sang bên kia. Chỉ ở khung NGANG — khung dọc
+                    bong bóng nằm trên đầu, không tranh chỗ với số. */
+                 lech={canRong ? ((canRong ? (noiA ? "phai" : "trai") : "") === "trai"
+                                    ? 0.16 : -0.16) : 0}
                  chu="Poppins, Arial, sans-serif" />
       ) : null}
 

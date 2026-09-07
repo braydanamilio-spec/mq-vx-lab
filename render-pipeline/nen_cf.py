@@ -172,7 +172,7 @@ def _prompt(noi: str, kenh_ten: str, ngoai: bool = False, de: str = "", tap: int
         + (f"{BIEN_THE[tap % len(BIEN_THE)]}, {GOC_MAY[(tap // 3) % len(GOC_MAY)]}. "
            if tap >= 0 else "")
         # (loại thứ hay làm hỏng khung)
-        + "No people, no characters, no watermark, no text of any kind."
+        + "No people, no characters, no watermark, every surface blank and unmarked of any kind."
     )
 
 

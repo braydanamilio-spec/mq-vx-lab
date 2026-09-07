@@ -75,7 +75,9 @@ const De: React.FC<{ children: React.ReactNode; u: number; nhe?: boolean }> =
 export const SoPanel: React.FC<{
   lop: LopComic; w: number; h: number; p: number; mau: string; phu: string; chu: string;
   tran?: number;
-}> = ({ lop, w, h, p, mau, phu, chu, tran }) => {
+  // Độ lệch ngang, tỉ lệ với bề ngang panel. Xem `chung` — số phải TRÁNH bong bóng thoại.
+  lech?: number;
+}> = ({ lop, w, h, p, mau, phu, chu, tran, lech = 0 }) => {
   // Đơn vị theo CẠNH NGẮN của panel: panel comic có ô ngang và ô dọc, và một hằng theo bề
   // ngang sẽ cho hai cỡ chữ khác hẳn nhau ở hai loại ô.
   const u = Math.min(w, h);
@@ -85,8 +87,15 @@ export const SoPanel: React.FC<{
   const cho = Math.max(h * 0.16, (tran ?? h) - DINH - h * 0.02);
   const vua = (cao: number) => Math.min(1, cho / Math.max(1, cao));
   const vao = kep(p / 0.14);
+  // ── SỐ PHẢI TRÁNH BONG BÓNG THOẠI  (soi khung 8/9/2026) ──────────────────────────────
+  // Khối số canh GIỮA panel, nên ở khung dọc nó nằm dưới bong bóng hẹp và không sao. Ở khung
+  // NGANG 16:9 bong bóng chiếm gần nửa trái, và nó vẽ SAU (zIndex cao hơn) nên nuốt mất nửa
+  // trái con số: soi bản dài `ATA Airlines` thì 4/6 khung chỉ còn `…000`, `973`, `15`, `93`.
+  // Nhìn ra thì tưởng số bị cắt mép, mà thật ra nó bị CHE — hai nguyên nhân khác nhau dẫn tới
+  // hai bản sửa khác nhau, và bản sửa cho "cắt mép" (thu nhỏ chữ) sẽ không chữa được gì.
+  // Đẩy số sang phía ĐỐI DIỆN bong bóng, biên độ theo bề ngang panel.
   const chung: React.CSSProperties = {
-    position: "absolute", left: 0, right: 0, top: h * 0.10,
+    position: "absolute", left: w * lech, right: -w * lech, top: h * 0.10,
     display: "flex", flexDirection: "column", alignItems: "center",
     opacity: vao, pointerEvents: "none",
   };

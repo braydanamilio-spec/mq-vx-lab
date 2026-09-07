@@ -697,7 +697,7 @@ def canh_moi_luot_ai(k: dict, cau: list, keys) -> list:
         "line N, ONE short English phrase (max 12 words) describing the SAME place from a "
         "different angle or with different foreground detail that suits that line.\n"
         "Never move to another location. Vary the camera angle and props, not the place.\nEVERY scene must be a WIDE shot at standing eye level, showing a room or open space with the floor visible. Never a close-up, never a macro shot, never a low angle looking up at an object.\n\n"
-        "Hard rules: no brand names, no proper nouns, no people, no text or signage, all "
+        "Hard rules: no brand names, no proper nouns, no people, every surface blank and unmarked, all "
         "packaging blank. Objects and places only.\n"
         "Format strictly as: 1. phrase\n2. phrase\n... nothing else."
     )
@@ -824,7 +824,7 @@ def canh_nen_ai(k: dict, cau: list, keys) -> str:
         f"Two characters talk. Dialogue: {thoai}\n\n"
         "Reply with ONE short English phrase (max 14 words) describing the exact physical place "
         "this conversation happens in. Be specific to the dialogue, not generic.\n"
-        "Hard rules: no brand names, no proper nouns, no people in the scene, no text or signage, "
+        "Hard rules: no brand names, no proper nouns, no people in the scene, every surface blank and unmarked, "
         "all packaging blank and unbranded. Describe a place and objects only.\n"
         "Reply with the phrase alone, nothing else."
     )
@@ -907,7 +907,7 @@ SAN_NEN_VAT = SAN_NEN.replace(
     "anything in the scene pushed far to the left and right edges")
 
 GU_NEN = ("flat 2D cartoon background in the style of classic American animated sitcoms, "
-          "bold clean outlines, simple flat colours, no people, no text, no signage, "
+          "bold clean outlines, simple flat colours, no people, every surface blank and unmarked, plain unmarked panels, "
           "wide establishing shot, slightly stylised perspective")
 
 
@@ -1075,7 +1075,7 @@ def ve_nen(k: dict, DS, keys, canh_tap: str = "") -> list:
                 # 30/8 — DÙNG LẠI BỘ CHỐNG-BỊA-CHỮ CỦA `datastory_ci`, ĐỪNG TỰ VIẾT LẠI.
                 # Khung DIET WARS đo được một biển hiệu ghi "FATET" — máy vẽ thấy "fast food
                 # restaurant" là dựng ngay một mặt biển hướng vào ống kính rồi điền chữ bịa vào.
-                # Câu "no text" trong `gu` KHÔNG cứu được: mô hình khuếch tán không có khái niệm
+                # Câu "every surface blank and unmarked" trong `gu` KHÔNG cứu được: mô hình khuếch tán không có khái niệm
                 # "đừng", chỉ có "vẽ cái gì" — chú thích ở `_bo_mat_chu` đã ghi rõ sau ba vòng thử.
                 # Cách đã kiểm chứng là BỎ HẲN CHỖ CHỮ CÓ THỂ XUẤT HIỆN (nhìn từ cạnh, quay lưng),
                 # và nó nằm sẵn trong `_salt_prompt`. Bộ này tự viết prompt riêng nên vòng ngoài
