@@ -111,10 +111,16 @@ jobs:
           # Và kiểm bằng `import`, KHÔNG bằng mã thoát của pip (§15.3).
           for i in 1 2 3; do
             python -m pip install -q --upgrade pip && \
-            python -m pip install -q "edge-tts==6.1.12" Pillow && break
+            python -m pip install -q "edge-tts==6.1.12" Pillow "PyYAML>=6.0,<7" && break
             echo "   ⚠ cài hụt lần $i/3"; sleep 20
           done
-          python -c "import edge_tts, PIL; print('edge-tts + Pillow OK')"
+          # PyYAML thêm 7/9/2026. Luồng này CHƯA THÀNH CÔNG LẦN NÀO: lượt duy nhất chết ở cổng
+          # `selftest` với 3/4 lỗi là `No module named 'yaml'`. Bảy workflow khác chạy selftest
+          # đều cài PyYAML — chỉ tệp này sót, và sót từ lúc tạo.
+          # Và phép kiểm `import` ngay dưới cũng sót đúng gói ấy: nó kiểm hai thứ VỪA CÀI chứ
+          # không kiểm thứ bước sau THẬT SỰ CẦN. Cổng kiểm danh sách được đưa cho nó, không
+          # kiểm danh sách thật — đúng họ §13.2, và ở đây nó im lặng suốt vì hai gói kia luôn có.
+          python -c "import edge_tts, PIL, yaml; print('edge-tts + Pillow + PyYAML OK')"
           cd engine-remotion && npm ci --no-audit --no-fund
 
       # Khoá dịch vụ ghi ở BƯỚC RIÊNG, sớm. Nó từng nằm bên trong bước "đẩy video", trong khi

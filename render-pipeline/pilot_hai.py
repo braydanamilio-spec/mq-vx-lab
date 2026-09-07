@@ -860,11 +860,44 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 MOT_GIONG = False        # bật: MỘT chuyên gia nói liên tục, hình đổi theo lời
 DAO_CU_TAP = ""          # hình mẫu của cả tập (`chu_de.hinh_mau`) — lấp chỗ câu không gợi vật
 ANH_THAT: list = []      # ảnh PD/CC0 của chính chủ thể — xem `_chen_anh_that`
+# ── NÉT DỰNG RIÊNG TỪNG KÊNH  (anh: "mỗi channel có 1 chút nét riêng", 7/9/2026) ────────────
+# §17.3 đã trả giá cho bài này ở bộ giải thích: **đa dạng thì CHỌN được, bản sắc thì phải KHAI**.
+# Rút từ hồ chung thì hai kênh vẫn có thể rút trúng nhau, và đo được cặp tệ nhất trùng 79%.
+#
+# Ba trục, và cả ba đặt vào thứ ĐÃ hiện trong MỌI khung — không thêm món đồ mới, vì thêm đồ là
+# thêm thứ để chồng chéo (§17.4):
+#     viTri  người dẫn đứng đâu ở dải đáy      trai · giua · phai
+#     ken    Ken Burns của kênh                vao (phóng vào) · ra (lùi ra) · ngang (trôi ngang)
+#     nen    cách chỉnh nền                    am (ấm) · lanh (lạnh) · moc (mộc, chất tư liệu)
+#
+# Gán theo bước NGUYÊN TỐ CÙNG NHAU với 27 để cả ba trục cùng xoay — gán tuần tự thì chín kênh
+# đầu bảng dùng chung một cách chỉnh nền, tức một trục đi thành vệt dài (§13.13 · §14.9).
+# 18/18 tổ hợp khác nhau; cổng `t_gu_dung_duy_nhat` canh tính duy nhất khi thêm kênh.
+GU_DUNG = {
+    "howlong": ("trai", "vao", "am"),      "howbig": ("phai", "ra", "moc"),
+    "realcost": ("giua", "vao", "moc"),    "howmuch": ("trai", "ngang", "lanh"),
+    "whatif": ("phai", "vao", "lanh"),     "survive": ("giua", "ngang", "am"),
+    "dayinlife": ("trai", "ra", "am"),     "wheregoes": ("phai", "ngang", "moc"),
+    "therules": ("giua", "ra", "moc"),     "speedof": ("trai", "vao", "moc"),
+    "odds": ("phai", "ra", "lanh"),        "hiddenfee": ("giua", "vao", "lanh"),
+    "yearsof": ("trai", "ngang", "am"),    "howloud": ("phai", "vao", "am"),
+    "whatweighs": ("giua", "ngang", "moc"), "rightnow": ("trai", "ra", "moc"),
+    "howhot": ("phai", "ngang", "lanh"),   "smallest": ("giua", "ra", "lanh"),
+}
+
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
 # Trần ảnh CF cho MỘT tập. Đặt ở đây chứ không ở biến toàn cục dùng chung: mỗi tập là một
 # tiến trình riêng nên phạm vi "một tiến trình" ĐÚNG BẰNG phạm vi "một tập" — khác hẳn ca
 # §17.7, nơi bộ đếm tự nhận là "mỗi lượt chạy" mà thật ra đếm mỗi tập.
 TRAN_NEN_TAP = int(os.environ.get("TRAN_NEN_TAP", "") or 14)
+
+
+def k_ma_sinh(ma: str) -> str:
+    """Khoá của kênh trong `giai_thich.BO_SINH`. Bảng ấy khoá theo trường `sinh` của kênh,
+    KHÔNG theo `ma` — hai thứ trùng nhau ở 18 kênh hiện tại nên nhầm cũng chạy, và sẽ hỏng
+    im lặng đúng lúc thêm một kênh đặt tên khác (§16.6: trường có, kiểu đúng, sai hệ quy chiếu)."""
+    import giai_thich as G
+    return next((k["sinh"] for k in G.KENH if k["ma"] == ma), ma)
 
 
 def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -> list:
@@ -1062,6 +1095,35 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     Nên bản dài chỉ khác bản ngắn ĐÚNG BA THAM SỐ: số chương, tên composition, tiền tố tệp.
     Mọi bộ vá của hôm nay tự động áp cho nó.
     """
+    global MOT_GIONG, DAO_CU_TAP, CHU_THE_TAP, ANH_THAT
+    # Khối này phải chạy TRƯỚC phép chọn vai: nhánh "một kênh một người" đọc `MOT_GIONG`,
+    # và bản đầu đặt khối ở dưới 53 dòng nên cờ vẫn là False lúc chọn — tức cơ chế vừa dựng
+    # không bao giờ chạy trong đường sản xuất, chỉ chạy khi tệp THỬ bật cờ từ ngoài.
+    # Đúng họ §15.19: mọi lượt RẢI phải chạy sau MỌI lượt CHÈN, ở đây là mọi lượt ĐỌC một cờ
+    # phải chạy sau lượt ĐẶT cờ ấy. Không lỗi nào báo — chỉ là nhân vật vẫn xoay như cũ.
+    # ── ĐƯỜNG "VÌ SAO" ĐI TRƯỚC, BỘ SINH CŨ LÀ TẦNG DƯỚI  (nối 7/9/2026) ────────────────
+    # Trước lượt nối này, mọi thứ dựng cả ngày (chủ thể có thật · khuôn hỏi · một giọng ·
+    # ảnh thật · nền theo chủ thể) chỉ với tới được qua `_thu_vanished.py` — một tệp THỬ.
+    # Đường sản xuất vẫn chạy bộ sinh ĐO LƯỜNG cũ, tức toàn bộ công việc không tới người xem.
+    #
+    # Hỏng thì rơi về bộ sinh cũ chứ KHÔNG mất một tập: hết chủ thể, chủ thể thiếu tư liệu,
+    # hay mạng hỏng đều là chuyện bình thường ở tầng này (§7 — tầng dưới cùng không gọi mạng).
+    _vs = None
+    try:
+        import vi_sao as _VS
+        if _VS.co_vi_sao(ma):
+            _vs = _VS.sinh(ma, idx)
+    except Exception as e:
+        print(f"   ⚠ đường 'vì sao' hỏng ({str(e)[:50]}) — dùng bộ sinh cũ")
+    if _vs:
+        _ch = _VS.DA_CHON.get((ma, idx), {})
+        MOT_GIONG = True
+        CHU_THE_TAP = _ch.get("chu_the", "")
+        DAO_CU_TAP = _ch.get("hinh_mau", "")
+        ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=14) if CHU_THE_TAP else []
+        print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · "
+              f"🖼 ảnh thật: {len(ANH_THAT)}")
+        G.BO_SINH[k_ma_sinh(ma)] = lambda _i, _r=_vs: _r
     import giai_thich as G
     import kich_comic as KC
     from kich_hai import doc_hai_giong
@@ -1154,7 +1216,19 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     # là chuyện bình thường ở kênh giải thích, và chặn họ ra khỏi vai hỏi làm số cặp tụt từ 30
     # xuống 5–9. Đa dạng là thứ người xem CẢM ĐƯỢC (§14.9), không đánh đổi lấy một quy tắc.
     _ho_cg = [v for v in _dan if _chat_nghe(v) >= 3]
-    if _ho_cg:
+    if _ho_cg and MOT_GIONG:
+        # ── MỘT KÊNH = MỘT NGƯỜI, CỐ ĐỊNH  (anh, 7/9/2026) ─────────────────────────────
+        # Anh: *"mỗi channel giờ 1 nhân vật phải ko … nhìn ra 1 người"*. Dòng dưới xoay
+        # chuyên gia theo SỐ TẬP, nên cùng một kênh mỗi tập một mặt — đúng thứ phá tan việc
+        # người xem nhận ra kênh. Xoay là đúng cho định dạng HAI NGƯỜI (đa dạng cặp thoại);
+        # với một người dẫn thì nó là lỗi. §12.5 lần nữa.
+        #
+        # Chọn TẤT ĐỊNH: người có nghề nhất, hoà thì so tên — không dùng `hash()` của Python
+        # (`PYTHONHASHSEED` ngẫu nhiên nên máy anh và runner ra hai người khác nhau, §13.13).
+        # Đo 18 kênh: mỗi kênh ra một người rõ rệt và khác nghề nhau — Attorney Brooks ·
+        # Dr Quintero · Inspector Nadia · Nurse Tara · Sergeant Boone…
+        _c = sorted(_ho_cg, key=lambda v: (-_chat_nghe(v), str(v.get("vai") or "")))[0]
+    elif _ho_cg:
         _c = _ho_cg[(idx // max(1, len(_dan) - 1)) % len(_ho_cg)]
         _khac = [v for v in _dan if v is not _c]
         _h = _khac[idx % len(_khac)]
@@ -1564,6 +1638,10 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         "nhacVol": KC._am_nhac(KC.NHAC[de]),
         **({"motNguoi": True} if MOT_GIONG else {}),
         **({"daoCuTap": DAO_CU_TAP} if DAO_CU_TAP else {}),
+        # Nét dựng riêng của kênh. Python QUYẾT rồi truyền KẾT QUẢ sang; engine chỉ đọc —
+        # §15.3: nơi chọn và nơi biết bản sắc phải là một, đừng tính lại ở đầu kia.
+        **(lambda g: {"guViTri": g[0], "guKen": g[1], "guNen": g[2]})(
+            GU_DUNG.get(ma, ("giua", "vao", "moc"))),
     }
     pj = os.path.join(GOC, "out", f"{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)

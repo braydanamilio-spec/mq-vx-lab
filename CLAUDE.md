@@ -3236,3 +3236,66 @@ Không cần đoán: **lượt này ĐÃ mang chỉ số của nó trong trườ
 
 **Luật:** khi phải nhận ra một thứ mà mô hình rò ra, hỏi trước *"dữ liệu có sẵn câu trả lời
 không?"* Một trường cấu trúc luôn đánh bại một biểu thức đoán chữ.
+
+### 19.18 MỘT BỘ ẢNH — MỘT LONG + BA SHORT. Luôn luôn, không phải khi rảnh
+
+Anh: *"1 long : 3 short từ CÙNG bộ ảnh, a đang muốn e ghi nhớ cách này mọi khi làm"*.
+
+Lý do là một bất đối xứng đo được, và nó sẽ còn đúng lâu:
+
+    thời gian render (Actions, repo PUBLIC)   ~7.200 tập/ngày   -> DƯ 8 lần
+    hạn mức ảnh CF (121 tài khoản, klein-4b)  ~2.530 tập/ngày   -> NÚT THẮT
+
+Ảnh là thứ hiếm, thời gian máy là thứ thừa. Nên mọi thứ tốn CPU mà không tốn ảnh đều gần như
+miễn phí, và **dùng lại một bộ ảnh cho bốn video là đòn bẩy lớn nhất trong nhóm ấy**: ×4 sản
+lượng trên cùng ngân sách ảnh.
+
+Nó cũng ĐÚNG về mặt sản phẩm, không phải một mẹo: short cắt từ long thì nó giữ được khoảnh
+khắc mạnh nhất của bản dài. §17.11 đã trả giá cho chiều ngược lại — `short_tu_long` mang đúng
+cái tên ấy mà gọi `mot_tap(ma, idx + chuong)`, tức dựng một tập MỚI không liên quan gì tới bản
+dài; đo 36 bộ thật thì **0 ảnh của long được dùng lại**, và chạy 24/7 là 3.566 ảnh/ngày vẽ thừa.
+
+Ba việc bắt buộc đi kèm, cả ba đều đã trả giá một lần:
+1. Đọc `out/v9_<ma>_<idx>_long.json` — tệp props mà chính lượt dựng bản dài đã ghi, mang `nhip`
+   ĐÃ CÓ `nenAnh`. Đừng sinh lại.
+2. **Short cắt từ long thì TUYỆT ĐỐI không gọi CF**, kể cả cho nhịp mà bản dài vẽ hụt. Một short
+   ăn theo mà tự đặt hàng ảnh thì nó không còn là bản cắt ra, và mọi phép tính ngân sách theo bộ
+   1:3 sai theo.
+3. Tiêu đề short = chính TÊN CHƯƠNG, không nối tiêu đề bản dài vào.
+
+Bốn cách khác cùng nhóm "tốn CPU, không tốn ảnh", xếp theo giá trị đo được:
+
+| cách | vì sao đáng |
+|---|---|
+| **sinh N kịch bản rồi chấm, lấy bản TỐT NHẤT** | kịch bản bộ này sinh bằng Python tất định — **0 token LLM** — nên bản thứ năm miễn phí. §13.24 đo được: trả bản CUỐI thay vì bản TỐT NHẤT làm điểm tụt 94 -> 81 |
+| **nâng cỡ 2160×3840 (lanczos) trước upload** | YouTube cấp codec/bitrate cao hơn cho tệp ≥1440p, cùng khung hình giữ nhiều chi tiết hơn SAU nén (§15.16) |
+| nhiều tỉ lệ khung từ một bộ ảnh | 9:16 · 16:9 · 1:1 cho ba nền tảng |
+| Ken Burns · 60fps · chuyển cảnh | đã làm; thuần CPU |
+
+### 19.19 XẾP HỒ ĐỀ TÀI THEO ĐỘ PHỦ ẢNH LÀ SAI — anh bắt được trước khi em kịp ship
+
+Em đo ra 6/11 chủ thể có đủ ảnh tự do nên tốn **0** hạn mức CF, rồi đề xuất **xếp hồ đề tài theo
+độ phủ tư liệu** để phần đầu hồ gần như miễn phí. Anh hỏi lại: *"như thế có đúng bối cảnh khớp
+kịch bản khi nói ko và vẫn đảm bảo ra videos hay hook chứ"*.
+
+Đo thì anh đúng, và bằng chứng nằm ngay trong mẫu:
+
+| chủ thể | ảnh tự do | câu NHÂN QUẢ |
+|---|---|---|
+| Kodak · Concorde · Zeppelin · Pan Am | 17–28 | 30 |
+| **Polaroid** | **14** | **0** |
+| **Periscope** | ít | **5** |
+
+Polaroid có ảnh đẹp và **không có chuyện nào để kể**. Xếp theo độ phủ ảnh thì nó lên đầu hồ.
+Và tập Periscope dựng thật đã cho thấy hậu quả: 5 câu nhân quả nên kịch bản tụt xuống thành một
+**nhật ký cập nhật phiên bản** — *"On 12 August 2015 … Then on 26 May 2015 … On 26 January
+2016 …"*, mốc thời gian còn đi lùi.
+
+**Luật:** khi tối ưu một RÀNG BUỘC (hạn mức ảnh), đừng để nó thành TIÊU CHÍ CHỌN nội dung. Cổng
+chọn chủ thể phải là CHUYỆN trước — đủ câu nhân quả để trả lời được chữ "vì sao" — và độ phủ ảnh
+chỉ được dùng làm **tiêu chí phụ giữa những chủ thể ĐÃ qua cổng chuyện**. Ngược lại là tối ưu
+đúng thứ dễ đo và hỏng đúng thứ người xem tới xem.
+
+Và một lỗ còn lại, ghi ra vì nó CHƯA sửa: ảnh được rải theo **VỊ TRÍ** (chia đều các nhịp), nên
+nó khớp CHỦ THỂ chứ không khớp MỆNH ĐỀ — câu nói về 2007 vẫn có thể đứng cạnh tấm quảng cáo
+1888. Muốn khớp thì phải ghép theo NGHĨA (chữ trong tiêu đề ảnh so với câu đang nói).

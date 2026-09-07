@@ -631,8 +631,10 @@ export const NenPanel: React.FC<{
   rong: boolean; bien?: number; net?: number; cham?: number; anh?: string;
   ken?: number;      // 0..1 — tiến độ của NHỊP này, dùng cho Ken Burns
   kenHat?: number;   // hạt chọn hướng trôi, để hai nhịp liền nhau không trôi cùng chiều
+  kenKieu?: string;  // "vao" phóng vào · "ra" lùi ra · "ngang" trôi ngang — bản sắc của kênh
+  guNen?: string;    // "am" ấm · "lanh" lạnh · "moc" mộc (chất tư liệu)
 }> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9, anh = "",
-        ken = 0, kenHat = 0 }) => {
+        ken = 0, kenHat = 0, kenKieu = "vao", guNen = "moc" }) => {
   // 31/8 — MỖI PANEL MỘT GÓC NHÌN KHÁC. Khung thử cho ra sáu panel với cùng cái màn hình ở
   // cùng một chỗ, và sáu lần lặp lại một hình trong hai mươi giây thì mắt đọc ra là ảnh dán,
   // không phải là sáu ô truyện tranh. Cùng một căn phòng nhìn từ ba chỗ đứng vẫn là một căn
@@ -687,7 +689,11 @@ export const NenPanel: React.FC<{
                Bốn hướng trôi xoay theo `kenHat` để hai nhịp liền nhau không cùng chiều. */
             transform: (() => {
               const p = Math.max(0, Math.min(1, ken));
-              const S = 1.06 + 0.09 * p;              // phóng chậm suốt nhịp
+              // Kiểu Ken Burns là BẢN SẮC của kênh: phóng vào · lùi ra · hoặc gần như
+              // không phóng mà trôi ngang. Ba kiểu đọc ra ba nhịp máy khác nhau.
+              const S = kenKieu === "ra" ? 1.15 - 0.09 * p
+                      : kenKieu === "ngang" ? 1.10 + 0.02 * p
+                      : 1.06 + 0.09 * p;
               const doi = ((S - 1) / 2) * 100 * 0.62;  // trần trôi, suy TỪ S
               const g = ((kenHat % 4) + 4) % 4;
               const hx = [1, -1, 1, -1][g], hy = [1, 1, -1, -1][g];
@@ -703,7 +709,13 @@ export const NenPanel: React.FC<{
                1,4 px vẫn đủ đẩy nền ra sau (nhân vật là nét mực đặc, tương phản rất cao) mà
                giữ lại chi tiết. Gốc thật vẫn là chiều vẽ: nền DỌC cho gấp 3,1 lần điểm ảnh
                thật, và bộ vẽ đã chuyển sang dọc — 1.585 nền ngang cũ đang được nâng cấp dần. */
-            filter: "saturate(0.80) brightness(1.06) contrast(0.96) blur(1.4px)",
+            /* Chỉnh nền theo BẢN SẮC KÊNH. Ba cách chỉnh cùng giữ một việc: đẩy nền ra sau
+               nhân vật. Cái đổi là TÔNG, thứ người xem cảm được mà không gọi tên được. */
+            filter: guNen === "am"
+              ? "saturate(0.92) brightness(1.08) contrast(0.94) sepia(0.14) blur(1.4px)"
+              : guNen === "lanh"
+              ? "saturate(0.74) brightness(1.04) contrast(1.00) hue-rotate(-8deg) blur(1.4px)"
+              : "saturate(0.62) brightness(1.05) contrast(1.02) blur(1.4px)",
           }} />
         </AbsoluteFill>
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}

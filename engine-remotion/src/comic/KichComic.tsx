@@ -228,12 +228,14 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
+  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string;
+  guViTri?: string; guKen?: string; guNen?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
   haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, noi, anhNen, soLieu,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap,
+        guViTri = "giua", guKen = "vao", guNen = "moc", noi, anhNen, soLieu,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
@@ -393,8 +395,12 @@ const Panel: React.FC<{
   const mauNen = (sang as any)?.mau || "#FFFFFF";
   const doSang = sang ? Math.min(1.06, 0.86 + ((sang as any).sang ?? 0.68) * 0.24) : 1;
 
-  const cxA = doiNguoi ? w * 0.28 : canRong ? w * 0.29 : w * 0.5;
-  const cxB = doiNguoi ? w * 0.72 : canRong ? w * 0.71 : w * 0.5;
+  // Người dẫn đứng LỆCH theo kênh (`GU_DUNG.viTri`). Đây là bản sắc đặt vào thứ ĐÃ hiện ở
+  // mọi khung, không phải một món đồ thêm vào (§17.3 · §17.4). Lệch 0,18 khung là đủ để hai
+  // kênh đọc ra khác nhau mà vẫn chừa chỗ cho ảnh nền ở nửa còn lại.
+  const _lechGu = motNguoi ? (guViTri === "trai" ? -0.18 : guViTri === "phai" ? 0.18 : 0) : 0;
+  const cxA = doiNguoi ? w * 0.28 : canRong ? w * 0.29 : w * (0.5 + _lechGu);
+  const cxB = doiNguoi ? w * 0.72 : canRong ? w * 0.71 : w * (0.5 + _lechGu);
 
   return (
     <div style={{
@@ -415,13 +421,26 @@ const Panel: React.FC<{
                    dùng `giay/DAI`: mỗi nhịp là một cú máy riêng, và một phép trôi trải trên cả
                    video thì mỗi nhịp chỉ nhận một lát cắt vài phần trăm — mắt không thấy gì. */
                 ken={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0}
-                kenHat={thuTu + hat} />
+                kenHat={thuTu + hat} kenKieu={guKen} guNen={guNen} />
 
       {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có
           cái router. Không gọi mô hình: câu thoại là văn bản, dò từ khoá là đủ. */}
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
            style={{ position: "absolute", inset: 0, zIndex: 2 }}>
-        <DaoCu ten={doDaoCu(L.nar) || (daoCuTap || "")} w={w} h={h} mau={mau} mauPhu={mauPhu} hai={doiNguoi} />
+        {/* ── ĐẠO CỤ CHỈ HIỆN KHI NỀN CHƯA NÓI HỘ  (anh soi, 7/9/2026) ──────────────────
+            Anh: *"sao nó gắn trên videos từ đầu tới cuối vậy có ok ko?"* — không ok.
+            Đạo cụ hình mẫu sinh ra sáng nay khi nền còn là PHÒNG CHUNG CHUNG: lúc ấy nó là
+            tín hiệu DUY NHẤT nói tập này về máy ảnh. Nay nền đã LÀ chủ thể (ảnh Kodak thật,
+            thẻ logo), nên nó vừa nói lại thứ nền đã nói, vừa đứng YÊN suốt video — và một
+            hình không bao giờ đổi thì mắt đọc ra watermark, không đọc ra bối cảnh. Đúng họ
+            "dấu hiệu nghiệp dư" §12.12, và §12.5: đúng ở ngữ cảnh nó sinh ra, sai ở ngữ
+            cảnh mới.
+            Điều kiện viết theo VAI của nó — *"đạo cụ là tầng dự phòng khi nền không mang
+            chủ thể"* — chứ không liệt kê nhịp nào được phép (§13.9). Câu thoại có gọi tên
+            một đồ vật cụ thể thì vẫn vẽ: lúc ấy nó minh hoạ chính câu đang nói, không phải
+            một nhãn dán cả tập. */}
+        <DaoCu ten={doDaoCu(L.nar) || (anhNen ? "" : (daoCuTap || ""))}
+               w={w} h={h} mau={mau} mauPhu={mauPhu} hai={doiNguoi} />
       </svg>
 
       {L.chot ? <VachToc w={w} h={h} p={kep(trong / 0.7)} mau={mauPhu} /> : null}
@@ -705,6 +724,9 @@ export type PropsComic = {
   noiIdx?: number;
   hook?: string;      // thẻ hook 2 giây đầu — xem `TheHook`
   anhNen?: string;    // nền 3D sinh bằng Cloudflare; bỏ trống thì vẽ nền vector như cũ
+  // Nét dựng riêng của kênh (`pilot_hai.GU_DUNG`). Python QUYẾT và truyền kết quả sang; engine
+  // chỉ ĐỌC — §15.3: nơi chọn và nơi biết bản sắc phải là một, đừng tính lại ở đầu kia.
+  guViTri?: string; guKen?: string; guNen?: string;
   // Hướng sáng ĐO TỪ chính `anhNen` (`huong_sang.py` -> `huong_sang.json`), đưa sang bằng props
   // chứ không để engine đọc tệp: bước render trên Actions không được phép chạm đĩa ngoài
   // `staticFile`, và số đo là thứ tính một lần rồi dùng mãi.
@@ -743,6 +765,7 @@ export const KichComic: React.FC<PropsComic> = ({
   luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, motNguoi, daoCuTap = "", tieuDe = "", handle = "", mau = "#F0483C",
+  guViTri = "giua", guKen = "vao", guNen = "moc",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
   sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
@@ -788,6 +811,7 @@ export const KichComic: React.FC<PropsComic> = ({
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            motNguoi={motNguoi} daoCuTap={daoCuTap}
+           guViTri={guViTri} guKen={guKen} guNen={guNen}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
            /* Cỡ cảnh: mặc định do engine xoay theo hạt của tập, nhưng một lượt được phép
               ÉP cỡ của riêng nó (`canh`). Kênh HOUSE RULES cần điều đó: mười biến thể của gói
