@@ -591,7 +591,15 @@ export const NenPanel: React.FC<{
         <AbsoluteFill style={{ overflow: "hidden" }}>
           <Img src={staticFile(anh)} style={{
             width: "100%", height: "100%", objectFit: "cover",
-            filter: "saturate(0.80) brightness(1.06) contrast(0.94) blur(2.4px)",
+            /* ── ĐỘ MỜ CHỒNG LÊN PHÉP PHÓNG  (anh: "ko được HD sắc nét lắm", 7/9/2026) ──
+               `blur(2.4px)` chọn để đẩy nền ra sau. Nhưng nền đời đầu là ảnh NGANG 1344×768
+               đặt `objectFit: cover` vào khung DỌC, tức đã bị phóng 2,5 lần — chỉ 432 px ngang
+               của ảnh gốc trải ra 1080 px màn hình. Mờ thêm 2,4 px trên một ảnh đã phóng 2,5
+               lần là cộng dồn hai lần mất nét, và người xem đọc ra "vỡ hình".
+               1,4 px vẫn đủ đẩy nền ra sau (nhân vật là nét mực đặc, tương phản rất cao) mà
+               giữ lại chi tiết. Gốc thật vẫn là chiều vẽ: nền DỌC cho gấp 3,1 lần điểm ảnh
+               thật, và bộ vẽ đã chuyển sang dọc — 1.585 nền ngang cũ đang được nâng cấp dần. */
+            filter: "saturate(0.80) brightness(1.06) contrast(0.96) blur(1.4px)",
           }} />
         </AbsoluteFill>
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}

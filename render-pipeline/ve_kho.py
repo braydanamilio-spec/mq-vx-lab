@@ -129,9 +129,23 @@ def mot_kenh(ma: str, ds: list, luong: int, ks, tran: int = 0) -> tuple:
     # 270 nền nữa, không phải 30 nền nét hơn.
     # Nên xếp sau, và chỉ chạy khi `thieu` đã rỗng. Kho tự về MỘT CHẤT qua vài ngày mà không
     # phải xoá gì và không phải quyết định gì (anh dặn: bổ sung dần cả tuần cũng được).
-    if not thieu and cu_ngang:
-        thieu = cu_ngang
-        print(f"      {ma}: đã phủ đủ — nâng cấp {len(cu_ngang)} nền ngang sang dọc")
+    # ── XEN KẼ, KHÔNG XẾP HÀNG  (anh: "ko được HD sắc nét lắm", 7/9/2026) ──────────────
+    # Bản trước xếp việc nâng cấp SAU khi phủ đủ. Đúng về thứ tự ưu tiên, sai về thời gian:
+    # kênh mới có 42/300 nền, nên "phủ đủ" là hàng tháng, và tới lúc ấy mọi tập vẫn dùng nền
+    # NGANG bị phóng 2,5 lần — tức thứ anh đang nhìn thấy là mờ, suốt hàng tháng.
+    #
+    # Hai việc chữa hai lỗi KHÁC NHAU mà anh nêu cùng lúc: phủ thêm chữa TRÙNG BỐI CẢNH, nâng
+    # cấp chữa MỜ. Xếp hàng thì lỗi thứ hai không được chạm tới lần nào. Nên chia ngân sách:
+    # 70% cho phủ, 30% cho nâng cấp — cả hai đường cùng nhích mỗi ngày.
+    if cu_ngang:
+        if not thieu:
+            thieu = cu_ngang
+            print(f"      {ma}: đã phủ đủ — nâng cấp {len(cu_ngang)} nền ngang sang dọc")
+        elif tran:
+            _n = max(1, tran * 3 // 10)
+            thieu = thieu[:max(1, tran - _n)] + cu_ngang[:_n]
+            print(f"      {ma}: {len(thieu) - min(_n, len(cu_ngang))} nền mới + "
+                  f"{min(_n, len(cu_ngang))} nâng cấp ngang->dọc")
     if tran:
         thieu = thieu[:tran]
     if not thieu:

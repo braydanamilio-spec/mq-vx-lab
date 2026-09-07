@@ -116,7 +116,12 @@ RULES
    see", nobody explains what the audience is looking at.
 5. Keep the same number of turns as there are narration lines, or at most two more.
 
-Return ONLY a JSON array: [{"ai":"a","chu":"...","cx":"trung_tinh"}]
+6. Every turn MUST carry "i": the number of the narration line it delivers, copied from the
+   list above. Two turns may share the same "i" (a question then its answer), and the numbers
+   must never go backwards. This is how the on-screen figure card is placed next to the turn
+   that actually says it — get "i" wrong and the viewer hears one number while reading another.
+
+Return ONLY a JSON array: [{"i":0,"ai":"a","chu":"...","cx":"trung_tinh"}]
 "ai" is "a" for the first character and "b" for the second.
 "cx" is one of exactly these: trung_tinh, bat_ngo, tu_tin, nghi_ngo, vui, buon.
 Use bat_ngo when the line lands a big figure, tu_tin when it explains, trung_tinh otherwise. This is an explainer channel, not a comedy: never angry.
@@ -360,10 +365,18 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
             "spoken out loud, digits exactly as written above, in the turn for its own line. "
             "A viewer listening without watching must hear each figure."), keys)
         ds = C._tach_json(t) or []
+        def _chi_so(x, mac_dinh):
+            """Chỉ số câu dẫn mà lượt này diễn. Sai kiểu / ngoài khoảng -> quay về ước lượng."""
+            try:
+                v = int(x.get("i"))
+            except Exception:
+                return mac_dinh
+            return v if 0 <= v < len(loi) else mac_dinh
         ra = [{"chu": " ".join(str(x.get("chu") or "").split()),
                "ai": "b" if str(x.get("ai", "a")).lower().startswith("b") else "a",
-               "cx": str(x.get("cx") or "trung_tinh")}
-              for x in ds if str(x.get("chu") or "").strip()]
+               "cx": str(x.get("cx") or "trung_tinh"),
+               "i": _chi_so(x, min(len(loi) - 1, k))}
+              for k, x in enumerate(ds) if str(x.get("chu") or "").strip()]
         if len(ra) < 4:
             continue
         # ── TRẦN SỐ LƯỢT: MÁY CẮT, KHÔNG ĐỐT MỘT VÒNG GỌI AI  (đo 6/9/2026) ─────────────
@@ -486,6 +499,9 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
           "mau": g["nen"], "de": de, "nen": phong}
 
     cau = [(x["chu"], 0 if x["ai"] == "a" else 1, x["cx"]) for x in thoai]
+    # Chỉ số câu dẫn mà mỗi lượt thoại diễn — mô hình tự khai (xem luật 6 của `LENH_THOAI`).
+    # Đây là thứ biến phép đặt thẻ từ ƯỚC LƯỢNG thành TRA CỨU.
+    chi_dan = [int(x.get("i", k)) for k, x in enumerate(thoai)]
     kieuA, kieuB, ghiA, ghiB, ga, gb = KC.vai_va_giong(kk)
     # ── TIỀN TỐ `v11_`, KHÔNG PHẢI `pilot_`  (6/9/2026) ──────────────────────────────────
     # `day_kho.py --mau` mặc định quét `v3_* · v3L_* · v5_* · v5L_* · v9_*`. Tệp tên `pilot_*`
@@ -643,45 +659,74 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     # một-đổi-một (12 câu -> 12 lượt). Nên nhịp thứ i ứng với lượt thứ i. Ánh xạ theo VỊ TRÍ
     # đúng theo cấu trúc, không phụ thuộc vào việc câu thoại có tình cờ chứa con số hay không.
     # Từ khoá chỉ còn là bản tinh chỉnh: nếu lượt lân cận có đúng con số thì dịch sang lượt đó.
+    # ── GÁN THẺ SỐ: HAI LƯỢT, KHỚP THẬT ĐI TRƯỚC  (anh nghe ra, 7/9/2026) ───────────────
+    # Anh: *"nhiều khi nói số liệu thì ko hiện số liệu mà hiện số liệu lại ko nói"*. Đo 3 tập:
+    # **10 lượt đọc số mà không thẻ nào hiện**, và **5/13 thẻ rơi vào lượt không đọc nó** —
+    # thẻ luôn nằm TRƯỚC một lượt so với câu đọc nó.
+    #
+    # Bản trước đã biết tìm lượt khớp, nhưng ngay sau đó có `while so_lieu[j]: j += 1` — nên
+    # khi ô vừa khớp đã bị một thẻ TRƯỚC chiếm, thẻ này bị đẩy sang ô kế, tức ra khỏi đúng chỗ
+    # nó vừa tìm được. Duyệt theo thứ tự nhịp làm thẻ đến sớm giành mất ô của thẻ đến sau.
+    #
+    # Chữa bằng THỨ TỰ, không bằng thêm điều kiện: lượt một chỉ đặt những thẻ tìm được lượt
+    # ĐỌC ĐÚNG con số của nó (không đẩy đi đâu cả); lượt hai mới rải phần còn lại vào ô trống
+    # theo tỉ lệ. Khớp thật luôn thắng phép ước lượng — trước đây thì ngược lại.
     so_lieu = [None] * len(cau)
     import phim as P
     co_lop = [(i, P.lop_du_lieu(n)) for i, n in enumerate(nhip)]
     co_lop = [(i, l) for i, l in co_lop if l]
+
+    def _vi_tri_ti_le(i_nhip):
+        return min(len(cau) - 1, round(i_nhip * (len(cau) - 1) / max(1, len(nhip) - 1)))
+
+    def _doc_o(t, sc, chu):
+        if not (0 <= t < len(cau)) or so_lieu[t]:
+            return False
+        g = cau[t][0].lower()
+        for _d in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+            g = g.replace(_d, "-")
+        if sc and sc in re.sub(r"[^0-9A-Za-z]", "", g):
+            return True
+        return bool(chu) and chu in g
+
+    # ── LƯỢT KHÔNG: TRA THEO CHỈ SỐ MÔ HÌNH KHAI  (triệt để, 7/9/2026) ─────────────────
+    # Mọi phép so chuỗi phía dưới đều là ĐOÁN: chúng cố suy ra "lượt thoại nào diễn câu dẫn
+    # nào" sau khi việc đã rồi. Nay mô hình khai thẳng `i` cho từng lượt, nên chỗ đặt thẻ là
+    # một phép TRA CỨU. Trong các lượt cùng khai một câu dẫn, ưu tiên lượt THẬT SỰ đọc con số
+    # (một câu dẫn thường tách thành "hỏi" rồi "đáp", và thẻ thuộc về câu đáp).
+    _con = []
     for i, lop in co_lop:
-        # vị trí tương ứng trong dòng lời thoại
-        j = min(len(cau) - 1, round(i * (len(cau) - 1) / max(1, len(nhip) - 1)))
-        # ── THẺ PHẢI RƠI VÀO LƯỢT THẬT SỰ ĐỌC CON SỐ ẤY  (anh nghe ra, 7/9/2026) ────────
-        # Anh: *"số liệu phải đọc đúng, a thấy đang bị đọc sai"*. Đọc tay `realcost`:
-        #
-        #     A: What does a nine dollar sandwich really cost?   [THẺ $213K]
-        #     B: Two hundred thirteen thousand dollars…          [THẺ $9]     <- lệch một nhịp
-        #
-        # Miệng đọc một con số, màn hình hiện con số khác. Gốc nằm ở đúng phép tinh chỉnh này:
-        # `kim` là CHỮ SỐ (`213k`) còn mô hình viết số bằng CHỮ (*"two hundred thirteen
-        # thousand"*), nên phép `in` không bao giờ khớp. Tinh chỉnh chưa từng chạy, và thẻ luôn
-        # rơi về vị trí TỈ LỆ — lệch bất cứ khi nào số lượt thoại khác số câu dẫn.
-        #
-        # Cùng họ với hai lỗi đã trả giá đêm qua (§18.11): phép so đo CHUỖI trong khi thứ cần
-        # đo là NỘI DUNG. Nay so cả ba dạng người ta thật sự viết ra: chữ số · chữ số bỏ dấu
-        # phẩy · dạng ĐỌC BẰNG CHỮ (`_doc_so` đã có sẵn và đã nới tới hàng tỉ).
         _thoi = str(lop.get("so") or "")
         _sc = re.sub(r"[^0-9A-Za-z]", "", _thoi)[:6].lower()
         _cs = re.sub(r"[^\d]", "", _thoi)
-        _chu = _doc_so(int(_cs)) if _cs.isdigit() and len(_cs) <= 12 else ""
-        def _doc_o_luot(t: int) -> bool:
-            if not (0 <= t < len(cau)) or so_lieu[t]:
-                return False
-            g = cau[t][0].lower()
-            for _d in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
-                g = g.replace(_d, "-")
-            if _sc and _sc in re.sub(r"[^0-9A-Za-z]", "", g):
-                return True
-            return bool(_chu) and _chu in g
+        _chu = _doc_so(int(_cs)) if _cs.isdigit() and 0 < len(_cs) <= 12 else ""
+        ung = [t for t, c in enumerate(chi_dan) if c == i and not so_lieu[t]]
+        dat = next((t for t in ung if _doc_o(t, _sc, _chu)), None)
+        if dat is None and ung:
+            dat = ung[-1]                       # không lượt nào đọc số -> lượt CUỐI của câu ấy
+        if dat is None:
+            _con.append((i, lop))
+        else:
+            so_lieu[dat] = lop
+    _con2, _con = _con, []
+    for i, lop in _con2:                        # LƯỢT MỘT — khớp chuỗi trong cửa sổ ±3
+        _thoi = str(lop.get("so") or "")
+        _sc = re.sub(r"[^0-9A-Za-z]", "", _thoi)[:6].lower()
+        _cs = re.sub(r"[^\d]", "", _thoi)
+        _chu = _doc_so(int(_cs)) if _cs.isdigit() and 0 < len(_cs) <= 12 else ""
+        j = _vi_tri_ti_le(i)
+        dat = None
         if _sc or _chu:
-            for d in (0, 1, -1, 2, -2):
-                if _doc_o_luot(j + d):
-                    j = j + d
+            for d in (0, 1, -1, 2, -2, 3, -3):
+                if _doc_o(j + d, _sc, _chu):
+                    dat = j + d
                     break
+        if dat is None:
+            _con.append((i, lop))
+        else:
+            so_lieu[dat] = lop
+    for i, lop in _con:                        # LƯỢT HAI — rải phần còn lại vào ô trống
+        j = _vi_tri_ti_le(i)
         while j < len(cau) and so_lieu[j]:
             j += 1
         if j < len(cau):
@@ -710,7 +755,14 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
 
     out = os.path.join(GOC, "out", f"{slug}.mp4")
     r = subprocess.run(["npx", "remotion", "render", "src/index.ts", "KichComic", out,
-                        f"--props={pj}", "--gl=swiftshader", "--log=error"],
+                        # ── CHẤT LƯỢNG ĐẶT TƯỜNG MINH  (anh: "ko được HD sắc nét lắm") ──
+                        # Remotion mặc định CRF 18 và đã cho 10,4 Mbps ở 1080×1920 — không tệ,
+                        # nhưng đây là tệp NGUỒN đem lên YouTube, nơi nó còn bị nén LẦN NỮA.
+                        # Nén hai lần thì mất mát cộng dồn, nên bản nguồn phải dư chất lượng:
+                        # CRF 16 và ảnh khung 100% (mặc định 80 — mỗi khung đã mất một lần
+                        # trước cả khi vào bộ mã hoá).
+                        f"--props={pj}", "--gl=swiftshader", "--log=error",
+                        "--crf=16", "--jpeg-quality=100"],
                        cwd=ENG, capture_output=True, text=True, timeout=2400)
     if r.returncode or not os.path.exists(out):
         print(f"   ❌ render hỏng: {(r.stderr or r.stdout or '')[-260:]}"); return ""
