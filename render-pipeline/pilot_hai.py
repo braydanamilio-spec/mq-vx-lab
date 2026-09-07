@@ -620,12 +620,16 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         for _k, _x in enumerate(ra):
             if (_ket and _x.get("ai") == _ket[-1].get("ai") == "b"
                     and _so_cua(_x) and _so_cua(_ket[-1])
-                    # Trần phải là CHÍNH ngân sách lượt, không phải một hằng tự đặt: bản đầu
-                    # viết `< 16` — một con số không có nguồn (§13.1) — nên `realcost` ra 16
-                    # lượt trong khi trần là 14, và video dài 66 giây so với trung vị 27.
-                    # Cho phép đúng HAI lượt nối trên trần: mỗi lượt nối chữa một cặp dính
-                    # nhau, và quá hai cặp thì lỗi nằm ở khâu viết chứ không phải khâu chèn.
-                    and len(_ket) + len(ra) - _k < _tran_luot + 2):
+                    # ── KHÔNG ĐẶT TRẦN CHO CHÍNH BẢN SỬA  (7/9/2026) ─────────────────────
+                    # Bản trước chặn ở `_tran_luot + 2`, và loạt dựng 18 kênh cho thấy trần
+                    # ấy chặn đúng thứ cần: `howloud` có BẢY cặp dính mà chỉ nhét được hai
+                    # câu nối, giao đi bảy chỗ một người nói hai lần liên tiếp.
+                    #
+                    # Câu nối chỉ được chèn khi CÓ một cặp dính thật — nó không bao giờ nổ
+                    # bừa. Nên đặt trần lên nó là đặt trần lên CÁI CHỮA, không phải lên cái
+                    # phí. Giá phải trả là vài giây mỗi câu nối; giá của việc không chữa là
+                    # đúng lỗi anh chê từ đầu (*"nhầm vai"*). Đổi đúng chiều.
+                    and len(_ket) < 40):
                 _ket.append({"i": _x.get("i", 0), "ai": "a",
                              "chu": _NOI[(_lech + len(_ket)) % len(_NOI)], "cx": "trung_tinh"})
             _ket.append(_x)
