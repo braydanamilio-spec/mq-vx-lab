@@ -291,6 +291,18 @@ def t_lat_short_khong_mong():
         assert len(set(van)) == len(van), f"n={n}: hai short trùng nội dung"
         assert len(ls) == 3 or n < san * 2 + 1, f"n={n}: chỉ ra {len(ls)} short"
     assert P._lat_short([{"loi": "a"}]) == [], "quá ít nhịp phải trả rỗng"
+    # TRẦN: short là MỘT chương có cú đấm, không phải một phần ba bộ phim. Bộ 129 cắt từ 32
+    # nhịp của bản dài ra ba short 58–68 giây — đúng luật, sai thể loại.
+    for n in (29, 32, 60, 120):
+        ls = P._lat_short([{"loi": f"s{i}"} for i in range(n)])
+        assert all(len(x) <= P.TRAN_LAT for x in ls), f"n={n}: lát vượt trần {[len(x) for x in ls]}"
+        assert ls[-1][-1]["loi"] == f"s{n-1}", f"n={n}: lát cuối không chạm đuôi bản dài"
+    # ba tiêu đề short phải khác nhau KHÔNG PHÂN BIỆT HOA THƯỜNG — bộ 129 ra
+    # `1992 INDIAN STOCK MARKET SCAM CAME BACK` cạnh `1992 Indian stock market scam came back`
+    P._DA_TIEU.clear()
+    a = P._tieu_short("DAI", [{"loi": "The airline lost its licence and never flew again."}], 0)
+    b = P._tieu_short("DAI", [{"loi": "THE AIRLINE LOST ITS LICENCE AND NEVER FLEW AGAIN."}], 1)
+    assert a.lower() != b.lower(), f"hai tiêu đề chỉ khác hoa thường: {a!r} / {b!r}"
     # MỘT hằng số, hai chỗ cưỡng chế: `doi_thoai` vứt bản nháp dưới sàn, `_lat_short` cắt
     # theo sàn. Bộ 128 mất clip thứ tư vì hai con số ấy từng là 4 và 3 (§11).
     src = inspect.getsource(P.doi_thoai)

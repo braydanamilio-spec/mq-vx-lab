@@ -570,6 +570,7 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
 # chữa được cái mỏng 2, không chữa được cái lệch sàn).
 # Một hằng số, hai chỗ đọc. §11: đừng bao giờ tạo nguồn sự thật thứ hai cho cùng một số.
 SAN_LUOT = 4
+TRAN_LAT = 7        # trần nhịp mỗi short ≈ 37 giây, xem `_lat_short`
 
 def doi_thoai(loi: list, vai: list, man: list = None) -> list:
     keys = C._khoa_groq()
@@ -2145,11 +2146,17 @@ def _lat_short(nhip: list, san: int = SAN_LUOT) -> list:
     if n < san:
         return []
     so = 3 if n >= san * 2 + 1 else (2 if n >= san + 2 else 1)
-    k = max(san, -(-n // 3))
+    # ── VÀ MỘT CÁI TRẦN, KHÔNG CHỈ MỘT CÁI SÀN  (8/9/2026) ──────────────────────────────
+    # Sau khi cắt từ bộ nhịp ĐÃ NỞ của bản dài (32 nhịp), `ceil(n/3)` cho lát 11 nhịp và
+    # short ra **58–68 giây**. Đúng luật, nhưng sai thể loại: một short là MỘT chương có cú
+    # đấm, không phải một phần ba bộ phim. Đo: ~5,3 giây/panel -> trần 7 nhịp ≈ 37 giây.
+    # Ba cửa sổ vì thế TRẢI ĐỀU khắp bản dài (đầu · giữa · cuối) thay vì phủ kín nó —
+    # ba chương rời nhau đọc ra ba video, ba phần ba liền nhau đọc ra một video bị chia ba.
+    k = min(TRAN_LAT, max(san, -(-n // 3)))
     dau = []
     for c in range(so):
-        d = min(c * k, n - k) if so > 1 else 0
-        dau.append(max(0, d if c < so - 1 else n - k))
+        d = 0 if so == 1 else round(c * (n - k) / (so - 1))
+        dau.append(max(0, min(d, n - k)))
     ra, da = [], set()
     for d in dau:
         khoa = (d, d + k)
@@ -2158,6 +2165,9 @@ def _lat_short(nhip: list, san: int = SAN_LUOT) -> list:
         da.add(khoa)
         ra.append(nhip[d:d + k])
     return ra
+
+
+_DA_TIEU: set = set()
 
 
 def _tieu_short(tieu_dai: str, lat: list, c: int) -> str:
@@ -2180,7 +2190,14 @@ def _tieu_short(tieu_dai: str, lat: list, c: int) -> str:
         cau = re.split(r"(?<=[.!?])\s", cau)[0].strip(" .!?")
         # bỏ câu dẫn quá ngắn (một con số, một tiếng đệm) và câu quá dài để làm tiêu đề
         if 18 <= len(cau) <= 92 and len(cau.split()) >= 4:
-            return cau[0].upper() + cau[1:]
+            cau = cau[0].upper() + cau[1:]
+            # ── KHÁC NHAU KHÔNG PHÂN BIỆT HOA THƯỜNG  (8/9/2026) ────────────────────────
+            # Bộ 129 ra hai tiêu đề `1992 INDIAN STOCK MARKET SCAM CAME BACK` và
+            # `1992 Indian stock market scam came back` — với người xem là MỘT tiêu đề,
+            # với `set()` là hai. Phép so phải đo thứ người xem cảm được (§18.11).
+            if cau.lower() not in _DA_TIEU:
+                _DA_TIEU.add(cau.lower())
+                return cau
     return f"{tieu_dai} — {c + 1}"
 
 
@@ -2263,6 +2280,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = 3) -> int:
             _nhip_dai = _nhip
         print(f"   ✂️ cắt short từ {len(_nhip_dai)} nhịp của bản dài "
               f"(bản thô {len(_nhip)} nhịp)")
+        _DA_TIEU.clear()
         _lats = _lat_short(_nhip_dai)
         if len(_lats) < 3:
             print(f"   ⚠ chỉ {len(_nhip)} nhịp — dựng {len(_lats)} short thay vì 3 "
