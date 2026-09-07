@@ -468,6 +468,14 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
     }
     pf = os.path.join(PUB, f"_{slug}.json")
     json.dump(props, io.open(pf, "w", encoding="utf-8"), ensure_ascii=False)
+    # ── TẠO THƯ MỤC TRƯỚC KHI GHI VÀO NÓ  (8/9/2026) ────────────────────────────────────
+    # `os.makedirs(RA)` vốn đứng SAU lệnh ghi `.canh.json` ngay dưới. Ở máy anh `out/` đã tồn
+    # tại từ lâu nên không bao giờ lộ; trên runner sạch thì lệnh ghi nổ
+    # `FileNotFoundError: .../v10_<kênh>_0504_long.canh.json` và giết cả job.
+    # Đo trên lượt thật 18:51 hôm nay: `Render 18 kênh PHIM v10` hỏng đúng như vậy ở nhiều
+    # luồng, sau khi CF đã vẽ xong 73/73 cảnh — tức mất trọn công của 527 giây vẽ ảnh.
+    # Cùng họ §10.1: hỏng mà không để lại tệp nào thì trông y hệt chưa từng chạy.
+    os.makedirs(RA, exist_ok=True)
     # Sổ cảnh đi kèm: đọc được bảng phân cảnh mà không phải mở lại video. Đây là thứ duy nhất
     # cho phép soi "cảnh có khớp lời không" bằng mắt trong một phút.
     json.dump([{"loi": n["cua"], "canh": n["canh"], "anh": n.get("anh"),
@@ -475,7 +483,6 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
               io.open(os.path.join(RA, f"{slug}.canh.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
 
-    os.makedirs(RA, exist_ok=True)
     out = os.path.join(RA, f"{slug}.mp4")
     comp = "PhimDoc" if doc else "PhimNgang"
     # ── DỰNG Ở 1440p, KHÔNG PHẢI 1080p  (6/9/2026) ──────────────────────────────────────
