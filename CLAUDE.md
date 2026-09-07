@@ -3056,3 +3056,83 @@ chi phí thật trong khi cổng Python miễn phí.
 | Cổng chặn SỐ BỊA (chiều thừa) | `pilot_hai._so_kich_ban` · `_so_trong` |
 | Bảng gắn kênh (kênh nào đã nối, thiếu gì) | `render-pipeline/kiem_gan_kenh.py` |
 
+
+### 19.9 MỘT GIỌNG là một ĐỊNH DẠNG KHÁC, không phải một tuỳ chọn của định dạng cũ
+
+Anh: *"hay nên chỉ có 1 nhân vật chuyên gia cho 1 channel và nói liên tục"*. Em bật cờ
+`MOT_GIONG` rồi vẫn dùng `LENH_THOAI` — lệnh dặn ấy nói *"hai nhân vật"*, nên mô hình viết
+ĐỐI THOẠI: nó tự hỏi rồi tự đáp, và đẻ ra những lượt trống rỗng (`"2012"` đứng một mình).
+Phải có `LENH_MOT_GIONG` riêng.
+
+Và một lỗi hình học đi kèm mà anh bắt được từ ảnh chụp — *"vẫn 2 nhân vạt"*: em truyền
+`hai={hai}` xuống `Panel` tưởng nó nghĩa là "hai người". `hai` trên `Panel` là **CỠ CẢNH**
+(shot size), đã có sẵn ở dòng trên, nên thuộc tính trùng tên của em bị đè và không làm gì cả.
+JSX lấy lần khai SAU, im lặng. Đổi tên thành `motNguoi`.
+
+**Luật:** trước khi truyền một thuộc tính, `grep` xem tên ấy đã có nghĩa gì trong chính
+component đó (§13.8, phía TSX). Một tên đọc lên "rất hợp lý" là chỗ dễ trùng nghĩa nhất.
+
+### 19.10 Nền chọn theo HÌNH MẪU của chủ thể, không chọn theo lời từng câu
+
+Anh: *"khi thế sợ bối cảnh nó lấy đúng nội dung nói tới ko, ví dụ nó nói tới bill gate mà ko
+có hình liên qua thì ko hay phải ko"*. Đúng, và bản đầu của em chấm điểm nền theo **từ khoá
+trong từng câu** — nên cùng một tập, câu nói về máy ảnh ra xưởng ảnh, câu nói về cổ phiếu ra
+văn phòng, câu nói về "tối tăm" ra **sân bay**. Người xem đọc ra một tập nhảy chỗ liên tục.
+
+Chữa: suy hình mẫu MỘT LẦN từ chủ thể (`chu_de.hinh_mau`, 15 khuôn, đo 8/8 đúng), rồi chọn
+nền theo hình mẫu ấy cho CẢ TẬP và tìm trong **cả kho** chứ không chỉ kho của kênh — kênh
+mỏng thì 42 nền không đủ để có nhóm đúng, mà kho chung có 67.
+
+**Luật:** đơn vị nhất quán của bối cảnh là TẬP, không phải CÂU. Chọn lại ở từng câu là cách
+chắc chắn để đúng từng khung mà sai cả tập.
+
+### 19.11 Cái nào vẽ được thì VẼ — 12 đạo cụ hình mẫu
+
+Anh: *"cái nào vẽ được thì phải vẽ nha, ko thì vẽ liên quan tới chủ thể được nói chính"*.
+`NenComic` có sẵn đường vẽ đạo cụ nhưng bảng chỉ có đồ nội thất, nên chủ thể nào cũng rơi về
+nền phòng chung. Thêm 12 hình mẫu vẽ bằng **khối đặc** (máy ảnh · băng video · máy bay · tên
+lửa · điện thoại · cửa hàng · xe · lò phản ứng · ống nghiệm · tàu thuỷ · toà nhà · đồng xu).
+
+Khối đặc chứ không phải nét rỗng — §15.9 đã trả giá: nét rỗng thu nhỏ thì chết, khối đặc co
+bao nhiêu vẫn giữ bóng dáng.
+
+### 19.12 Ảnh THẬT là thứ không nền vẽ nào thay được — nhưng chỉ ở nhịp LẺ
+
+Nền vẽ chọn đúng LĨNH VỰC rồi vẫn là một căn phòng chung; người xem không đọc ra "xưởng ảnh
+Kodak". Một tấm `Eastman Kodak HQ 1900` (PD, Library of Congress) thì đọc ra ngay.
+
+Nhưng **thay hết là sai**: mất phong cách truyện tranh của kênh, và ảnh tự do thì hữu hạn
+(Kodak 8, Betamax 1) nên không đủ mọi nhịp. Xen kẽ — nhịp chẵn nền vẽ, nhịp lẻ ảnh thật,
+thiếu thì rơi về nền vẽ (§7, bốn tầng).
+
+Hai chỗ hỏng im lặng đã gặp khi làm:
+- **đuôi tệp phải đọc từ TÊN TỆP, không từ URL** — URL Wikimedia kết thúc bằng tham số truy
+  vấn nên `url.endswith(".jpg")` trượt SẠCH, trả 0 ảnh cho mọi chủ thể trong khi cổng giấy
+  phép vẫn in `TỰ DO? True`. Cổng đúng, phép kiểm cạnh nó sai.
+- **engine chỉ phục vụ tệp dưới `public`** — không copy thì đường dẫn hợp lệ mà ảnh không
+  hiện. Nên phép tải+copy phải nằm ở `pilot_hai.nap_anh_that`, KHÔNG ở tệp thử: để ở tệp thử
+  thì lúc nối vào đường chạy thật người nối phải viết lại, và câu copy là chỗ dễ quên nhất
+  (§13.1 · §15.10).
+
+### 19.13 "Ảnh này nói về AI" hỏi được bằng Categories, không hỏi được bằng danh sách tên
+
+`GeorgeEastman2.jpg` lọt bộ lọc chân dung vì tên tệp là một TÊN NGƯỜI — không chứa
+`portrait`, `headshot` hay bất kỳ từ nào trong danh sách. Thêm tên ấy vào thì mai
+`Akio Morita` (Betamax) lại lọt: danh sách ngoại lệ là danh sách vô hạn (§13.9).
+
+Luật sinh ra ngoại lệ nằm sẵn trong `Categories` của Wikimedia:
+
+    Eastman Kodak HQ 1900  ->  ... | Kodak | Featured pictures of New York ...
+    GeorgeEastman2         ->  Retouched pictures | PD-Bain | George Eastman | ...
+
+Ảnh CỦA chủ thể được xếp vào hạng mục mang tên chủ thể; ảnh của một người/vật chỉ đứng cạnh
+nó trong bài thì xếp theo tên người/vật ấy.
+
+Đọc tay mọi ca bị loại trước khi biến phép so thành cổng (§13.21): 3/4 đúng, trong đó
+`Lockheed L-2000 mockup` khi hỏi về Concorde là một **máy bay khác** — đúng thứ anh gọi là
+*"râu ông nọ cắm cằm bà kia"*. Ca oan duy nhất chữa bằng cách xét thêm tên tệp + `ObjectName`.
+Thử ngược đủ hai chiều: Kodak 9→8 · Concorde 5→3 · MH370 0→0.
+
+Và một bẫy đúng họ §15.12: `iiextmetadatafilter` **liệt kê** những trường được trả về. Không
+xin `Categories|ObjectName` thì luật đọc chuỗi rỗng và im lặng giữ hết — cổng có mặt, đọc lên
+rất thuyết phục, và không lọc gì.
