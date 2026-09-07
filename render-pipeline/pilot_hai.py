@@ -624,7 +624,24 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
             số ở đầu câu ĐÚNG BẰNG chỉ số ấy. Hết mơ hồ, và không thể bắt oan trừ khi câu thật
             tình cờ mở đầu bằng đúng số thứ tự của chính nó.
             """
-            return re.sub(rf"^\s*[A-Za-z]?{i}\s*[.):]?\s+(?=[A-Z])", "", chu)
+            # ── DẠNG THỨ TƯ: CHỈ SỐ VIẾT BẰNG CHỮ, KÈM NHÃN  (8/9/2026) ──────────────
+            # Bộ 126: **8/8 khung** mở bằng `Line two:` · `Line seven:` · `Line twenty-five:`
+            # — tức mô hình đọc số thứ tự thành CHỮ và dán thêm nhãn `Line`. Regex cũ chỉ
+            # biết chữ số, và còn đòi chữ HOA ngay sau (`Line two: so let us...` là chữ
+            # thường), nên nó trượt sạch. Không có lỗi nào báo; nó chỉ hiện trên mọi phụ đề.
+            #
+            # Vẫn giữ nguyên nguyên tắc §19.17 — chỉ xén khi con số ĐÚNG BẰNG chỉ số của
+            # chính lượt này — nên nới rộng ở đây không mở ra chỗ bắt oan nào: một câu thật
+            # phải vừa mở bằng nhãn, vừa mang đúng số thứ tự của chính nó.
+            _chu_so = _doc_so(i).replace("-", "[-\u2010-\u2015]?")   # §18.11: sáu dạng gạch
+            _nhan = r"(?:line|turn|beat|item|step|point|no\.?)\s+"
+            # A · có nhãn -> xén bất kể chữ sau hoa hay thường, rồi viết hoa lại
+            ra = re.sub(rf"^\s*{_nhan}(?:{i}|{_chu_so})\s*[.):\-\u2013\u2014]?\s+",
+                        "", chu, flags=re.I)
+            if ra is not chu and ra != chu:
+                return ra[:1].upper() + ra[1:] if ra else chu
+            # B · không nhãn -> giữ đúng độ chặt cũ: phải có dấu ngăn và chữ HOA theo sau
+            return re.sub(rf"^\s*[A-Za-z]?(?:{i}|{_chu_so})\s*[.):]?\s+(?=[A-Z])", "", chu)
         ra = []
         for k, x in enumerate(ds):
             if not str(x.get("chu") or "").strip():
@@ -1216,7 +1233,10 @@ RULES
 5. Plain spoken American English. No "as you can see", no "let's dive in", no narrator
    throat-clearing. Explain like someone who knows it, talking to one person.
 6. Every line MUST carry "i": the number of the narration line it delivers. Keep the same
-   order as the narration; never go backwards.
+   order as the narration; never go backwards. That number belongs in the "i" FIELD ONLY —
+   "chu" is what the expert says out loud, and nobody says a line number out loud. Do not
+   open "chu" with it in any shape: not "7.", not "i7:", not "Line seven:", not "Turn 7 -".
+   Start "chu" with the first real word of the sentence.
 
 Return ONLY a JSON array: [{"i":0,"ai":"b","chu":"...","cx":"tu_tin"}]
 "ai" is always "b". "cx" is one of: trung_tinh, tu_tin, nghi_ngo. Never excited, never angry.

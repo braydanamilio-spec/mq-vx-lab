@@ -273,6 +273,43 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_bo_tien_to_chi_so():
+    """Tiền tố chỉ số rò ra BỐN dạng — chốt giữ cả bốn, và giữ chiều KHÔNG bắt oan.
+
+    Bộ 126 in `Line two:` · `Line twenty-five:` lên **8/8 khung**: mô hình đọc số thứ tự
+    thành CHỮ rồi dán nhãn `Line`. Regex cũ chỉ biết chữ số và còn đòi chữ HOA ngay sau, nên
+    trượt sạch. Nguyên tắc §19.17 giữ nguyên: chỉ xén khi con số ĐÚNG BẰNG chỉ số của chính
+    lượt ấy — nhờ vậy nới rộng không mở ra chỗ bắt oan nào."""
+    import re, textwrap, io as _io, pilot_hai as P
+    src = _io.open(f"{P.__file__}", encoding="utf-8").read().splitlines()
+    a = next(k for k, l in enumerate(src) if "def _bo_stt" in l)
+    ind = len(src[a]) - len(src[a].lstrip())
+    b = a + 1
+    while b < len(src) and (not src[b].strip() or len(src[b]) - len(src[b].lstrip()) > ind):
+        b += 1
+    ns = {"re": re, "_doc_so": P._doc_so}
+    exec(textwrap.dedent("\n".join(src[a:b])), ns)
+    f = ns["_bo_stt"]
+    xen = [("Line two: so let us actually work it out.", 2),
+           ("Line twenty-five: By then the total stood at 9 million.", 25),
+           ("Line twenty\u2011one: additionally, Toyota could lose money.", 21),
+           ("7. Toyota widened the recall.", 7),
+           ("i7: Toyota widened the recall.", 7)]
+    for chu, i in xen:
+        assert f(chu, i) != chu, f"KHÔNG xén được tiền tố: {chu[:40]!r}"
+        assert f(chu, i)[:1].isupper(), f"xén xong mất chữ hoa đầu câu: {f(chu, i)[:30]!r}"
+    giu = [("1 in 5 Americans drive one.", 1),
+           ("Line two: so let us work it out.", 9),      # số KHÔNG bằng chỉ số lượt
+           ("Twenty-five million cars were recalled.", 25),
+           ("Two hundred dealers refused.", 2),
+           ("Step aside, the recall came first.", 3)]
+    for chu, i in giu:
+        assert f(chu, i) == chu, f"BẮT OAN câu đúng: {chu[:40]!r} -> {f(chu, i)[:40]!r}"
+    # §13.2: cổng đo một dạng thì lệnh dặn phải nêu chính dạng ấy
+    L = P.LENH_MOT_GIONG
+    assert "Line seven" in L and '"i" FIELD ONLY' in L, "luật 6 chưa cấm rõ tiền tố chỉ số"
+
+
 def t_cong_giong_bao_luc():
     """CỔNG GIỌNG phải chặn chủ thể có thương vong — thử ĐỦ HAI CHIỀU (§13.11).
 
@@ -2659,6 +2696,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("bỏ tiền tố chỉ số đủ bốn dạng", t_bo_tien_to_chi_so)
     check("cổng giọng chặn chủ thể có thương vong", t_cong_giong_bao_luc)
     check("ba short một bộ không trùng tiêu đề", t_short_khong_trung_tieu_de)
     check("gộp sổ kho nền khi hai lượt đụng nhau", t_gop_so_nen)
