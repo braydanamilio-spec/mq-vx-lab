@@ -124,6 +124,23 @@ def _so_dau(c: str) -> str:
     return ""
 
 
+# ── THAM CHIẾU TREO: CÂU ĐÚNG TRONG BÀI, VÔ NGHĨA KHI TÁCH RA  (7/9/2026) ─────────────────
+# "The combination of these two factors caused a decline in profits." — đúng nguyên văn, và
+# trong bài nó trỏ về hai yếu tố ở đoạn trên. Tách ra đứng một mình thì người xem không biết
+# HAI YẾU TỐ NÀO. Câu vẫn thật, mà vẫn hỏng.
+#
+# Đây là loại lỗi mà cổng kiểm mệnh đề KHÔNG bắt được: câu bắt rễ hoàn toàn ở nguồn, số đúng,
+# phủ định cùng chiều — nó chỉ thiếu thứ nằm ở CÂU TRƯỚC. Nên phải chặn bằng một phép khác:
+# nhận ra từ chỉ trỏ mà không có vật để trỏ.
+_TREO = _re.compile(r"^\s*(?:the\s+)?(?:combination of\s+)?"
+                    r"(?:these|those|this|that|such|it|they|he|she|his|her|their|both|"
+                    r"the (?:former|latter|same|other|two|three))\b", _re.I)
+
+
+def _co_tham_chieu_treo(c: str) -> bool:
+    return bool(_TREO.match(c or ""))
+
+
 def _lau_sach(c: str) -> str:
     """Dọn rác chữ của Wikipedia: dấu ngoặc kép lạc, khoảng trắng thừa, dấu câu treo.
 
@@ -135,80 +152,116 @@ def _lau_sach(c: str) -> str:
     return c
 
 
-def _rut(c: str, tran: int = 74) -> str:
+def _duoi_hong(r: str) -> bool:
+    """Câu cắt xong có kết thúc lửng lơ không.
+
+    Ba dạng đo được trong bản Kodak đầu tiên, và cả ba đều đọc lên là câu chưa hết:
+      · kết bằng SỐ      — "declined from 80."      (mất vế "xuống 7%")
+      · kết bằng CHỮ TẮT — "after Antonio M."       (cắt giữa tên người)
+      · kết bằng GIỚI TỪ — "the company emerged from."
+    Một câu cụt tệ hơn một câu dài: câu dài chỉ chậm, câu cụt thì sai nghĩa.
+    """
+    r = (r or "").rstrip()
+    if _re.search(r"\b\d[\d,\.]*\s*%?\.$", r):
+        return True
+    if _re.search(r"\b[A-Z]\.$", r):
+        return True
+    if _re.search(r"\b(of|in|on|at|to|for|from|by|with|as|than|into|over|under|after|"
+                  r"before|between|and|or|but|the|a|an)\.$", r, _re.I):
+        return True
+    return False
+
+
+# Trần 160 chứ không phải 74. Đây là CÂU DẪN, không phải lời thoại — `pilot_hai` sẽ đưa nó
+# cho mô hình nén thành lượt 5–10 chữ ở bước sau. Trần 74 làm mọi câu dài phải cắt, và cắt
+# là chỗ đẻ ra câu cụt: đo được nó bỏ oan "declined from 80% in 1976 to 7% in 2010" — một
+# câu hoàn chỉnh, đúng chủ đề, chỉ vì không có dấu phẩy nào để cắt.
+def _rut(c: str, tran: int = 160) -> str:
     """Cắt câu nguồn xuống độ dài đọc được, KHÔNG viết lại.
 
-    Viết lại là chỗ mô hình bịa (§ đo được hôm nay: "Theranos worked"). Cắt thì câu vẫn là
-    câu của nguồn, chỉ ngắn hơn — mọi chữ còn lại đều truy ngược được.
+    Viết lại là chỗ mô hình bịa (đo hôm nay: "Theranos worked"). Cắt thì câu vẫn là câu của
+    nguồn, chỉ ngắn hơn — mọi chữ còn lại đều truy ngược được.
     """
     c = " ".join(str(c or "").split()).rstrip(".")
     if len(c) <= tran:
-        return c + "."
-    # Cắt ở ranh giới MỆNH ĐỀ, không ở ranh giới từ. Bản đầu cắt theo từ và ra "as the." ·
-    # "with the first." — đúng ngữ pháp tới nửa câu rồi cụt, tệ hơn một câu dài.
+        r = c + "."
+        return "" if _duoi_hong(r) else r
+    # Cắt ở ranh giới MỆNH ĐỀ, không ở ranh giới từ. Bản đầu cắt theo từ và ra "as the." —
+    # đúng ngữ pháp tới nửa câu rồi cụt, tệ hơn một câu dài.
     d = c[:tran]
     for dau in (";", ",", " and ", " but ", " as ", " with ", " which "):
         k = d.rfind(dau)
         if k > tran * 0.45:
-            return d[:k].rstrip(",;: ") + "."
+            r = d[:k].rstrip(",;: ") + "."
+            if not _duoi_hong(r):
+                return r
     return ""          # không cắt sạch được thì BỎ CÂU, đừng giao một câu cụt
 
-
 def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
-                  tu_khoa=()) -> tuple:
+                  tu_khoa=(), dung_ai: bool = True) -> tuple:
     """(tiêu đề, hook, hook phụ, nhịp) — đúng hình dạng `giai_thich.BO_SINH` trả.
 
-    Mọi câu trong nhịp là câu CỦA NGUỒN đã cắt ngắn, và mọi con số là con số của chính câu
-    ấy. Không chỗ nào để mô hình cấp một dữ kiện, nên cổng "số bịa" ở `pilot_hai` luôn xanh.
+    Mọi câu là câu CỦA NGUỒN đã cắt sạch; mọi số là số của chính câu ấy. Không chỗ nào để
+    mô hình cấp một dữ kiện — nó chỉ được CHỌN (trả về chỉ số), nên cổng "số bịa" ở
+    `pilot_hai` luôn xanh ở bộ này.
     """
-    # ── KHÔNG PHẢI MỌI NHỊP ĐỀU PHẢI ĐÚNG CHỦ ĐỀ  (7/9/2026) ─────────────────────────────
-    # Bản đầu đòi ĐỦ NĂM câu khớp lời hứa. Đo thật: chủ thể có 40 câu có số nhưng chỉ 1–8
-    # câu khớp — Concorde 3, Kodak 3, Betamax 3. Ngưỡng ấy giết 11/12 chủ thể.
-    #
-    # Và nó sai về CẤU TRÚC KỂ CHUYỆN, không chỉ về ngưỡng: một tập không cần mọi nhịp trả
-    # lời câu hỏi. Nó cần MỞ và CHỐT đúng chủ đề, phần giữa là bối cảnh — đúng cách video
-    # thật kể: mở bằng cái kết, quay lại đầu, rồi đóng lại ở cái kết.
-    #
-    # Nên: ≥2 câu ĐÚNG LỜI HỨA (một cho mở, một cho chốt), phần giữa lấy câu giàu nhất còn
-    # lại. Thiếu hai câu ấy thì vẫn BỎ CẶP — không có cái mở và cái chốt thì tiêu đề nói một
-    # đằng thân bài nói một nẻo, đúng lỗi em vừa giao ra ở bản Concorde đầu tiên.
-    tk = tuple(t.lower() for t in (tu_khoa or ()))
-    # ── SỐ PHẢI LẤY TỪ CÂU ĐÃ CẮT, KHÔNG TỪ CÂU GỐC  (7/9/2026) ──────────────────────────
-    # Bản đầu tính `so` trên câu GỐC rồi mới cắt, nên thẻ hiện "2012" trong khi câu đọc lên
-    # là "These strategies failed to improve the company's finances." — không có 2012 nào.
-    # Đúng lỗi anh chê từ đầu: *"nói số liệu thì ko hiện, hiện thì ko nói"*.
-    # Bất biến đúng: con số trên thẻ phải nằm TRONG CHÍNH CÂU người xem nghe.
-    def _cap(c):
+    sach = []
+    for c in (ho_so.get("tat_ca") or ho_so.get("cau") or []):
         r = _rut(c["cau"])
-        if not r:
-            return None
-        v = _so_dau(r)                    # số của câu ĐÃ CẮT
-        return {"cau": r, "so": v} if v else None
-    sach = [x for x in (_cap(c) for c in (ho_so.get("cau") or [])) if x]
-    hua = [c for c in sach if not tk or any(t in c["cau"].lower() for t in tk)]
-    nen = [c for c in sach if c not in hua]
-    if len(hua) < 2 or len(sach) < 5:
+        if not r or _co_tham_chieu_treo(r):
+            continue
+        r = _lau_sach(r)
+        if r:
+            sach.append({"cau": r, "so": _so_dau(r)})
+    if len(sach) < 8:
         return None
-    # mở = câu đúng chủ đề · giữa = bối cảnh · chốt = câu đúng chủ đề thứ hai
-    cau = [hua[0]] + nen[:4] + [hua[1]]
+
+    # Tên chủ thể giữ nguyên hoa/thường như nguồn viết. Bản dựng đầu ra "kodak" chữ thường
+    # vì khuôn hook hạ chữ cả câu — tên riêng viết thường đọc ra là cẩu thả (§12.12).
+    chu_the = chu_the.strip()
     tieu = khuon.format(x=chu_the)
+    chon = chon_cau(tieu, sach) if dung_ai else []
+    if len(chon) < 5:
+        # Mô hình không chọn được -> lùi về lọc theo TỪ KHOÁ của lời hứa. Đường lùi phải
+        # tồn tại: một lượt gọi AI hỏng không được làm chết cả tập (§13.3).
+        tk = tuple(t.lower() for t in (tu_khoa or ()))
+        hua = [k for k, x in enumerate(sach)
+               if not tk or any(t in x["cau"].lower() for t in tk)]
+        if len(hua) < 2:
+            return None
+        con = [k for k in range(len(sach)) if k not in hua]
+        chon = [hua[0]] + con[:4] + [hua[1]]
+    cau = [sach[k] for k in chon][:6]
+
     dau = cau[0]
     hook = tieu.upper()[:52]
-    hook_phu = dau["so"]
+    hook_phu = dau["so"] or chu_the.upper()[:18]
 
     nhip = [
-        _n("so_lieu", _lau_sach(dau["cau"]), so=dau["so"], don="", bt="tien", dinh=True,
-           ve=_ve(f"a simplified figure looking at a single object on a plain table",
+        # `du=True`: nhịp này TỰ MANG nội dung của nó, `_day_du_y` không được chèn câu
+        # viết tay của kênh vào (§ đo được: tập về Kodak dính câu về ranh giới đất).
+        # `[KEEP]` — nhịp này là CÚ LẬT của tập, khâu nén lời thoại không được bỏ mệnh đề
+        # của nó. Cổng ở `pilot_hai` đọc dấu này.
+        _n("so_lieu" if dau["so"] else "canh", "[KEEP]" + dau["cau"], du=True,
+           **({"so": dau["so"], "don": "", "bt": "tien"} if dau["so"] else {}),
+           dinh=True,
+           ve=_ve("a simplified figure looking at a single object on a plain table",
                   "studying it closely", "curious",
                   "a plain pale wall", "a clean floor strip", "restrained muted palette")),
     ]
     for c in cau[1:]:
-        nhip.append(
-            _n("so_lieu", _lau_sach(c["cau"]), so=c["so"], don="", bt="tien", dinh=True))
+        if c["so"]:
+            nhip.append(_n("so_lieu", c["cau"], so=c["so"], don="", bt="tien", dinh=True))
+        else:
+            nhip.append(_n("canh", c["cau"],
+                           ve=_ve("a simplified figure at a desk with one folder open",
+                                  "reading a single page", "absorbed",
+                                  "a plain office wall", "a clean floor strip",
+                                  "restrained muted palette")))
     nhip.append(
-        _n("canh", f"That is the part of {chu_the} nobody repeats.",
-           ve=_ve("a simplified figure putting a folder down on a desk",
-                  "finished reading", "quiet",
+        _n("canh", f"That is the part of {chu_the} nobody repeats.", du=True,
+           ve=_ve("a simplified figure closing a folder and setting it down",
+                  "finished", "quiet",
                   "a plain office wall", "a clean floor strip", "restrained muted palette")))
     return tieu, hook, hook_phu, nhip
 
@@ -216,19 +269,14 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
 # ══════════════════════════════════════════════════════════════════════════════════════════
 # AI CHỌN, KHÔNG VIẾT
 # ══════════════════════════════════════════════════════════════════════════════════════════
-# ── VÌ SAO TRẢ VỀ CHỈ SỐ, KHÔNG TRẢ VỀ CHỮ ─────────────────────────────────────────────────
 # Bộ lọc từ khoá bắt được câu CHỨA chữ "bankruptcy"; nó không bắt được câu GIẢI THÍCH vì sao
-# phá sản. Đo thật: "What actually killed Kodak" ra bốn nhịp giữa nói về 1880–1888, lúc công
-# ty RA ĐỜI. Cấu trúc chạy đúng, câu chuyện thì không — và chọn câu theo quan hệ nhân quả là
-# việc của ngôn ngữ, không phải của danh sách từ.
+# phá sản. Đo: "What actually killed Kodak" ra bốn nhịp giữa nói về 1880–1888, lúc công ty RA
+# ĐỜI. Chọn câu theo quan hệ nhân quả là việc của ngôn ngữ, không phải của danh sách từ.
 #
 # Nhưng giao việc chọn cho mô hình mà để nó SINH CHỮ là mở lại đúng cửa đã đóng: hôm nay đo
 # được nó bịa "one hundred ninety miles" (sai) và "Theranos worked" (sai về một vụ án hình
-# sự). Nên nó trả về CHỈ SỐ. Không có chỗ nào để bịa — nó không được viết một chữ nào; mọi
-# câu đi vào sản phẩm vẫn là câu nguyên văn của nguồn.
-#
-# Đây đúng ranh giới rút ra từ sáu điểm dữ liệu hôm nay: AI làm việc ngôn ngữ (câu nào trả
-# lời câu hỏi), máy gác sự thật (câu ấy có thật không, số có nằm trong câu không).
+# sự). Nên nó trả về CHỈ SỐ — không được viết một chữ nào; mọi câu đi vào sản phẩm vẫn là câu
+# nguyên văn của nguồn.
 LENH_CHON = """You are given a title and a numbered list of factual sentences taken verbatim
 from an encyclopedia article. Choose the sentences that actually answer the title, and put
 them in the order a viewer should hear them.
@@ -246,20 +294,15 @@ Return ONLY a JSON array of integers, e.g. [12,3,7,19,2,25]"""
 
 
 def chon_cau(tieu: str, cau: list, keys=None) -> list:
-    """Chỉ số các câu được chọn. Rỗng khi không gọi được -> bên gọi dùng thứ tự từ khoá.
-
-    Kiểm ba lớp trước khi tin: đúng kiểu số nguyên · trong khoảng · không trùng. Một chỉ số
-    ngoài khoảng là dấu hiệu mô hình đang đoán, và tin nó thì lấy nhầm câu.
-    """
+    """Chỉ số các câu được chọn. Rỗng khi không gọi được -> bên gọi dùng đường lùi từ khoá."""
     import phim_canh as _C
     # `_goi` đòi danh sách khoá và nổ `TypeError` khi nhận None — lấy đúng đường mà
-    # `pilot_hai` lấy (§13.15: gọi bằng chính đường mã thật gọi), đừng tự dựng đường thứ hai.
+    # `pilot_hai` lấy (§13.15), đừng tự dựng đường thứ hai.
     keys = keys or _C._khoa_groq()
     ds = "\n".join(f"{i}. {c['cau']}" for i, c in enumerate(cau))
     u = f"TITLE: {tieu}\n\nSENTENCES:\n{ds}"
     try:
-        t = _C._goi(LENH_CHON, u, keys)
-        ra = _C._tach_json(t) or []
+        ra = _C._tach_json(_C._goi(LENH_CHON, u, keys)) or []
     except Exception:
         return []
     tot, thay = [], set()

@@ -7285,6 +7285,16 @@ def _be_doi(c: str) -> str:
 
 def _day_du_y(ma: str, nhip: list, idx: int = 0) -> list:
     """Chèn nhịp quy đổi + hệ quả cho kênh mỏng. Không đụng kênh đã đủ dài."""
+    # ── NHỊP TỰ ĐỦ THÌ ĐỪNG CHÈN CÂU CỦA KÊNH  (7/9/2026) ────────────────────────────
+    # `THEM_NHIP` là ba câu viết TAY RIÊNG cho từng kênh, và nó đúng cho kênh sinh ra nó.
+    # Nhưng bộ sinh "vì sao" (`khung_hoi`) dựng nhịp từ tư liệu của MỘT CHỦ THỂ, và khi nó
+    # trả 7 nhịp thì hàm này thấy "dưới sàn 9" nên chèn thêm ba câu của kênh — dựng thật ra
+    # một tập nói về Kodak mà có câu *"ranh giới nằm trên tấm bản đồ anh chưa từng thấy"*
+    # (câu của kênh ranh giới đất). Câu đúng, kênh đúng, chủ đề thì không.
+    #
+    # Nhịp nào TỰ MANG NỘI DUNG của nó thì khai `du=True`, và hàm này để yên.
+    if any((x or {}).get("du") for x in nhip):
+        return nhip
     them = THEM_NHIP.get(ma)
     if not them or len(nhip) >= SAN_NHIP or len(nhip) < 3:
         return nhip
@@ -8983,7 +8993,14 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
         # nói về TRILLION vs BILLION mà lời vẫn đọc "A billion is not a big million" — sai nghĩa,
         # và trên màn hình còn đá nhau với dòng chú thích (vốn lấy từ tập). Bộ sinh đã trả sẵn
         # `hook` riêng cho từng tập; dùng nó, `HOOK_LOI` chỉ còn là đường lui.
-        _hl = _cau_hook(hook, HOOK_LOI[ma])
+        # ── ĐỪNG RÂU ÔNG NỌ CẮM CẰM BÀ KIA  (anh dặn, 7/9/2026) ──────────────────────
+        # `HOOK_LOI[ma]` là câu hook viết TAY của kênh. Với bộ "vì sao" thì tập lấy nội dung
+        # từ MỘT CHỦ THỂ, nên câu của kênh đá thẳng vào: dựng thật ra hook
+        # *"You own it. Sort of. What actually killed kodak?"* — nửa đầu là câu của kênh nói
+        # về quyền sở hữu, nửa sau là tập nói về Kodak. Hai chuyện khác nhau trong một câu.
+        # Nhịp tự đủ (`du=True`) thì hook lấy NGUYÊN của tập, không pha câu kênh vào.
+        _tu_du = any((x or {}).get("du") for x in nhip)
+        _hl = hook if _tu_du else _cau_hook(hook, HOOK_LOI[ma])
         nhip.insert(0, {
             "khuon": "so_lieu", "loi": _hl, "dinh": True,
             "so": (hook_phu.split()[0] if hook_phu else ""),
