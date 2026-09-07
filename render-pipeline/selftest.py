@@ -2561,6 +2561,7 @@ def main():
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
+    check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
     check("gu hình mỗi kênh một bộ, không lặp biểu tượng liền kề", t_gu_hinh_khac_nhau)
     check("mọi nhịp có khuôn đổi bố cục đều ĐƯỢC GÁN bố cục", t_moi_nhip_co_bo_cuc)
@@ -8184,6 +8185,60 @@ def t_khoi_khoa_kenh_khong_lech():
     cu = s[s.index(m.DAU): s.index(m.CUOI) + len(m.CUOI)]
     assert cu.strip() == moi.strip(), \
         "khối kênh trong publish.yml LỆCH channels.yaml — chạy dong_bo_khoa_kenh.py --viet"
+
+
+def t_trang_phuc_dung_vai():
+    """Trang phục vẽ ra phải là của CHÍNH vai đang nói, không phải của vai khác.
+
+    Anh soi khung `hiddenfee` ngày 7/9: *"sao giọng nữ mà ông lão hói đầu"* — và nặng hơn,
+    nhân vật khai `gioi: nu` mà đội tạo hình có RÂU DÊ, đúng lỗi §11 đã ghi từ ngày đầu
+    (*"nữ công tố đeo râu dê"*) quay lại.
+
+    Bảng trang phục không sai. Sai ở chỗ ghép: bản đổi cách chọn cặp vai (hồ hỏi × hồ chuyên
+    gia) gán vào `vai`, còn `do_vai(ma, (_i, _j))` vẫn dùng cặp chỉ số CŨ — giọng và giới lấy
+    từ cặp mới, quần áo lấy từ cặp cũ. Hai nguồn sự thật cho một nhân vật.
+
+    Cổng mô phỏng ĐÚNG đường mã thật đi (§13.15) trên 18 kênh × 12 tập, và kiểm hai điều:
+    vai nữ không bao giờ có râu, và bộ đồ gán ra đúng bằng bộ đồ của vai ấy trong bảng.
+    """
+    import ast as _a, re as _re, json as _j, io as _io, os as _o
+    import phim_gu as _GU, pilot_hai as _P
+    src = _io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "pilot_hai.py"),
+                   encoding="utf-8").read()
+    mod = _a.parse(src)
+    def _lay(n):
+        f = next(x for x in _a.walk(mod) if isinstance(x, _a.FunctionDef) and x.name == n)
+        ns = {"re": _re}
+        exec(compile(_a.Module(body=[f], type_ignores=[]), "<x>", "exec"), ns)
+        return ns[n]
+    cn = _lay("_chat_nghe")
+    bang = _j.load(_io.open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)),
+                                         "do_vai_all.json"), encoding="utf-8"))
+    _NU = _re.compile(r"\b(woman|girl|she|her)\b", _re.I)
+    xau = []
+    for ma in sorted(_GU.VAI):
+        dan = _GU.dan_vai_khai(ma); n = len(dan)
+        do_ma = bang.get(ma) or []
+        for idx in range(12):
+            b = 1 + (idx // max(1, n)) % max(1, n - 1)
+            i, j = idx % n, (idx % n + b) % n
+            cg = [v for v in dan if cn(v) >= 3]
+            if cg:
+                c = cg[(idx // max(1, n - 1)) % len(cg)]
+                khac = [v for v in dan if v is not c]
+                vai = [khac[idx % len(khac)], c]
+            else:
+                a2, b2 = dan[i], dan[j]
+                vai = [a2, b2] if cn(b2) >= cn(a2) else [b2, a2]
+            i = next((k for k, v in enumerate(dan) if v is vai[0]), i)
+            j = next((k for k, v in enumerate(dan) if v is vai[1]), j)
+            dA, dB = _P.do_vai(ma, (i, j))
+            for t, (v, do, k) in enumerate(((vai[0], dA, i), (vai[1], dB, j))):
+                if _NU.search(v["ta"]) and (do.get("rau") or ""):
+                    xau.append(f"{ma} tập{idx}: {v['vai']} (nữ) có râu")
+                if k < len(do_ma) and do_ma[k].get("ao") != do.get("ao"):
+                    xau.append(f"{ma} tập{idx}: {v['vai']} mặc đồ của vai khác")
+    assert not xau, "trang phục lệch vai: " + "; ".join(sorted(set(xau))[:3])
 
 
 def t_chart_co_so_that():

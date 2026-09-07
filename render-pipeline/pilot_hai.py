@@ -554,7 +554,13 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         # Bộ cắt sinh ra lỗi này, nên bộ cắt phải vá lại — §13.12: máy sửa được thì máy sửa,
         # đừng đốt một vòng gọi AI cho một chuyện máy làm được. Chỉ lượt MANG SỐ mới buộc
         # thuộc về chuyên gia; lượt không có số thì ai nói cũng đúng vai, nên đổi được.
-        _so_cua = lambda x: any(c.isdigit() for c in x.get("chu", ""))
+        # Lượt "khoá cứng vào vai chuyên gia" là lượt KHẲNG ĐỊNH có số. Một CÂU HỎI có số
+        # ("Is it really 48,358 dollars?") thì người hỏi nói được, và chuyên gia vẫn là người
+        # xác nhận — vai không đổi. Đo `realcost`: gần như mọi lượt đều mang số nên đều bị
+        # khoá vào B, và bộ vá luân phiên bó tay hoàn toàn (9 cặp dính trong bản giao đi).
+        # Nới đúng một chỗ này mở lại chỗ xoay mà không đụng luật "số liệu do chuyên gia đưa".
+        _so_cua = lambda x: (any(c.isdigit() for c in x.get("chu", ""))
+                             and not str(x.get("chu", "")).strip().endswith("?"))
         _bo2 = set()
         for _k in range(1, len(ra)):
             if _k - 1 in _bo2 or ra[_k].get("ai") != ra[_k - 1].get("ai"):
@@ -724,6 +730,20 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
         vai = [_a, _b] if _chat_nghe(_b) >= _chat_nghe(_a) else [_b, _a]
     if len(vai) < 2:
         print("   ❌ kênh này chưa khai đủ hai vai"); return ""
+    # ── CHỈ SỐ TRANG PHỤC PHẢI THEO CẶP VAI ĐÃ CHỌN  (7/9/2026) ─────────────────────────
+    # Anh soi khung `hiddenfee`: *"sao giọng nữ mà ông lão hói đầu"*. Đúng, và nặng hơn —
+    # nhân vật khai `gioi: nu` mà đội trang phục có RÂU DÊ, đúng lỗi §11 đã ghi từ đầu
+    # (*"nữ công tố đeo râu dê"*) quay lại.
+    #
+    # Bảng trang phục KHÔNG sai: Tobias (nam) hói + râu dê, Gwen (nữ) tóc ngắn — đo tận nơi.
+    # Sai là chỗ ghép: hôm nay em đổi cách chọn cặp vai (hồ hỏi × hồ chuyên gia) và gán vào
+    # `vai`, nhưng `do_vai(ma, (_i, _j))` ở dưới vẫn dùng cặp chỉ số CŨ. Nên giọng và giới
+    # lấy từ cặp MỚI còn quần áo lấy từ cặp CŨ — hai nguồn sự thật cho một nhân vật, đúng
+    # thứ §11 dặn đừng bao giờ tạo ra. Hồi quy do chính bản sửa sáng nay đẻ ra.
+    #
+    # Suy chỉ số TỪ `vai` thay vì giữ một cặp song song: còn hai biến thì còn cách để lệch.
+    _i = next((_k for _k, _v in enumerate(_dan) if _v is vai[0]), _i)
+    _j = next((_k for _k, _v in enumerate(_dan) if _v is vai[1]), _j)
 
     k, tieu, hook, hook_phu, nhip, muc = G.kich_ban(ma, idx, False, 3)
     loi = [n["loi"] for n in nhip]
