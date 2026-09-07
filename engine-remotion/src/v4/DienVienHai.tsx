@@ -403,10 +403,26 @@ export const DienVienHai: React.FC<PropsHai> = ({
   const vungT = buoc > 0 ? Math.sin(t * 7.4 + Math.PI) * buoc * 26 : 0;
   const vungP = buoc > 0 ? Math.sin(t * 7.4) * buoc * 26 : 0;
   const nhipTay = noi.h * 7 * dien;
-  const gocVT = trn(100, G.vaiT, mo) + Math.sin(t * 1.7) * 2.2 + vungT - nhipTay;
-  const gocKT = trn(-8, G.khuyuT, mo);
-  const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP + nhipTay;
-  const gocKP = trn(8, G.khuyuP, mo);
+  // ── KHUỶU PHẢI ĐỘNG THEO LỜI, KHÔNG CHỈ VAI  (anh: "tay hơi cứng", 7/9/2026) ──────────
+  // Bản trước cho `nhipTay` vào VAI và để `gocK*` không có một số hạng thời gian nào. Vai xoay
+  // mà khuỷu đứng yên thì cả cánh tay quay quanh MỘT khớp — đó đúng là định nghĩa của một cái
+  // que, và mắt đọc ra "cứng" dù biên độ có tăng bao nhiêu. Người nói thật gập cẳng tay nhiều
+  // hơn xoay vai: khuỷu là khớp mang gần hết cử chỉ.
+  //
+  // Ba việc, và cả ba đều cần — thiếu một thì hai cái kia không cứu được:
+  //   1. khuỷu nhận nhịp lời với biên độ LỚN HƠN vai (×1,8)
+  //   2. khuỷu TRỄ pha sau vai (0,09 s) — cẳng tay đi sau cánh tay, đó là thứ làm chuyển động
+  //      đọc ra là một chuỗi khớp chứ không phải một khối cứng
+  //   3. hai tay KHÔNG đối xứng gương. Bản cũ dùng đúng `−nhipTay`/`+nhipTay`, nên mỗi trọng âm
+  //      hai tay mở ra rồi khép vào cùng lúc — đọc ra máy móc. Lệch pha + lệch độ lợi.
+  const _treTay = Math.max(0, t - 0.09);
+  const _lechTay = Math.sin(t * 1.13) * 0.35 + 0.65;       // 0,30..1,00 — hai tay không cùng độ lợi
+  const _khuyuNhip = (pha: number, gain: number) =>
+    Math.sin(_treTay * 1.7 + pha) * 2.2 * dien + noi.h * 7.5 * dien * gain;
+  const gocVT = trn(100, G.vaiT, mo) + Math.sin(t * 1.7) * 2.2 + vungT - nhipTay * _lechTay;
+  const gocKT = trn(-8, G.khuyuT, mo) - _khuyuNhip(0.4, _lechTay);
+  const gocVP = trn(80, G.vaiP, mo) + Math.sin(t * 1.7 + 1) * 2.2 + vungP + nhipTay * (1.35 - _lechTay);
+  const gocKP = trn(8, G.khuyuP, mo) + _khuyuNhip(2.3, 1.35 - _lechTay);
 
   const khuyuT = P(vaiT[0], vaiT[1], dtay, gocVT);
   const tayT = P(khuyuT[0], khuyuT[1], dcang, gocVT + gocKT);

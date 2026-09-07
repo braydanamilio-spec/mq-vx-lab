@@ -3136,3 +3136,103 @@ Thử ngược đủ hai chiều: Kodak 9→8 · Concorde 5→3 · MH370 0→0.
 Và một bẫy đúng họ §15.12: `iiextmetadatafilter` **liệt kê** những trường được trả về. Không
 xin `Categories|ObjectName` thì luật đọc chuỗi rỗng và im lặng giữ hết — cổng có mặt, đọc lên
 rất thuyết phục, và không lọc gì.
+
+### 19.14 Kho ảnh không bao giờ trả ZERO là kho không dùng được
+
+Anh hỏi bốn kho footage (Pexels · Pixabay · NARA · DVIDS) *"đủ đa dạng ko hay là ko nên dùng 1
+kho footage cả thế giới dùng dễ bị lặp lại youtube đánh giá spam"*.
+
+Nỗi lo spam đặt sai chỗ, và §13.18 đã trả lời: luật YouTube xét **các video trong CÙNG một kênh
+có giống nhau không**, không xét kênh mình có dùng chung kho với thiên hạ không. Hàng nghìn kênh
+dùng Pexels vẫn sống.
+
+Nhưng có một lý do KỸ THUẬT để loại Pexels/Pixabay, và nó nặng hơn nhiều. Truy vấn vô nghĩa:
+
+    zzqx wubblefrotz   ->  Pexels 4.248 ảnh (bóng bay, phụ nữ trong studio)  ·  NARA 0
+
+Pexels **không bao giờ trả zero**: hết khớp thì nó lùi về ảnh chung chung và vẫn báo hàng nghìn
+"kết quả". Đo tiếp trên chủ thể thật: `betamax` ra băng **VHS** — đúng thứ đã THẮNG Betamax, tức
+một lỗi sự thật hiện thẳng trên màn hình; `eastman kodak headquarters` ra một máy chiếu Kodascope.
+
+Đây là §15.2 ở dạng nguồn dữ liệu: **một kho không phân biệt được "không có" với "có" thì mọi
+phép lọc đặt sau nó đều đang lọc rác.** Và `total_results` của nó là một con số vô nghĩa để dựa
+vào — 4.248 cho một chuỗi không tồn tại.
+
+Đo trước khi tin một kho: **gõ một truy vấn vô nghĩa.** Nó trả 0 thì con số của nó có nghĩa.
+
+Kèm một phát hiện: 24 khoá Pexels + 18 Pixabay đang nằm trong hồ, và **không tệp nào của 18 kênh
+đọc chúng** — dòng `PEXELS_KEY` trong `render_giai_thich_18.yml` là một dòng chết (§15.12).
+
+### 19.15 NARA: đúng nguồn cho ngách "vì sao", và ba cái bẫy của nó
+
+| chủ thể | Wikimedia (PD/CC0) | NARA |
+|---|---|---|
+| Kodak | 8 | 79.704 bản ghi |
+| Concorde | 3 | 5.781 |
+| Three Mile Island | 0 | 275.195 |
+
+Ba bẫy, cả ba đều đã trả giá trong buổi:
+
+1. **`limit` PHẢI nhỏ.** Đo với khoảng cách 20 giây giữa hai lệnh: `limit=20` ra JSON 136 KB,
+   `limit=60` ra **HTML 5,4 KB kèm HTTP 200**. Lần đo đầu em kết luận *"chặn ngẫu nhiên, tham
+   số không ảnh hưởng"* vì thấy 25 và 60 hỏng mà 50 và 100 chạy — nhưng sáu lệnh ấy bắn liên
+   tiếp, nên phép đo đang đo cái CHÙM chứ không đo tham số. §13.15 lần nữa, và lần này em suýt
+   đi viết cơ chế lùi dần để chữa một thứ không hỏng.
+2. **Từ chối bằng HTTP 200 + HTML.** `json.loads` ném, `except` nuốt, log in "0 ảnh" — "kho
+   không có gì" và "tôi bị chặn" ra cùng một dòng chữ (§15.2). Phải kiểm byte đầu là `{`.
+3. **Ảnh là bản QUÉT GỐC: một tấm Concorde 27 MB.** Kho nền cả hệ chỉ 104 MB cho 1.978 tệp.
+   `_ha_co` hạ về 266 KB (−99%). Và nhánh "tệp ĐÃ CÓ" cũng phải đi qua phép hạ cỡ — nhánh trả
+   về sớm là chỗ dễ quên nhất (§6: vá một nhánh, để nguyên nhánh song song).
+
+Hai cổng bắt buộc: chỉ nhận `Photographs and other Graphic Materials` (đo 50 bản ghi đầu của
+«Kodak»: 32 ảnh · **18 văn bản**, và kết quả hạng CAO NHẤT là bản scan vi phim một tờ kiểm kê
+tài sản — đúng chủ thể, vô dụng làm nền), và tên bản ghi phải mang tên chủ thể (§19.13).
+
+### 19.16 Cỡ cảnh người dẫn: ba lỗi chồng nhau, và mỗi lỗi che lỗi sau
+
+Anh: *"zoom bự nhân vật lên 1 chút và chỉ lấy phần thân trên tay cử động nhẹ"*. Bốn vòng dựng
+mới xong, vì mỗi lần sửa một lớp lại lộ ra lớp dưới.
+
+**Lớp 1 — trần NGANG ghìm chiều cao (§17.2 lặp lại nguyên xi).** Đo panel thật 992×1770:
+
+    câu 1 dòng: trần NGANG 3,50 · trần CAO 5,54     câu 3 dòng: trần NGANG 3,50 · trần CAO 4,31
+
+Trần ngang chặn cả ba, nhân vật chỉ chiếm 70% bề ngang — tức giữ lại 30% bề ngang KHÔNG ai dùng,
+và chỗ chừa bong bóng chưa bao giờ được quyền quyết định lần nào.
+
+**Lớp 2 — chừa chỗ bong bóng là một MÔ HÌNH, không phải bong bóng.** Đo pixel trên khung: bong
+bóng ba dòng chiếm **0,120** panel trong khi công thức chừa **0,44** — thừa 3,7 lần, nên giữa
+bong bóng và đỉnh đầu là một mảng trống bằng một phần ba khung. Chữa bằng `caoBong()` đoán từ
+CHÍNH hằng số bố cục của bong bóng (18 · 52/62 · 1,12 · 44 · 24), đặt ngay cạnh nó.
+
+**Lớp 3 — mốc cắt mang theo giả định của ô NGANG.** Sửa xong hai lớp trên thì ra cỡ CẬN MẶT,
+mất cả thân lẫn tay. `Y_NGUC` (ngực) là mốc của ô ngang, nơi chiều cao ít ỏi nên phải cắt cao;
+khung dọc thì cắt ở **HÔNG**. §17.1: hằng số đúng ở ngữ cảnh nó được đo, sai ở ngữ cảnh mới.
+
+**Và tay cứng thì gốc không nằm ở biên độ.** `nhipTay` chỉ cộng vào VAI; `gocK*` (khuỷu) không
+có một số hạng thời gian nào. Vai xoay mà khuỷu đứng yên thì cả cánh tay quay quanh MỘT khớp —
+đó đúng là định nghĩa của một cái que, và tăng biên độ bao nhiêu cũng vẫn đọc ra "cứng". Ba việc
+cùng lúc: khuỷu nhận nhịp lời (biên độ lớn hơn vai), khuỷu TRỄ pha 0,09 s sau vai, và hai tay
+thôi đối xứng gương.
+
+Kèm một lỗi tư thế: người nói dùng mặc định `mo_tay` (`vaiT: 138` — hai tay mở bành sang hai
+bên) và GIỮ NGUYÊN suốt lượt. Đúng cho định dạng HAI người (cử chỉ hướng về người kia), sai cho
+một người nói vào máy quay — ở cỡ trung thân trên nó đọc ra "chống nạnh". Nền phải là `dem` (hai
+cẳng thu vào trước ngực): `nghi` thì tay buông xuôi và bàn tay tụt hẳn dưới mép cắt, tức cử động
+khuỷu vừa thêm không ai nhìn thấy.
+
+### 19.17 Tiền tố chỉ số rò ba dạng — và dạng thứ ba không xén được bằng regex
+
+Mô hình chép chỉ số câu dẫn vào lời thoại theo BA dạng khác nhau, mỗi bản dựng một dạng mới:
+
+    `0. The real cause…`   ·   `i7: Remember, Kodak…`   ·   `1 Kodak started as…`
+
+Dạng hai là nó chép luôn TÊN TRƯỜNG `"i"` mà đề bài đặt. Dạng ba là **số trần, không dấu ngăn** —
+và nới regex tới đó thì nó xén luôn *"1 in 5 Americans"*, một câu hoàn toàn đúng. Cổng bắt oan
+tệ hơn cổng không bắt (§13.8).
+
+Không cần đoán: **lượt này ĐÃ mang chỉ số của nó trong trường `i`.** Chỉ xén khi con số ở đầu câu
+ĐÚNG BẰNG chỉ số ấy. Thử ngược 7 ca, cả hai chiều, sạch.
+
+**Luật:** khi phải nhận ra một thứ mà mô hình rò ra, hỏi trước *"dữ liệu có sẵn câu trả lời
+không?"* Một trường cấu trúc luôn đánh bại một biểu thức đoán chữ.

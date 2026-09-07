@@ -576,9 +576,19 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
         # Mô hình chép cả SỐ THỨ TỰ của câu dẫn vào lời ("0. The real cause…"). Nó đang làm
         # đúng thứ đề bài đánh số, và người xem thì nghe thấy "không chấm". Dọn ở đây, chỗ
         # duy nhất biết chuỗi vừa về từ mô hình.
+        #
+        # ── DẠNG THỨ HAI: TÊN TRƯỜNG + SỐ  (anh soi ra trên khung, 7/9/2026) ──────────────
+        # Bản đầu chỉ bắt `7.` và `7)`. Đo trên bản dựng thật thì mô hình viết **`i7:`** — nó
+        # chép luôn TÊN TRƯỜNG `"i"` mà đề bài đặt, rồi mới tới số. Phụ đề hiện `i1: Kodak
+        # started as…` và giọng đọc lên nguyên chữ ấy.
+        # Không liệt kê thêm ví dụ (§13.9): quy luật là *một tham chiếu tới chỉ số mà lượt này
+        # ĐÃ mang trong trường riêng* — chữ cái liền số, rồi dấu ngăn.
+        # Hai chỗ siết để khỏi bắt oan: chữ cái phải DÍNH số (nếu không thì *"A 3-year gap"*
+        # bị xén mất đầu), và số tối đa hai chữ số (nếu không thì *"1888 was the year"* bị xén).
         for _x in ds:
             if isinstance(_x, dict):
-                _x["chu"] = re.sub(r"^\s*\d{1,2}\s*[.)]\s*", "", str(_x.get("chu", "")))
+                _x["chu"] = re.sub(r"^\s*(?:[A-Za-z]\d{1,2}|\d{1,2})\s*[.):]\s*",
+                                   "", str(_x.get("chu", "")))
         def _chi_so(x, mac_dinh):
             """Chỉ số câu dẫn mà lượt này diễn. Sai kiểu / ngoài khoảng -> quay về ước lượng."""
             try:
@@ -586,11 +596,28 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
             except Exception:
                 return mac_dinh
             return v if 0 <= v < len(loi) else mac_dinh
-        ra = [{"chu": " ".join(str(x.get("chu") or "").split()),
-               "ai": "b" if str(x.get("ai", "a")).lower().startswith("b") else "a",
-               "cx": str(x.get("cx") or "trung_tinh"),
-               "i": _chi_so(x, min(len(loi) - 1, k))}
-              for k, x in enumerate(ds) if str(x.get("chu") or "").strip()]
+        def _bo_stt(chu: str, i: int) -> str:
+            """Bỏ tiền tố chỉ số mà mô hình chép vào lời — dùng CHÍNH chỉ số của lượt.
+
+            ── VÌ SAO KHÔNG DÙNG MỘT REGEX RỘNG HƠN  (7/9/2026) ──────────────────────────
+            Đo trên ba bản dựng thật, mô hình rò tiền tố theo BA dạng khác nhau: `0.` · `i7:`
+            · và `1 Kodak` (số TRẦN, không dấu ngăn). Nới regex tới dạng thứ ba thì nó xén
+            luôn *"1 in 5 Americans"* — một câu hoàn toàn đúng — và cổng bắt oan tệ hơn cổng
+            không bắt (§13.8).
+            Không cần đoán: lượt này ĐÃ mang chỉ số của nó trong trường `i`. Chỉ xén khi con
+            số ở đầu câu ĐÚNG BẰNG chỉ số ấy. Hết mơ hồ, và không thể bắt oan trừ khi câu thật
+            tình cờ mở đầu bằng đúng số thứ tự của chính nó.
+            """
+            return re.sub(rf"^\s*[A-Za-z]?{i}\s*[.):]?\s+(?=[A-Z])", "", chu)
+        ra = []
+        for k, x in enumerate(ds):
+            if not str(x.get("chu") or "").strip():
+                continue
+            _i = _chi_so(x, min(len(loi) - 1, k))
+            ra.append({"chu": _bo_stt(" ".join(str(x.get("chu") or "").split()), _i),
+                       "ai": "b" if str(x.get("ai", "a")).lower().startswith("b") else "a",
+                       "cx": str(x.get("cx") or "trung_tinh"),
+                       "i": _i})
         if len(ra) < 4:
             continue
         # ── TRẦN SỐ LƯỢT: MÁY CẮT, KHÔNG ĐỐT MỘT VÒNG GỌI AI  (đo 6/9/2026) ─────────────
@@ -866,24 +893,46 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
     tải về `render-pipeline/anh_pd`.
     """
     import os as _o, shutil as _sh
-    try:
-        import anh_tu_do as _A
-    except Exception as e:
-        print(f"   ⚠ không nạp được anh_tu_do ({str(e)[:40]}) — bỏ ảnh thật")
-        return []
     pub = _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))),
                        "engine-remotion", "public", "anh_pd")
     _o.makedirs(pub, exist_ok=True)
-    ra = []
-    for a in _A.anh_cua(chu_the, toi_da=toi_da):
-        d = _A.tai_ve(a)
-        if not d:
+
+    # ── HAI NGUỒN, THEO THỨ TỰ  (anh: "ảnh khớp bối cảnh vẫn hơi ít", 7/9/2026) ────────────
+    # Wikimedia trước: nó giữ những tấm ĐÃ ĐƯỢC BIÊN TẬP chọn cho chính bài viết ấy, nên tấm
+    # đầu thường là tấm biểu tượng. NARA sau, để BÙ — đo được nó có tư liệu ở chỗ Wikimedia
+    # cạn: Concorde 3 -> +8 · Three Mile Island 0 -> +8.
+    #
+    # Không thêm Pexels/Pixabay: đo truy vấn vô nghĩa `zzqx wubblefrotz` ra **4.248 ảnh**
+    # (bóng bay). Kho không bao giờ trả zero là kho không phân biệt được "không có" với "có"
+    # (§15.2), nên mọi phép lọc đặt sau nó chỉ đang lọc rác.
+    ra, thay = [], set()
+    for _ten_mod in ("anh_tu_do", "anh_nara"):
+        if len(ra) >= toi_da:
+            break
+        try:
+            _M = __import__(_ten_mod)
+        except Exception as e:
+            print(f"   ⚠ không nạp được {_ten_mod} ({str(e)[:40]}) — bỏ qua nguồn này")
             continue
-        ten = _o.path.basename(d)
-        dich = _o.path.join(pub, ten)
-        if not _o.path.exists(dich):
-            _sh.copyfile(d, dich)
-        ra.append("anh_pd/" + ten)
+        try:
+            _ds = _M.anh_cua(chu_the, toi_da=toi_da - len(ra))
+        except Exception as e:
+            print(f"   ⚠ {_ten_mod} hỏng ({str(e)[:40]}) — bỏ qua nguồn này")
+            continue
+        for a in _ds:
+            d = _M.tai_ve(a)
+            if not d:
+                continue
+            ten = _o.path.basename(d)
+            if ten in thay:
+                continue
+            thay.add(ten)
+            dich = _o.path.join(pub, ten)
+            if not _o.path.exists(dich):
+                _sh.copyfile(d, dich)
+            ra.append("anh_pd/" + ten)
+            if len(ra) >= toi_da:
+                break
     return ra
 
 # ── LỆNH DẶN RIÊNG CHO MỘT GIỌNG  (anh đề xuất, 7/9/2026) ─────────────────────────────────

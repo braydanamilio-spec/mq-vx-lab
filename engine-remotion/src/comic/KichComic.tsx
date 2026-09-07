@@ -77,6 +77,22 @@ const coChu = (chu: string, W: number, H: number, toiDa: number) => {
   return Math.max(17, Math.min(toiDa, theoDienTich));
 };
 
+// Chiều cao bong bóng ĐOÁN TRƯỚC, dùng để chừa chỗ cho nó. Phải nằm cạnh `BongThoai` và dùng
+// CHUNG các hằng số của nó — 18 (đỉnh) · 52/62 (trần cỡ chữ) · 1,12 (giãn dòng) · 44 (đệm+viền)
+// · 24 (đuôi bong bóng). Đổi bố cục bong bóng thì đổi cả hai chỗ; để hai nơi là mở lại đúng lỗi
+// "hai phân số cố định cạnh nhau" (§15.10).
+//
+// ── VÌ SAO PHẢI ĐOÁN THAY VÌ CHỪA MỘT PHÂN SỐ  (đo 7/9/2026) ────────────────────────────────
+// `chuaTren = min(0,44 · 0,20 + 0,08×dòng)` là một MÔ HÌNH của bong bóng, không phải bong bóng.
+// Đo pixel trên khung thật: bong bóng ba dòng chiếm **0,120** panel trong khi công thức chừa
+// **0,44** — thừa 3,7 lần. Hệ quả là nhân vật bị ép nhỏ lại và giữa bong bóng với đỉnh đầu là
+// một mảng trống to bằng một phần ba khung. §13.7: sai hằng số tới lần thứ ba thì đo vật thật.
+const caoBong = (chu: string, la: boolean, hook: number): number => {
+  const fs = la ? 62 : 52;
+  const dong = Math.max(1, Math.ceil(chu.length / 27));
+  return (18 + dong * fs * 1.12 + 44 + 24) * (hook > 0 ? 1.5 : 1);
+};
+
 const BongThoai: React.FC<{
   chu: string; tu: Tu[]; giay: number; W: number; H: number;
   ben: "trai" | "phai"; duoi?: "trai" | "phai"; hep?: boolean;
@@ -265,12 +281,49 @@ const Panel: React.FC<{
 
   const canRong = !doiNguoi && w > h * 1.15;      // ô NGANG chứa một người -> lệch hẳn một mép
   const _chuaCan = canRong ? 0.08 : chuaTren;
-  const kCan = Math.min((w * (khungDoc ? 0.74 : 0.46)) / (NUA_RONG * 2.1),
-                        (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
+  // ── TRẦN NGANG ĐANG GHÌM CHIỀU CAO — §17.2 LẶP LẠI ĐÚNG Ở ĐÂY  (đo 7/9/2026) ──────────
+  // Anh: *"zoom bự nhân vật lên 1 chút và chỉ lấy phần thân trên"*. Đo panel thật 992×1770 với
+  // hệ số cũ 0,74:
+  //
+  //     câu 1 dòng: trần NGANG 3,50  ·  trần CAO 5,54   -> k = 3,50   (NGANG chặn)
+  //     câu 2 dòng: trần NGANG 3,50  ·  trần CAO 4,93   -> k = 3,50   (NGANG chặn)
+  //     câu 3 dòng: trần NGANG 3,50  ·  trần CAO 4,31   -> k = 3,50   (NGANG chặn)
+  //
+  // Trần NGANG chặn cả ba, và nhân vật chỉ chiếm 70% bề ngang panel — tức cái chặn bề ngang
+  // ghìm chiều cao để giữ lại 30% bề ngang KHÔNG ai dùng. Đúng §17.2, và hệ quả là `_chuaCan`
+  // (chỗ chừa bong bóng) chưa bao giờ được quyền quyết định lần nào.
+  //
+  // `NUA_RONG = 100` đo lúc TAY GHIM NGỰC. Ở cỡ trung một người nói, tay mở ra thì mép tay ra
+  // khỏi khung là bố cục đúng, không phải lỗi — nên nới trần ngang cho trần CAO cầm lái.
+  // Hai điều kiện, giải THẲNG ra một tỉ lệ — không `min()` của hai trần rồi để trần nào thắng
+  // cũng được (§15.8: đo được thứ mình cần thì đừng đi tìm công thức cho nó):
+  //     đỉnh đầu  = ngay dưới bong bóng   -> h * _chuaCan
+  //     mép cắt   = ngang HÔNG            -> đáy panel
+  // Ra đúng một `k`, và khung luôn là cỡ TRUNG thân trên: đầu · vai · thân · HAI TAY.
+  //
+  // Vòng trước em nới trần ngang rồi để trần CAO cầm lái với mốc cắt `Y_NGUC` (ngực). Soi khung
+  // thì ra cỡ CẬN MẶT — mất cả thân lẫn tay, tức mất đúng thứ anh vừa bảo cho cử động. `Y_NGUC`
+  // là mốc của ô NGANG, nơi chiều cao ít ỏi nên phải cắt cao; khung dọc thì cắt ở HÔNG.
+  // §17.1 lần nữa: một hằng số đúng ở ngữ cảnh nó được đo, sai ở ngữ cảnh mới.
+  // Chừa THẬT: chiều cao bong bóng đoán từ chính hằng số của nó, cộng một khe thở 0,03·h.
+  // Chỉ dùng cho nhánh MỘT NGƯỜI khung dọc — mười kênh comic hai người đang chạy vẫn đi đường
+  // `chuaTren` cũ, không đổi một pixel (§12.5: câu luật đúng ở ngữ cảnh nó sinh ra).
+  const _chuaBong = Math.min(0.40, Math.max(0.15, caoBong(L.nar, L.chot === true, hook) / h + 0.03));
+  const kCan = khungDoc
+    ? Math.min((h * (1 - _chuaBong)) / ((CAO_NGUOI - Y_HONG) * (noiA ? caoA : caoB)),
+               w / (NUA_RONG * 2.3))            // chỉ để tay mở không văng hẳn khỏi khung
+    : Math.min((w * 0.46) / (NUA_RONG * 2.1),
+               (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
   const k = doiNguoi ? kRong : kCan;
+  // ĐỈNH ĐẦU NEO ĐÚNG MÉP CHỪA, không neo vào một phân số thứ hai. Bản cũ tính trần bằng
+  // `_chuaCan` (0,28–0,44 theo số dòng) rồi đặt đầu ở hằng số 0,30 — hai phân số cố định cạnh
+  // nhau không mã hoá được quan hệ "đầu nằm dưới bong bóng" (§15.10, lần thứ tư). Ở câu ba dòng
+  // bong bóng chiếm tới 0,44 mà đầu vẫn đặt ở 0,30, tức đầu chui vào bong bóng.
+  // Một nguồn sự thật thì đầu luôn dừng đúng dưới bong bóng, và cắt thân tự siết theo: câu càng
+  // dài, khung càng cận — cắt ở hông (1 dòng) tới ngang ngực (3 dòng).
   const yChan = doiNguoi
     ? (khungDoc ? h * (bongDuoi ? SAN - 0.21 : SAN) : h + Y_HONG * caoMin * k)
-    : h * (khungDoc ? 0.30 : _chuaCan) + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
+    : h * (khungDoc ? _chuaBong : _chuaCan) + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
 
   // Người NGHE không được đứng yên tay buông — nửa còn lại của trò đùa nằm ở phản ứng của nó.
   const CU_CHI_NGHE: Record<string, TenCuChi> = {
@@ -285,6 +338,28 @@ const Panel: React.FC<{
   };
   const cxNghe = L.camXucKia || DOI_LAP[(L.camXuc || "trung_tinh") as string] || "nghi_ngo";
   const cuChiNghe = CU_CHI_NGHE[cxNghe as string] || "nghi";
+
+  // ── MỘT CHUYÊN GIA NÓI VÀO MÁY QUAY: TAY BUÔNG, CỬ ĐỘNG Ở KHUỶU  (anh soi, 7/9/2026) ───
+  // Anh: *"tay hơi cứng ko hợp"*. Soi khung thì tư thế nền là `mo_tay` (`vaiT: 138` — hai
+  // cánh tay mở bành sang hai bên), và nó GIỮ NGUYÊN suốt lượt. Ở cỡ trung thân trên, hai
+  // khuỷu chìa ngang khung đọc ra "chống nạnh", không đọc ra "đang giảng".
+  //
+  // `mo_tay` đúng cho định dạng HAI NGƯỜI — ở đó nó là cử chỉ hướng về người kia. Một người
+  // nói thẳng vào máy thì tay buông tự nhiên và cử động dồn vào cẳng tay. §12.5 lần nữa.
+  //
+  // Danh sách CHO PHÉP, không phải danh sách cấm: câu hỏi là *"người dẫn nói vào máy quay
+  // dùng những tư thế nào"*, và đó là một tập hữu hạn có thật. Kịch bản đòi tư thế ngoài tập
+  // ấy (khoanh tay · chống nạnh · chống cằm) thì quay về `nghi` thay vì diễn sai vai.
+  const CHO_PHEP_MOT: TenCuChi[] = ["nghi", "chi", "dem", "mo_tay"] as TenCuChi[];
+  const cuChiNoi = ((): TenCuChi => {
+    const c = (L.cuChi || "") as TenCuChi;
+    if (!motNguoi) return (c || "mo_tay") as TenCuChi;
+    // Nền là `dem` (hai cẳng thu vào trước ngực), KHÔNG phải `nghi`. Soi khung với `nghi`:
+    // tay buông xuôi nên bàn tay tụt hẳn dưới mép cắt ngang hông — tức cử động khuỷu vừa thêm
+    // không ai nhìn thấy. Người dẫn nói với máy quay để tay phía TRƯỚC, và đó cũng là chỗ duy
+    // nhất bàn tay còn nằm trong khung ở cỡ trung thân trên.
+    return CHO_PHEP_MOT.indexOf(c) >= 0 && c !== ("mo_tay" as TenCuChi) ? c : ("dem" as TenCuChi);
+  })();
 
   // 31/8 — Anh: *"lúc nói thì tất cả hình nhân vật đều mấp máy miệng"*. Gốc nằm ở một dòng:
   // `visemeTai(tu, giay, 0)` tra mốc từ của CẢ VIDEO tại giây hiện tại, nên cảnh nào cũng nhận
@@ -371,7 +446,7 @@ const Panel: React.FC<{
           <DienVienHai
             kieu={A}
             camXuc={(noiA ? (L.camXuc || "trung_tinh") : cxNghe) as TenCamXuc}
-            cuChi={(noiA ? (L.cuChi || "mo_tay") : cuChiNghe) as TenCuChi}
+            cuChi={(noiA ? cuChiNoi : cuChiNghe) as TenCuChi}
             nhin={doiNguoi ? [noiA ? 0.45 : 0.5, 0] : [0, 0]}
             noi={noiA ? viseme : imLang}
             t={giay} dangNoi={noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? 0.09 : 0}
@@ -393,7 +468,7 @@ const Panel: React.FC<{
           <DienVienHai
             kieu={B}
             camXuc={(!noiA ? (L.camXuc || "trung_tinh") : cxNghe) as TenCamXuc}
-            cuChi={(!noiA ? (L.cuChi || "mo_tay") : cuChiNghe) as TenCuChi}
+            cuChi={(!noiA ? cuChiNoi : cuChiNghe) as TenCuChi}
             nhin={doiNguoi ? [!noiA ? -0.45 : -0.5, 0] : [0, 0]}
             noi={!noiA ? viseme : imLang}
             t={giay + 0.7} dangNoi={!noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? -0.09 : 0}
