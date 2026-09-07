@@ -273,6 +273,24 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_gop_so_nen():
+    """GỘP SỔ KHO NỀN KHI HAI LƯỢT ĐỤNG NHAU (8/9/2026) — thử ĐỦ HAI CHIỀU (§13.11).
+
+    Chỉ số trong `nen_kho[kênh]` CHÍNH LÀ số trong tên tệp (`..._157.webp`), nên phép gộp chỉ
+    được NỐI ĐUÔI. Nối đuôi thì gộp; lệch ở giữa thì phải NỔ chứ không được đoán — đoán ở đây
+    là làm mọi ảnh phía sau trỏ sai mô tả, hỏng im lặng."""
+    import gop_so_nen as G
+    assert G.gop_kho({"a": ["x", "y"]}, {"a": ["x", "y", "z"]}) == {"a": ["x", "y", "z"]}
+    assert G.gop_kho({}, {"b": ["p"]}) == {"b": ["p"]}
+    try:
+        G.gop_kho({"a": ["x", "zA"]}, {"a": ["x", "zB", "w"]})
+        raise AssertionError("KHÔNG bắt được hai lượt ghi khác nhau ở CÙNG một chỉ số")
+    except RuntimeError:
+        pass
+    # bảng tra phẳng: hợp hai phía, khoá trùng thì bản TRÊN REMOTE thắng
+    assert G.gop_tag({"k": "xa"}, {"k": "ta", "m": "chi_ta"}) == {"k": "xa", "m": "chi_ta"}
+
+
 def t_failover_rehearsal():
     """DIỄN TẬP FAILOVER (23/8, user: "đừng chạy xong mới ớ ra"): giả lập B chết giữa phiên bằng
     client GIẢ (0 mạng, 0 quota) và kiểm 4 đường gây HỎNG SẢN PHẨM nếu lệch:
@@ -2597,6 +2615,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("gộp sổ kho nền khi hai lượt đụng nhau", t_gop_so_nen)
     check("DIỄN TẬP failover: chủ đề + đếm chỉ tiêu khi B chết", t_failover_rehearsal)
     check("toon: validator + safe-words + route", t_toon)
     check("hồ key viết không lẫn key ảnh/lưu trữ", t_key_pool_sach)

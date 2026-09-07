@@ -195,9 +195,43 @@ jobs:
           fi
           N=$(git diff --cached --name-only | wc -l | tr -d ' ')
           git commit -m "Kho nền: +$N tệp (bổ sung tự động)"
-          # Lượt khác có thể vừa push; rebase rồi thử lại thay vì hỏng.
+          # ── BA LẦN THỬ PHẢI LÀ BA LẦN THỬ  (8/9/2026) ────────────────────────────────
+          # Bản cũ gọi `git pull --rebase` ba lần mà KHÔNG dọn tàn dư. Lần đầu đụng độ thì
+          # rebase dừng giữa chừng và để lại tệp chưa hoà; hai lần sau chết ngay ở
+          #     "Pulling is not possible because you have unmerged files."
+          # -> ba lần thử thật ra là MỘT. Đo được: lượt 18:09 và 18:58 (7/9) hỏng đúng thế.
+          #
+          # Và đụng độ ở đây có gốc đo được: ba lượt cron chạy CHỒNG NHAU (18:09–18:47 ·
+          # 18:30–19:28 · 18:58–20:02) dù đã khai `concurrency: kho-nen`, nên hai lượt cùng
+          # lấp một chỗ trống và cùng sinh `dayinlife_157.webp`. Hai ảnh ấy vẽ cho CÙNG một
+          # mô tả, nên bản đã lên remote thắng còn bản của lượt này là bản dư — bỏ đi là
+          # đúng, không mất gì. Sổ JSON thì gộp bằng `gop_so_nen.py` (§15.6: chỉ giải khi
+          # CHỨNG MINH được; tệp lạ thì dừng và báo, không đoán).
           for i in 1 2 3; do
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push && exit 0
-            sleep 10
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase --autostash origin "${GITHUB_REF_NAME}"; then
+              git push && exit 0
+              sleep 10; continue
+            fi
+            DUNG=$(git diff --name-only --diff-filter=U)
+            echo "   ⚠️ đụng độ: $(echo "$DUNG" | tr '\n' ' ')"
+            LA=0
+            for f in $DUNG; do
+              case "$f" in
+                engine-remotion/public/comic_nen/*.webp)
+                  # trong rebase, `--ours` là bản ĐÃ Ở TRÊN REMOTE
+                  git checkout --ours -- "$f" && git add "$f" ;;
+                render-pipeline/nen_kho.json|render-pipeline/nen_tag.json)
+                  python3 render-pipeline/gop_so_nen.py "$f" && git add "$f" || LA=1 ;;
+                *) echo "   ❌ tệp lạ trong đụng độ: $f"; LA=1 ;;
+              esac
+            done
+            if [ "$LA" = 1 ]; then
+              echo "::error::đụng độ ở thứ không tự giải được — dừng, không đoán"
+              git rebase --abort 2>/dev/null || true; exit 1
+            fi
+            GIT_EDITOR=true git rebase --continue || true
+            sleep 5
           done
+          git rebase --abort 2>/dev/null || true
           echo "::error::push hỏng sau 3 lần"; exit 1
