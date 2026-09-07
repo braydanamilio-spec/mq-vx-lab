@@ -823,6 +823,68 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 # ══ DỰNG MỘT TẬP ═════════════════════════════════════════════════════════════════════════════
 MOT_GIONG = False        # bật: MỘT chuyên gia nói liên tục, hình đổi theo lời
 DAO_CU_TAP = ""          # hình mẫu của cả tập (`chu_de.hinh_mau`) — lấp chỗ câu không gợi vật
+ANH_THAT: list = []      # ảnh PD/CC0 của chính chủ thể — xem `_chen_anh_that`
+
+
+def _chen_anh_that(anh_nens: list, duong: list) -> list:
+    """Rải ảnh THẬT của chủ thể vào danh sách nền, xen kẽ với nền vẽ.
+
+    ── VÌ SAO XEN KẼ, KHÔNG THAY HẾT  (7/9/2026) ─────────────────────────────────────────
+    Anh: *"hình ảnh chưa vẽ ra được ảnh liên quan tới nội dung"*. Nền vẽ đã chọn đúng LĨNH
+    VỰC (xưởng ảnh cho Kodak) nhưng vẫn là một căn phòng chung — người xem không nhìn ra đó
+    là phòng ảnh. Một tấm ảnh THẬT "Eastman Kodak HQ 1900" thì không nền vẽ nào thay được.
+    Nhưng thay HẾT thì mất luôn phong cách truyện tranh của kênh, và ảnh thật thì hữu hạn
+    (Kodak 8, Betamax 1) nên không đủ cho mọi nhịp.
+
+    Xen kẽ: nhịp chẵn giữ nền vẽ, nhịp lẻ dùng ảnh thật khi có. Người xem thấy cả hai, và
+    chỗ nào không có ảnh thì rơi về nền vẽ — không bao giờ để trống (§7, bốn tầng).
+    """
+    if not duong:
+        return anh_nens
+    ra = list(anh_nens)
+    k = 0
+    for i in range(1, len(ra), 2):          # chỉ nhịp LẺ, giữ nhịp chẵn cho nền vẽ
+        if k >= len(duong):
+            break
+        ra[i] = duong[k]
+        k += 1
+    return ra
+
+
+def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
+    """Tải ảnh PD/CC0 của chủ thể rồi COPY vào `engine-remotion/public/anh_pd`.
+
+    Trả về danh sách đường dẫn TƯƠNG ĐỐI với public — dạng engine đọc được.
+
+    ── VÌ SAO HÀM NÀY Ở ĐÂY, KHÔNG Ở TỆP THỬ  (7/9/2026) ─────────────────────────────────
+    Bản đầu em viết phép tải + copy thẳng trong `_thu_vanished.py`. Chạy thì đúng, nhưng
+    `ANH_THAT` khi ấy là một trường CHỈ tệp thử ghi — tới lúc nối vào đường chạy thật thì
+    người nối phải viết lại phép copy, và chỗ dễ quên nhất chính là câu copy (đường dẫn hợp
+    lệ mà ảnh không hiện). Đúng họ §13.1: cơ chế phải nằm ở nơi đường chạy thật với tới.
+
+    Copy chứ không trỏ thẳng: Remotion chỉ phục vụ tệp nằm dưới `public`, còn `anh_tu_do`
+    tải về `render-pipeline/anh_pd`.
+    """
+    import os as _o, shutil as _sh
+    try:
+        import anh_tu_do as _A
+    except Exception as e:
+        print(f"   ⚠ không nạp được anh_tu_do ({str(e)[:40]}) — bỏ ảnh thật")
+        return []
+    pub = _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))),
+                       "engine-remotion", "public", "anh_pd")
+    _o.makedirs(pub, exist_ok=True)
+    ra = []
+    for a in _A.anh_cua(chu_the, toi_da=toi_da):
+        d = _A.tai_ve(a)
+        if not d:
+            continue
+        ten = _o.path.basename(d)
+        dich = _o.path.join(pub, ten)
+        if not _o.path.exists(dich):
+            _sh.copyfile(d, dich)
+        ra.append("anh_pd/" + ten)
+    return ra
 
 # ── LỆNH DẶN RIÊNG CHO MỘT GIỌNG  (anh đề xuất, 7/9/2026) ─────────────────────────────────
 # Bật `MOT_GIONG` mà vẫn dùng `LENH_THOAI` thì mô hình viết ĐỐI THOẠI: nó hỏi rồi tự đáp, và
@@ -1291,6 +1353,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # quay vòng, nên số phòng riêng = min(số ô, cỡ kho) — tức mỗi ô một phòng đã là tối ưu
         # và không phép gộp nào cải thiện được. Bỏ hẳn phép gộp.
         anh_nens = [_co(co[(noi_idx + i * buoc) % len(co)]) for i in range(len(cau))]
+        anh_nens = _chen_anh_that(anh_nens, ANH_THAT)
     else:
         anh_nens = []
 

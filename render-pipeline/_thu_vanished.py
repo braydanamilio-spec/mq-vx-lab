@@ -32,4 +32,8 @@ import pilot_hai as P                                   # noqa: E402  (sau khi �
 P.MOT_GIONG = True          # MỘT chuyên gia nói liên tục, hình đổi theo lời
 P.DAO_CU_TAP = C.hinh_mau(_ho)      # hình mẫu suy từ chủ thể, dùng cho cả tập
 print(f"   🎨 hình mẫu: {P.DAO_CU_TAP or '(không nhận ra)'}")
+
+# ── ẢNH THẬT: engine chỉ đọc được tệp dưới `public`, nên `nap_anh_that` tải VÀ copy ─────
+P.ANH_THAT = P.nap_anh_that(CHU_THE, toi_da=6)
+print(f"   🖼 ảnh thật PD/CC0: {len(P.ANH_THAT)}")
 raise SystemExit(0 if P.mot_tap(KENH, 4, False) else 1)
