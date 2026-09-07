@@ -262,8 +262,23 @@ def _du_so(loi: list, thoai: list, man: list = None) -> list:
     `man` là danh sách song song với `loi`: con số panel ấy sẽ hiện. Thiếu nó thì hàm quay về
     hành vi cũ — chỉ soi lời dẫn — và đó chính là trạng thái đã cho ra "ĐỦ" trên một tập câm
     hoàn toàn về số. Nên chỗ gọi PHẢI truyền `man`; cổng dưới đây canh việc ấy."""
+    # ── NHỊP NÀO CÓ THẺ THÌ THẺ LÀ NGUỒN DUY NHẤT  (anh gửi ảnh, 7/9/2026) ──────────────
+    # Anh soi ra một khung: thẻ hiện **`$213K`** mà bong bóng đọc *"two hundred twelve thousand
+    # five hundred thirty seven dollars thirty years"* — 11 chữ, bốn dòng, che hẳn cái thẻ.
+    #
+    # Gợi ý ON SCREEN đưa xuống đã đúng (`$213K over 30 years`). Con số `212,537` đến từ LỜI
+    # DẪN, và vòng dưới đây gom số từ **cả lời dẫn lẫn thẻ** — nên cổng đòi mô hình đọc một con
+    # số mà MÀN HÌNH KHÔNG HỀ HIỆN.
+    #
+    # Luật anh giao là *"số TRÊN MÀN HÌNH phải được đọc lên"* (người nghe mà không nhìn). Một
+    # con số chỉ nằm trong lời dẫn thì không ở trên màn hình; bắt đọc nó là làm quá luật, và
+    # cái giá trả bằng đúng thứ luật ấy sinh ra để bảo vệ — cái thẻ bị che.
+    # Nên: nhịp NÀO CÓ thẻ thì chỉ đòi con số của thẻ; nhịp không có thẻ mới xét lời dẫn.
     goc = set()
-    for t in list(loi) + list(man or []):
+    _man = list(man or [])
+    _nguon = [(_man[i] if i < len(_man) and _man[i] else t) for i, t in enumerate(loi)]
+    _nguon += _man[len(loi):]
+    for t in _nguon:
         ds = [x.strip() for x in _SO.findall(t) if any(c.isdigit() for c in x)]
         # ── BIỂU ĐỒ: CHỈ ĐÒI CON SỐ LỚN NHẤT  (đo 6/9/2026) ─────────────────────────────
         # Một nhịp `chart` mang 3–4 cột, và bắt đọc đủ cả bốn thì câu dài lê thê rồi vẫn trượt:
@@ -431,8 +446,36 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
     # ── ĐĂNG KÝ KÊNH VÀO CÁC BẢNG CỦA COMIC ──────────────────────────────────────────────
     # Không sửa `kich_comic.py`; chỉ thêm khoá lúc chạy. Bộ hài 20 kênh không đổi một dòng.
     de = ma
-    KC.VAI[de] = [["luat_tre", "nu", "trung", 0.97, vai[0]["vai"], vai[0]["vai"]],
-                  ["khoa_hoc", "nam", "trung", 1.00, vai[1]["vai"], vai[1]["vai"]]]
+    # ── GIỌNG PHẢI ĐỌC TỪ DÀN VAI THẬT  (anh nghe ra, 7/9/2026) ──────────────────────────
+    # Anh: *"nhiều clip nhân vật đọc lời thoại nhầm ... nhầm vai"*. Bản cũ ghi CỨNG
+    # `["luat_tre","nu","trung",...]` và `["khoa_hoc","nam","trung",...]`, tức vai A LUÔN giọng
+    # nữ trung niên và vai B LUÔN giọng nam trung niên — bất kể cặp xoay ra ai.
+    #
+    # `vai_va_giong` lấy đúng hai trường ấy để tra `GIONG_VAI[(gioi, tuoi)]`, nên hình vẽ là
+    # Gus/Tank/Nia của kênh (do `do_vai` ghi đè sau) còn GIỌNG thì của hai vai bộ hài đời cũ.
+    # Đo trên 18 kênh × 12 tập × 2 vai = 432 lượt gán: **218 lượt sai giới — đúng 50%.**
+    # Nửa số nhân vật nói bằng giọng khác giới của mình, và không cổng nào đo giọng.
+    #
+    # `tuoi` cũng ghi cứng `"trung"`, nên vai 12 tuổi (Ravi của `smallest`) và vai 62 tuổi đều
+    # nói giọng trung niên — bảng `GIONG_VAI` có sẵn `tre`, `gia` và một giọng `tre_con` chưa
+    # bao giờ được dùng (§15.12: thứ có sẵn mà không ai gọi).
+    #
+    # Nay suy từ chính câu mô tả vai — nguồn sự thật duy nhất, đúng luật "đừng tạo nguồn thứ
+    # hai" ở §11: mô tả đã ghi "36-year-old woman, ..." nên giới và tuổi đọc thẳng ra được.
+    def _gioi_tuoi(ta: str, thu_tu: int):
+        t = " " + str(ta or "").lower()
+        g = ("nu" if re.search(r"\b(woman|girl|she|her)\b", t) else
+             "nam" if re.search(r"\b(man|boy|he|his)\b", t) else
+             ("nu", "nam")[thu_tu % 2])          # mô tả không nói giới -> xen kẽ, đừng đoán
+        m = re.search(r"(\d{1,2})\s*-?\s*year", t)
+        n = int(m.group(1)) if m else 38
+        if n < 16:
+            return "tre", "tre_con", 0.82        # giọng trẻ con, và người thấp hẳn
+        return g, ("tre" if n < 32 else "trung" if n < 56 else "gia"), (0.97 if g == "nu" else 1.00)
+    _gA, _tA, _cA = _gioi_tuoi(vai[0].get("ta"), 0)
+    _gB, _tB, _cB = _gioi_tuoi(vai[1].get("ta"), 1)
+    KC.VAI[de] = [["luat_tre", _gA, _tA, _cA, vai[0]["vai"], vai[0]["vai"]],
+                  ["khoa_hoc", _gB, _tB, _cB, vai[1]["vai"], vai[1]["vai"]]]
     KC.NHAC[de] = G.GU_RIENG.get(ma, ("", "music/forecast.mp3", ""))[1]
     KC.MAU_CHINH[de] = g["chinh"]
     KC.MAU_PHU[de] = g["phu"]
