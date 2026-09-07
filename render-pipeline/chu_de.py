@@ -35,10 +35,25 @@ UA = {"User-Agent": "MM0-pipeline/1.0 (youtube explainer; contact via repo owner
 
 # Đơn vị PHẢI có mặt thì con số mới "cảm được" — một năm trần (1996) không nói lên quy mô.
 # Danh sách này cố ý HẸP: rộng ra thì nhặt cả số trang, số hiệu, số chú thích.
+# ── BỘ TRÍCH ĐẦU TIÊN QUÁ HẸP, VÀ EM ĐÃ KẾT LUẬN SAI TỪ NÓ  (7/9/2026) ────────────────────
+# Bản đầu đòi SỐ + ĐƠN VỊ ĐO trong cùng một câu. Đo ra `Dolly (sheep)` chỉ 1 câu, `Simulation
+# hypothesis` 0 câu, và em báo với anh rằng hồ chủ thể chỉ dùng được 12% — "không vô hạn".
+#
+# Sai. Nội dung KỂ CHUYỆN không sống bằng đơn vị đo; nó sống bằng NĂM, TUỔI, SỐ LẦN, SỐ CA,
+# SỐ NGƯỜI. Nới đúng những thứ ấy rồi đo lại chính sáu chủ đề anh nêu:
+#
+#     Dolly 1 -> 22 câu · MH370 40 -> 129 · Simulation hypothesis 0 -> 18
+#     Benjamin Franklin 8 -> 202 · Cloning 1 -> 80 · Sleep deprivation 26 -> 40
+#
+# Con số 12% đo chính bộ lọc của em, không đo nguồn. Đây là §13.15 ở dạng đắt nhất trong
+# ngày: em lấy kết quả của một phép đo hẹp rồi dùng nó để BÁC một hướng đi mà anh đã chọn.
 _DV = (r"%|percent|million|billion|trillion|thousand|km|kilometres?|miles?|kg|kilograms?|"
        r"pounds?|tons?|tonnes?|years?|months?|days?|hours?|minutes?|seconds?|people|"
-       r"passengers?|crew|deaths?|dollars?|USD|feet|foot|metres?|meters?|degrees?")
-_CAU = re.compile(r"[^.\n]*?\b\d[\d,\.]*\s*(?:" + _DV + r")\b[^.\n]*\.")
+       r"passengers?|crew|deaths?|dollars?|USD|feet|foot|metres?|meters?|degrees?|"
+       r"times|copies|attempts?|embryos?|cases?|patients?|studies|subjects?|"
+       r"votes?|books?|letters?|inventions?|experiments?")
+# `\d{4}` bắt NĂM — mốc thời gian là xương sống của mọi câu chuyện, và bản đầu bỏ hết.
+_CAU = re.compile(r"[^.\n]*?\b(?:\d{4}|\d[\d,\.]*\s*(?:" + _DV + r"))\b[^.\n]*\.")
 _SO = re.compile(r"\b\d[\d,\.]*\b")
 
 
