@@ -92,6 +92,32 @@ def _co_ho_kho():
         return None
 
 
+def _ho_kho_chi_tiet():
+    """(số kho, số kho token CHẾT). None khi không đọc được.
+
+    ── VÌ SAO PHẢI IN RA  (7/9/2026) ──────────────────────────────────────────────────
+    Anh nói hồ kho có hơn 100 tài khoản; em đi tìm bằng chứng trong log CI thì **không
+    workflow nào in con số ấy ra**. Đúng §13.1 ở dạng quen thuộc: cơ chế có sẵn, chạy tốt,
+    và không ai báo cáo nó — nên mỗi lần cần biết là một lần đi mò, và hai người có thể
+    tin hai con số khác nhau mà không ai sai.
+    Thứ đáng lo hơn con số tổng: log `publish` ngày 7/9 có `⚠️ list_queue kho ADISONDURHAM:
+    invalid_grant` — một kho token đã CHẾT. Kho chết không làm hỏng lượt đẩy (hệ xoay sang
+    kho khác) nên nó im lặng mòn dần, đúng họ lỗi "hỏng mà vẫn báo xanh".
+    """
+    try:
+        sys.path.insert(0, GOC)
+        import firestore_bridge as FB
+        n = hong = 0
+        for d in FB._db_ghi().collection("connections").where("kind", "==", "drive").stream():
+            n += 1
+            x = d.to_dict() or {}
+            if x.get("health") in ("bad", "invalid_grant") or x.get("last_error"):
+                hong += 1
+        return n, hong
+    except Exception:
+        return None
+
+
 def _o(co) -> str:
     return "✅" if co is True else ("—" if co is False else "?")
 
@@ -108,6 +134,13 @@ def main() -> int:
     print(f"nguồn: {os.path.relpath(_duong_channels(), DU_AN)} · {len(kenh)} kênh")
     print(f"  secret  : {'đọc được, ' + str(len(sec)) + ' tên' if sec is not None else 'CHƯA KIỂM ĐƯỢC (gh không trả lời)'}")
     print(f"  kết nối : {'đọc được, ' + str(len(kn)) + ' bản ghi' if kn is not None else 'CHƯA KIỂM ĐƯỢC (không mở được Firestore ở máy này)'}")
+    _hk = _ho_kho_chi_tiet()
+    if _hk is None:
+        print("  hồ kho  : CHƯA KIỂM ĐƯỢC")
+    else:
+        _n, _h = _hk
+        print(f"  hồ kho  : {_n} tài khoản Drive"
+              + (f" — ⚠ {_h} kho có token CHẾT, cần nối lại" if _h else " — tất cả còn sống"))
     print()
     print(f"{'kênh':13s} {'bật':>4s} {'drive':>6s} {'youtube':>8s} {'facebook':>9s} {'instagram':>10s}   việc cần làm")
 
