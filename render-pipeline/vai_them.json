@@ -3,6 +3,10 @@
   {
    "ten": "Eloise",
    "ta": "70-year-old woman, silver bun, crimson raincoat, leather satchel, inquisitive"
+  },
+  {
+   "ten": "Captain Ross",
+   "ta": "57-year-old man, close-cropped grey hair, navy flight jacket over a white shirt, route chart and dividers, long-haul navigator, precise"
   }
  ],
  "howbig": [
@@ -15,18 +19,34 @@
   {
    "ten": "Tara",
    "ta": "24-year-old woman, auburn ponytail, golden blouse, pocket calculator, curious"
+  },
+  {
+   "ten": "Warren Tate",
+   "ta": "56-year-old man, thinning sandy hair, charcoal blazer over a light blue oxford shirt, horn-rim glasses, cost-sheet binder and a pocket calculator, certified cost analyst, meticulous"
   }
  ],
  "whatif": [
   {
    "ten": "Mira",
    "ta": "55-year-old woman, long wavy brown hair, lavender dress, notebook, naive"
+  },
+  {
+   "ten": "Professor Abiodun",
+   "ta": "58-year-old man, greying close crop, charcoal cardigan over a white shirt, lab notebook and slide rule, physicist, unhurried"
+  },
+  {
+   "ten": "Dr Sable",
+   "ta": "53-year-old woman, greying hair in a loose knot, white lab coat over a burgundy turtleneck, chalk-covered slide rule and a lab notebook, theoretical physicist, unhurried"
   }
  ],
  "survive": [
   {
    "ten": "Jace",
    "ta": "22-year-old man, shaggy dark hair, crimson thermal coat, compass, hopeful"
+  },
+  {
+   "ten": "Sergeant Boone",
+   "ta": "51-year-old man, weathered face, olive expedition parka, altimeter watch and safety harness, cold-weather survival instructor, meticulous"
   }
  ],
  "dayinlife": [
@@ -39,30 +59,54 @@
   {
    "ten": "Omar",
    "ta": "50-year-old man, salt‑and‑pepper beard, orange high‑visibility jacket, dark denim overalls, steel‑toe boots, methodical"
+  },
+  {
+   "ten": "Dr Oyelude",
+   "ta": "50-year-old man, shaved head, white hard hat, lime high-visibility vest over a navy polo, sampling jar and a tablet, municipal waste engineer, precise"
   }
  ],
  "therules": [
   {
    "ten": "Felix",
    "ta": "24-year-old man, shaved head, bright yellow safety vest, black cargo pants, clipboard, inquisitive"
+  },
+  {
+   "ten": "Attorney Brooks",
+   "ta": "47-year-old woman, dark curls pinned back, navy pinstripe suit over a cream shell, bar association pin, leather portfolio of statutes and a legal pad, unhurried"
   }
  ],
  "speedof": [
   {
    "ten": "Ava",
    "ta": "19-year-old woman, curly auburn hair, white windbreaker, red running shorts, digital speedometer watch, eager"
+  },
+  {
+   "ten": "Dr Quintero",
+   "ta": "43-year-old woman, black hair to the shoulders, olive flight-test coveralls, handheld chronometer and calipers, aerodynamics engineer, precise"
   }
  ],
  "odds": [
   {
    "ten": "Petra",
    "ta": "23-year-old woman, straight blonde hair, silver sequined vest, black leggings, poker chips pouch, optimistic"
+  },
+  {
+   "ten": "Dr Farrow",
+   "ta": "49-year-old woman, dark hair in a tight bun, steel-grey blazer over a white shirt, probability tables and a tally counter, risk statistician, methodical"
   }
  ],
  "yearsof": [
   {
    "ten": "Lena",
    "ta": "46-year-old woman, platinum bob, amber trench coat, leather satchel, philosophical"
+  },
+  {
+   "ten": "Dr Petra",
+   "ta": "39-year-old woman, straight auburn hair, lime lab coat over a navy tee, stopwatch and time-use logbook, time-use researcher, patient"
+  },
+  {
+   "ten": "Dr Halvorsen",
+   "ta": "51-year-old woman, silver-blonde crop, forest-green blouse under a lab coat, longevity ledger and calculator, demographer, patient"
   }
  ],
  "howloud": [
@@ -75,18 +119,34 @@
   {
    "ten": "Eve",
    "ta": "60-year-old woman, silver braid, navy coveralls, steel weight bar, steady"
+  },
+  {
+   "ten": "Inspector Nadia",
+   "ta": "43-year-old woman, dark curls tied back, purple hi-vis vest over a white shirt, calibrated load scale and clipboard, freight weights inspector, precise"
   }
  ],
  "rightnow": [
   {
    "ten": "Milo",
    "ta": "38-year-old man, dark curly hair, olive bomber jacket, digital wristwatch, watchful"
+  },
+  {
+   "ten": "Dr Solis",
+   "ta": "46-year-old woman, silver-streaked bob, rust blazer over a cream blouse, population atlas and clipboard, demographer, analytical"
+  },
+  {
+   "ten": "Inspector Vance",
+   "ta": "54-year-old man, close-cropped grey beard, navy field jacket with a badge, population census clipboard, methodical"
   }
  ],
  "howhot": [
   {
    "ten": "Nia",
    "ta": "20-year-old woman, auburn ponytail, yellow sun visor, charcoal shorts, curious"
+  },
+  {
+   "ten": "Dr Imani",
+   "ta": "44-year-old woman, black hair in a low knot, teal fire-lab coat over a grey tee, infrared thermometer on a lanyard, thermal materials scientist, methodical"
   }
  ],
  "smallest": [
@@ -103,12 +163,20 @@
   {
    "ten": "Tobias",
    "ta": "62-year-old man, bald with a white beard, rust cardigan over a cream shirt, dark trousers, wooden pencil behind the ear, unhurried bookkeeper"
+  },
+  {
+   "ten": "Denise Park",
+   "ta": "45-year-old woman, straight black hair to the jaw, navy suit trousers and a white oxford shirt with the sleeves rolled, ID lanyard, fee-schedule binder and a ten-key calculator, certified public accountant, reads every line"
   }
  ],
  "howmuch": [
   {
    "ten": "Suri",
    "ta": "27-year-old woman, dark hair in a neat bob, navy hoodie over a white tee, olive trousers, canvas shoes, hand tally counter, counts out loud"
+  },
+  {
+   "ten": "Dr Adeyemi",
+   "ta": "49-year-old man, shaved head, charcoal waistcoat over a pale blue shirt, ledger and pocket calculator, actuary who counts for a living, unhurried"
   }
  ]
 }

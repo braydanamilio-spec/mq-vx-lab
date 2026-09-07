@@ -501,7 +501,86 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True) -> str:
         _i, _j = idx % _n, (idx % _n + _b) % _n
     else:
         _i = _j = 0
-    vai = [_dan[_i], _dan[_j]]
+    # ── NGƯỜI BIẾT CON SỐ PHẢI RA CHẤT CHUYÊN GIA  (anh giao, 7/9/2026) ──────────────────
+    # Anh: *"nếu là channel phân tích thì phong cách nhân vật đúng chất chuyên gia mỗi channel"*.
+    # `LENH_THOAI` đã quy định vai B là *"người BIẾT con số"*, nhưng cặp vai xoay theo `_cap`
+    # nên ai vào vai B là ngẫu nhiên. Đo 216 lượt xếp vai: **158 lượt (73%) vai B không ra chất
+    # chuyên gia** — có cả một bé gái 16 tuổi đi giải thích số liệu cho người lớn.
+    #
+    # Không khoá cứng một người vào vai B (mất hẳn đa dạng: 30 cặp còn 5). Giữ nguyên CẶP, chỉ
+    # đổi THỨ TỰ trong cặp: người có nghề hơn nhận vai trả lời. Đa dạng giữ nguyên vì cặp
+    # (X,Y) và (Y,X) vẫn là hai cặp khác nhau về hình; cái đổi là ai cầm con số.
+    def _chat_nghe(v) -> int:
+        t = (str(v.get("vai") or "") + " " + str(v.get("ta") or "")).lower()
+        d = 0
+        if re.match(r"^(dr|doctor|professor|prof|chef|nurse|officer|ranger|coach|foreman|"
+                    r"chief|marshal|deputy|lieutenant|warden|capt(?:ain)?|sgt|sergeant|"
+                    r"attorney|counsel|inspector)\b", t):
+            d += 4
+        d += 3 * len(re.findall(r"\b(engineer|scientist|analyst|technician|inspector|auditor|"
+                                r"surveyor|physiologist|specialist|bookkeeper|operator|"
+                                r"actuary|navigator|demographer|researcher|instructor|"
+                                # Ngành TÀI CHÍNH và LUẬT thiếu hẳn khỏi bảng, nên chính hai
+                                # chuyên gia anh nêu tên làm ví dụ lại không vào nổi top hai.
+                                r"accountant|attorney|lawyer|paralegal|appraiser|adjuster|"
+                                r"economist|statistician|underwriter|pathologist|"
+                                r"epidemiologist|acoustician|hydrologist|geologist)\b", t))
+        # ĐỒ NGHỀ và ĐỒNG PHỤC, không chỉ chức danh  (anh giao, 7/9/2026)
+        # Đọc tay 84 vai cận ngưỡng: `Ranger Ellis` (áo kiểm lâm + phù hiệu), `Gus/howbig`
+        # (thước đo laser), `Gus/howloud` (máy đo decibel), `Cass` (bộ chống cháy phản quang)
+        # đều là người có nghề thật mà thước cũ cho 1–2 điểm, vì nó chỉ đếm CHỨC DANH.
+        # Thứ người xem đọc ra "người này biết việc" trong nửa giây là ĐỒ NGHỀ trên tay và
+        # BỘ ĐỒ trên người, không phải hai chữ đứng trước tên. Đếm chức danh là danh sách vô
+        # hạn (§13.9); đếm đồ nghề thì bảng đóng lại được vì số dụng cụ đo là hữu hạn.
+        # `notebook` và `ledger` TRẦN bị bỏ khỏi bảng: `Mira/whatif` ("lavender dress,
+        # notebook, naive") và `Eli/realcost` ("ledger book, frugal") vượt ngưỡng chỉ nhờ một
+        # cuốn sổ, trong khi tính cách khai ra là NGÂY THƠ và TIẾT KIỆM — trái hẳn chất chuyên
+        # gia. Một cuốn sổ ai cũng cầm được; thứ chỉ người có nghề mới cầm là DỤNG CỤ ĐO.
+        d += 2 * len(re.findall(r"\b(lab coat|safety|apron|clipboard|microscope|scanner|"
+                                r"lab notebook|tally|pocket ledger|goggles|"
+                                r"measuring rod|decibel meter|chronometer|calipers|stopwatch|"
+                                r"weight scale|weight bar|abacus|multi-tool|dividers|"
+                                r"route chart|gauge|thermometer|calculator|legal pad|"
+                                r"statutes|fee-?schedule|cost-?sheet|ten-?key|"
+                                r"hard hat|hi-?vis|high-?visibility|coveralls|jumpsuit|badge|"
+                                r"fire-?res|fire-?ret|heat-?proof|stethoscope|scrub coat)\b", t))
+        d += len(re.findall(r"\b(analytical|methodical|meticulous|precise|patient|probing|"
+                            r"unhurried|reads every line|delighted by detail)\b", t))
+        # Tính cách khai ra NGƯỢC với chất chuyên gia thì trừ thẳng — một người được tả là
+        # "naive" không thể là người mà cả tập đi hỏi con số.
+        d -= 4 * len(re.findall(r"\b(naive|gullible|clueless|frugal|thrifty|mischievous|"
+                                r"complaining|grumbling|impatient|hopeful|daring)\b", t))
+        m = re.search(r"(\d{1,2})\s*-?\s*year", t)
+        n = int(m.group(1)) if m else 38
+        if n < 18:
+            d -= 6                    # trẻ con hỏi thì hợp, trả lời số liệu thì không
+        elif 30 <= n <= 65:
+            d += 1
+        return d
+    # ── MỘT NGƯỜI HỎI, MỘT CHUYÊN GIA TRẢ LỜI — CHIA HAI HỒ  (anh giao, 7/9/2026) ───────
+    # Chỉ đổi THỨ TỰ trong cặp thì vẫn còn 50% lượt vai B không ra chất chuyên gia, vì vòng
+    # xoay `_cap` chỉ đưa chuyên gia vào ~29% số cặp — có cặp không có ai là chuyên gia cả.
+    #
+    # Format của một kênh giải thích không phải "hai người bất kỳ nói chuyện" mà là **người
+    # tò mò hỏi, người có nghề trả lời**. Nên chia dàn vai làm hai hồ và bắt cặp CHÉO: một
+    # người từ hồ hỏi, một chuyên gia từ hồ trả lời. Đa dạng không mất — `k` người hỏi × `m`
+    # chuyên gia vẫn cho `k·m` cặp, và mỗi tập vẫn đổi cả hai phía.
+    #
+    # Kênh chưa có chuyên gia nào thì quay về cách cũ (đổi thứ tự trong cặp) thay vì bịa ra
+    # một vai không có trong dàn — thà nhận là chưa đủ còn hơn giả vờ là đủ.
+    _gioi = sorted(_dan, key=_chat_nghe, reverse=True)
+    # Hồ HỎI lấy CẢ DÀN trừ đúng người đang trả lời — một chuyên gia hỏi một chuyên gia khác
+    # là chuyện bình thường ở kênh giải thích, và chặn họ ra khỏi vai hỏi làm số cặp tụt từ 30
+    # xuống 5–9. Đa dạng là thứ người xem CẢM ĐƯỢC (§14.9), không đánh đổi lấy một quy tắc.
+    _ho_cg = [v for v in _dan if _chat_nghe(v) >= 3]
+    if _ho_cg:
+        _c = _ho_cg[(idx // max(1, len(_dan) - 1)) % len(_ho_cg)]
+        _khac = [v for v in _dan if v is not _c]
+        _h = _khac[idx % len(_khac)]
+        vai = [_h, _c]
+    else:
+        _a, _b = _dan[_i], _dan[_j]
+        vai = [_a, _b] if _chat_nghe(_b) >= _chat_nghe(_a) else [_b, _a]
     if len(vai) < 2:
         print("   ❌ kênh này chưa khai đủ hai vai"); return ""
 

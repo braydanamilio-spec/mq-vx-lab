@@ -47,6 +47,14 @@
    "toc": "#B9BFC4",
    "kieuToc": "bui",
    "kieuAo": "cardigan"
+  },
+  {
+   "ao": "#2B5FA8",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#8A8F94",
+   "kieuToc": "ngan",
+   "kieuAo": "somi"
   }
  ],
  "howbig": [
@@ -150,6 +158,15 @@
    "toc": "#8C4A2F",
    "kieuToc": "duoi_ngua",
    "kieuAo": "thun"
+  },
+  {
+   "ao": "#3A3A3A",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#D9BE86",
+   "kieuToc": "bob",
+   "kieuAo": "somi",
+   "kinh": true
   }
  ],
  "howmuch": [
@@ -200,6 +217,14 @@
    "toc": "#4A3728",
    "kieuToc": "bob",
    "kieuAo": "hoodie"
+  },
+  {
+   "ao": "#E39BB4",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "trocs",
+   "kieuAo": "thun"
   }
  ],
  "whatif": [
@@ -242,7 +267,7 @@
    "quan": "#3A3A3A",
    "toc": "#4A3728",
    "kieuToc": "trocs",
-   "kieuAo": "cardigan"
+   "kieuAo": "polo"
   },
   {
    "ao": "#6B4A2F",
@@ -251,6 +276,22 @@
    "toc": "#6B4A2F",
    "kieuToc": "xoan",
    "kieuAo": "polo"
+  },
+  {
+   "ao": "#B49CD0",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "re_ngoi",
+   "kieuAo": "cardigan"
+  },
+  {
+   "ao": "#D9BE86",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "hoi",
+   "kieuAo": "somi"
   }
  ],
  "survive": [
@@ -303,6 +344,14 @@
    "toc": "#4A3728",
    "kieuToc": "roi",
    "kieuAo": "thun"
+  },
+  {
+   "ao": "#2A2A2A",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "bob",
+   "kieuAo": "somi"
   }
  ],
  "dayinlife": [
@@ -407,6 +456,15 @@
    "kieuToc": "re_ngoi",
    "kieuAo": "thun",
    "rau": "de"
+  },
+  {
+   "ao": "#9ACD32",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "trocs",
+   "kieuAo": "polo",
+   "mu": "luoi_trai"
   }
  ],
  "therules": [
@@ -458,6 +516,14 @@
    "quan": "#3A3A3A",
    "toc": "#4A3728",
    "kieuToc": "trocs",
+   "kieuAo": "hoodie"
+  },
+  {
+   "ao": "#8B6BB8",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "xoan",
    "kieuAo": "hoodie"
   }
  ],
@@ -512,6 +578,14 @@
    "toc": "#8C4A2F",
    "kieuToc": "xoan",
    "kieuAo": "thun"
+  },
+  {
+   "ao": "#3FA46A",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#2A2A2A",
+   "kieuToc": "hoi",
+   "kieuAo": "somi"
   }
  ],
  "odds": [
@@ -562,6 +636,14 @@
    "toc": "#E0C060",
    "kieuToc": "re_ngoi",
    "kieuAo": "polo"
+  },
+  {
+   "ao": "#E08A3C",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "bui",
+   "kieuAo": "thun"
   }
  ],
  "hiddenfee": [
@@ -613,6 +695,14 @@
    "kieuToc": "trocs",
    "kieuAo": "cardigan",
    "rau": "de"
+  },
+  {
+   "ao": "#B49CD0",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#2A2A2A",
+   "kieuToc": "roi",
+   "kieuAo": "hoodie"
   }
  ],
  "yearsof": [
@@ -663,6 +753,22 @@
    "quan": "#3A3A3A",
    "toc": "#D8D8D8",
    "kieuToc": "bob",
+   "kieuAo": "polo"
+  },
+  {
+   "ao": "#2C3E50",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#8C4A2F",
+   "kieuToc": "hoi",
+   "kieuAo": "thun"
+  },
+  {
+   "ao": "#D9503F",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "duoi_ngua",
    "kieuAo": "somi"
   }
  ],
@@ -765,6 +871,14 @@
    "toc": "#4A3728",
    "kieuToc": "duoi_ngua",
    "kieuAo": "thun"
+  },
+  {
+   "ao": "#E8C24A",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#4A3728",
+   "kieuToc": "xoan",
+   "kieuAo": "somi"
   }
  ],
  "rightnow": [
@@ -781,7 +895,7 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#2A2A2A",
-   "kieuToc": "ngan",
+   "kieuToc": "re_ngoi",
    "kieuAo": "hoodie"
   },
   {
@@ -805,8 +919,8 @@
    "aoTrong": "#FFFFFF",
    "quan": "#3A3A3A",
    "toc": "#4A3728",
-   "kieuToc": "re_ngoi",
-   "kieuAo": "somi"
+   "kieuToc": "roi",
+   "kieuAo": "polo"
   },
   {
    "ao": "#6B7A45",
@@ -815,6 +929,23 @@
    "toc": "#4A3728",
    "kieuToc": "xoan",
    "kieuAo": "polo"
+  },
+  {
+   "ao": "#B5542E",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#B9BFC4",
+   "kieuToc": "bob",
+   "kieuAo": "somi"
+  },
+  {
+   "ao": "#E39BB4",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#8A8F94",
+   "kieuToc": "ngan",
+   "kieuAo": "polo",
+   "rau": "de"
   }
  ],
  "howhot": [
@@ -865,6 +996,14 @@
    "toc": "#8C4A2F",
    "kieuToc": "duoi_ngua",
    "kieuAo": "cardigan"
+  },
+  {
+   "ao": "#8A8F94",
+   "aoTrong": "#FFFFFF",
+   "quan": "#3A3A3A",
+   "toc": "#2A2A2A",
+   "kieuToc": "re_ngoi",
+   "kieuAo": "thun"
   }
  ],
  "smallest": [
