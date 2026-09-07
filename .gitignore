@@ -79,3 +79,8 @@ render-pipeline/out/
 # Hình Canva Pro: licence cho DÙNG bên trong video, không cho phát tán tệp rời — mà repo này
 # PUBLIC. Tệp gốc nằm ở repo riêng `braydanamilio-spec/mm0-kho-canva`, workflow checkout về.
 render-pipeline/kho_canva/
+
+# Ảnh Wikimedia tải về và bài đã đệm — sinh lại được từ nguồn, không đưa vào lịch sử git
+# (§18.12: nén/thêm tệp đã commit là làm NẶNG lịch sử, không phải nhẹ đi)
+render-pipeline/anh_pd/
+render-pipeline/_dem_wiki/

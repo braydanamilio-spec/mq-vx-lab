@@ -27,6 +27,7 @@ mất uy tín cả kênh (chép đúng ranh giới của `the_he_2.py`).
 from __future__ import annotations
 
 import json
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -62,6 +63,9 @@ def _goi(url: str, timeout: int = 25) -> dict:
     return json.load(urllib.request.urlopen(r, timeout=timeout))
 
 
+_DEM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_dem_wiki")
+
+
 def bai_viet(ten: str) -> str:
     """Thân bài Wikipedia dạng chữ thuần. `redirects=1` là bắt buộc.
 
@@ -69,13 +73,70 @@ def bai_viet(ten: str) -> str:
     "Wikipedia không có bài về Benjamin Franklin". Trang đổi hướng trả `pages` không có
     `extract`, và rỗng thì trông y hệt không tồn tại (§15.2).
     """
+    # ── ĐỆM RA ĐĨA, VÀ NÓ KHÔNG PHẢI TỐI ƯU MÀ LÀ ĐIỀU KIỆN ĐÚNG ĐẮN  (7/9/2026) ─────────
+    # Đo năng suất khuôn×chủ thể ra 10% và em suýt kết luận thiết kế hỏng. Kiểm lại: `Kodak`
+    # trả 40 câu ở lượt trước và 0 câu ở lượt sau — Wikipedia CHẶN NHỊP GỌI (429), nên phép
+    # đo đang đo chính cái rate-limit của em chứ không đo thiết kế (§13.15, lần thứ năm
+    # trong ngày).
+    #
+    # Một phép đo lặp lại trên cùng dữ liệu mà cho hai kết quả khác nhau thì nó chưa đo được
+    # gì. Đệm ra đĩa làm phép đo LẶP LẠI ĐƯỢC, và đó là điều kiện để tin bất kỳ con số nào
+    # ở đây — chưa nói tới chuyện nó cứu hạn mức khi chạy hàng nghìn tập.
+    import hashlib
+    os.makedirs(_DEM, exist_ok=True)
+    k = hashlib.sha1(ten.encode("utf-8")).hexdigest()[:20]
+    d = os.path.join(_DEM, k + ".txt")
+    if os.path.exists(d):
+        try:
+            return io.open(d, encoding="utf-8").read()
+        except Exception:
+            pass
     u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1"
          f"&prop=extracts&explaintext=1&titles={urllib.parse.quote(ten)}")
     try:
         p = list((_goi(u).get("query") or {}).get("pages", {}).values())
-        return (p[0].get("extract") or "") if p else ""
+        v = (p[0].get("extract") or "") if p else ""
     except Exception:
-        return ""
+        return ""                      # hỏng thì KHÔNG ghi đệm — đệm một chuỗi rỗng là khoá
+    if v:                              # cứng cái hỏng lại mãi mãi
+        try:
+            io.open(d, "w", encoding="utf-8").write(v)
+        except Exception:
+            pass
+    return v
+
+
+# ── CÂU KHÔNG CÓ SỐ VẪN KIỂM CHỨNG ĐƯỢC  (7/9/2026) ───────────────────────────────────────
+# Đưa 22 câu CÓ SỐ của Kodak cho mô hình chọn, nó trả về RỖNG — và nó đúng: 22 câu ấy toàn
+# niên đại thành lập (1880 · 1884 · 1888), không câu nào giải thích cái gì giết Kodak.
+#
+# Gốc là ràng buộc của chính em: chỉ giữ câu CÓ SỐ. Nhưng câu NHÂN QUẢ — thứ trả lời "vì
+# sao" — thường không có số ("failed to transition to digital photography"). Em tự bỏ đói
+# mô hình rồi trách nó không chọn được.
+#
+# Và ràng buộc ấy đặt sai chỗ: một câu TRÍCH NGUYÊN VĂN kiểm chứng được dù không có số —
+# phép kiểm là "câu này có trong bài không", so chuỗi chính xác. SỐ chỉ cần cho cái THẺ trên
+# màn hình, không cần cho SỰ THẬT. Nên lấy cả hai loại, đánh dấu loại nào có số, rồi khâu
+# dựng cho câu có số thành nhịp `so_lieu` và câu không số thành nhịp `canh`.
+_CAU_CHUYEN = re.compile(r"[^.\n]*?\b(?:because|after|when|until|failed|refused|declined|"
+                         r"collapsed|bankrupt|replaced|abandoned|banned|lost|blamed|"
+                         r"led to|resulted|caused|forced|never|no longer|instead)\b"
+                         r"[^.\n]*\.")
+
+
+def cau_nhan_qua(van: str, toi_da: int = 30) -> list[dict]:
+    """Câu mang QUAN HỆ NHÂN QUẢ, kể cả khi không có số. Vẫn nguyên văn từ nguồn."""
+    ra, thay = [], set()
+    for c in _CAU_CHUYEN.findall(van or ""):
+        c = " ".join(c.split())
+        if not (34 < len(c) < 215) or c in thay:
+            continue
+        thay.add(c)
+        ds = [x for x in _SO.findall(c) if len(x) > 1]
+        ra.append({"cau": c, "so": ds[0] if ds else "", "moi_so": ds})
+        if len(ra) >= toi_da:
+            break
+    return ra
 
 
 def cau_su_that(van: str, toi_da: int = 40) -> list[dict]:
@@ -112,7 +173,11 @@ def ho_so(ten: str) -> dict:
     """{ten, van, cau[]} — rỗng khi không đủ sự thật, và KHÔNG đoán bù."""
     van = bai_viet(ten)
     cs = cau_su_that(van)
-    return {"ten": ten, "van": van, "cau": cs, "du": len(cs) >= 8}
+    nq = cau_nhan_qua(van)
+    thay = {c["cau"] for c in cs}
+    gop = cs + [c for c in nq if c["cau"] not in thay]
+    return {"ten": ten, "van": van, "cau": cs, "nhan_qua": nq, "tat_ca": gop,
+            "du": len(gop) >= 8}
 
 
 # ══════════════════════════════════════════════════════════════════════════════════════════
