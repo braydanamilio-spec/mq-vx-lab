@@ -634,8 +634,9 @@ export const NenPanel: React.FC<{
   kenKieu?: string;  // "vao" phóng vào · "ra" lùi ra · "ngang" trôi ngang — bản sắc của kênh
   guNen?: string;    // "am" ấm · "lanh" lạnh · "moc" mộc (chất tư liệu)
   benVat?: string;   // bên nào của NỀN chứa đồ vật — xem `_viTriNen` bên dưới
+  nenTron?: boolean; // ĐO Ở PYTHON: phép `cover` giấu quá nhiều -> hiện TRỌN
 }> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9, anh = "",
-        ken = 0, kenHat = 0, kenKieu = "vao", guNen = "moc", benVat = "giua" }) => {
+        ken = 0, kenHat = 0, kenKieu = "vao", guNen = "moc", benVat = "giua", nenTron = false }) => {
   // ── KHUNG DỌC KHÔNG ĐƯỢC CẮT VÀO ĐÚNG CHỖ ĐÃ ĐẶT HÀNG LÀ TRỐNG  (anh soi short, 8/9) ──
   // Anh gửi hai khung short: hai phần ba trên là mảng tường trơn, nhân vật bé tí dưới đáy —
   // *"tình trạng trống … sơ sài quá nhiều"*. Đo trên chính nền của short 1532:
@@ -655,7 +656,13 @@ export const NenPanel: React.FC<{
   const _doc = h > w * 1.2;
   // Ảnh THẬT nhận ra bằng thư mục `anh_pd/` — đó là nơi DUY NHẤT ảnh tải về được chép vào
   // (§19.12). Nền vẽ theo tập nằm ở `phim_nen/`, nền kho ở `comic_nen/`.
+  // ── DÙNG CỜ ĐÃ ĐO, ĐỪNG ĐOÁN THEO HƯỚNG KHUNG  (sửa lần hai, 8/9/2026) ─────────────
+  // Bản đầu quyết bằng `ảnh thật && khung dọc`. Đo lại thì chiều ngược lại hỏng y hệt: 4/13
+  // ảnh thật trong bản DÀI mất quá 45% một chiều (một tấm dọc còn 31% chiều cao, một tấm
+  // toàn cảnh còn 47% bề ngang). Luật đúng không phải HƯỚNG KHUNG mà là TỈ LỆ BỊ GIẤU — và
+  // chỉ Python biết cỡ ảnh trước khi dựng, nên nó đo và gửi cờ sang (`props.nenTron`).
   const _anhThat = String(anh || "").indexOf("anh_pd/") >= 0;
+  const _tron = nenTron || (_anhThat && _doc);
   const _viTriNen = !_doc ? "50% 50%"
     : benVat === "trai" ? "22% 50%"
     : benVat === "phai" ? "78% 50%"
@@ -712,7 +719,7 @@ export const NenPanel: React.FC<{
             to + làm mờ — cách mọi kênh dọc xử lý tư liệu ngang. Nền vẽ giữ nguyên `cover`: nó
             sinh ra để phủ kín, và §17.4 đã trả giá cho việc để lọt mép trắng. */}
         <AbsoluteFill style={{ overflow: "hidden" }}>
-          {_anhThat && _doc ? (
+          {_tron ? (
             <Img src={staticFile(anh)} style={{
               position: "absolute", inset: 0, width: "100%", height: "100%",
               objectFit: "cover", filter: "blur(26px) saturate(0.7) brightness(0.82)",
@@ -721,8 +728,8 @@ export const NenPanel: React.FC<{
           ) : null}
           <Img src={staticFile(anh)} style={{
             width: "100%", height: "100%",
-            objectFit: (_anhThat && _doc ? "contain" : "cover"),
-            objectPosition: (_anhThat && _doc ? "50% 42%" : _viTriNen),
+            objectFit: (_tron ? "contain" : "cover"),
+            objectPosition: (_tron ? "50% 42%" : _viTriNen),
             /* ── KEN BURNS: PHÓNG CHẬM + TRÔI  (anh yêu cầu, 7/9/2026) ──────────────────
                Nền giờ là ẢNH TĨNH thật (trụ sở Kodak 1900, thẻ logo). Một ảnh tĩnh đứng yên
                tám giây sau lưng một nhân vật đang nói thì đọc ra là ảnh dán — người xem thấy

@@ -248,14 +248,14 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string;
+  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string; nenTron?: boolean;
   guViTri?: string; guKen?: string; guNen?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
   logo?: string;      // ẢNH THẬT của chủ thể (logo/trụ sở) — thẻ nhỏ, xem `TheLogo`
   haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, nenTron = false,
         guViTri = "giua", guKen = "vao", guNen = "moc", noi, anhNen, soLieu, logo,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
@@ -465,6 +465,7 @@ const Panel: React.FC<{
                 /* Đồ vật nằm NGƯỢC bên người dẫn: `san_nen_ben` chừa trống đúng bên người
                    đứng. Khung dọc vì thế phải cắt sang bên kia, không cắt vào giữa. */
                 benVat={guViTri === "trai" ? "phai" : guViTri === "phai" ? "trai" : "giua"}
+                nenTron={nenTron}
                 bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} 
                 /* Tiến độ của CHÍNH nhịp này (0->1) cho Ken Burns. Dùng `L.s`/`L.e` chứ không
                    dùng `giay/DAI`: mỗi nhịp là một cú máy riêng, và một phép trôi trải trên cả
@@ -823,6 +824,7 @@ export type PropsComic = {
   // một hướng sáng riêng. Bản ngắn không truyền thì rơi về `anhNen`/`sang` như cũ — đường chạy
   // đã duyệt không đụng gì.
   anhNens?: string[];
+  nenTron?: boolean[];   // nền nào bị `cover` giấu quá nhiều -> hiện TRỌN
   // ── ẢNH THẬT CỦA CHỦ THỂ, HIỆN Ở VÀI NHỊP ĐẦU  (anh, 8/9/2026) ──────────────────────
   // `logoTap` = đường dẫn ảnh (logo hoặc trụ sở, lấy từ Wikidata P154/P18, chỉ nhận PD/CC0).
   // `logoNhip` = những nhịp được phép hiện nó. Không hiện suốt tập: một thẻ đứng nguyên từ
@@ -863,7 +865,7 @@ export const KichComic: React.FC<PropsComic> = ({
   kieuTuyA = {}, kieuTuyB = {}, motNguoi, daoCuTap = "", tieuDe = "", handle = "", mau = "#F0483C",
   guViTri = "giua", guKen = "vao", guNen = "moc",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
-  sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
+  sang, anhNens, nenTron, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   anhChens,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
@@ -917,6 +919,7 @@ export const KichComic: React.FC<PropsComic> = ({
            hai={typeof (Lx as any).canh === "boolean" ? (Lx as any).canh : coCanh(ix, luot.length, hat)}
            dangNoi={dangNoi} noi={noi}
            anhNen={(anhNens && anhNens[ix]) || anhNen}
+           nenTron={!!(nenTron && nenTron[ix])}
            logo={(anhChens && anhChens[ix]) || undefined}
            soLieu={(soLieu && soLieu[ix]) || null} haiHuoc={haiHuoc}
            sang={(sangs && sangs[ix]) || sang}

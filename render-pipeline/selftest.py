@@ -1124,8 +1124,38 @@ def t_anh_that_hien_tron_va_khong_lap_ca_bo():
     nc = (pathlib.Path(PH.__file__).resolve().parent.parent
           / "engine-remotion" / "src" / "comic" / "NenComic.tsx").read_text(encoding="utf-8")
     assert "_anhThat" in nc, "engine chưa phân biệt ảnh THẬT với nền vẽ"
-    assert 'objectFit: (_anhThat && _doc ? "contain" : "cover")' in nc, \
-        "ảnh thật ở khung dọc vẫn bị CẮT — thứ cần nhận ra sẽ mất"
+    assert 'objectFit: (_tron ? "contain" : "cover")' in nc, \
+        "ảnh thật bị cắt quá nhiều vẫn không được hiện trọn"
+    # ── QUYẾT BẰNG CỜ ĐÃ ĐO, KHÔNG ĐOÁN THEO HƯỚNG KHUNG ────────────────────────────
+    # Bản đầu quyết bằng `ảnh thật && khung dọc`. Đo lại thì chiều ngược lại hỏng y hệt: 4/13
+    # ảnh thật trong bản DÀI mất quá 45% một chiều — một tấm dọc còn 31% chiều cao, một tấm
+    # toàn cảnh còn 47% bề ngang. Luật đúng là TỈ LỆ BỊ GIẤU, và chỉ Python biết cỡ ảnh.
+    assert "nenTron" in nc, "engine chưa nhận cờ đo từ Python"
+    assert hasattr(PH, "_nen_can_tron"), "Python chưa đo tỉ lệ bị giấu"
+    # thử ngược: ảnh ngang vừa khung ngang thì KHÔNG cần trọn; ảnh dọc trong khung ngang thì CẦN
+    import tempfile, os as _os
+    try:
+        from PIL import Image
+    except Exception:
+        return
+    d = tempfile.mkdtemp()
+    pub = _os.path.join(_os.path.dirname(PH.__file__), "..", "engine-remotion", "public", "anh_pd")
+    _os.makedirs(pub, exist_ok=True)
+    ten_ngang, ten_doc = "_thu_ngang.jpg", "_thu_doc.jpg"
+    try:
+        Image.new("RGB", (1800, 1000), "white").save(_os.path.join(pub, ten_ngang))
+        Image.new("RGB", (560, 840), "white").save(_os.path.join(pub, ten_doc))
+        r = PH._nen_can_tron([f"anh_pd/{ten_ngang}", f"anh_pd/{ten_doc}"], ngang=True)
+        assert r == [False, True], f"đo sai ở khung NGANG: {r}"
+        r2 = PH._nen_can_tron([f"anh_pd/{ten_ngang}", f"anh_pd/{ten_doc}"], ngang=False)
+        assert r2[0] is True, f"ảnh ngang trong khung DỌC phải hiện trọn: {r2}"
+        # nền VẼ không bao giờ bị đụng tới
+        assert PH._nen_can_tron(["phim_nen/nentap_0000_001_x.jpg"], ngang=False) == [False], \
+            "nền vẽ bị lôi vào luật ảnh thật — sẽ hở mép (§17.4)"
+    finally:
+        for t in (ten_ngang, ten_doc):
+            try: _os.remove(_os.path.join(pub, t))
+            except Exception: pass
     assert "blur(" in nc, "thiếu lớp lấp mép bằng bản mờ — sẽ hở nền"
     # short không được rải lại ảnh thật
     src = inspect.getsource(PH.mot_tap)

@@ -1288,6 +1288,47 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
     return out
 
 
+def _nen_can_tron(duong: list, ngang: bool, san: float = 0.60) -> list:
+    """[bool] — nền nào bị phép `cover` giấu mất quá nhiều thì phải hiện TRỌN.
+
+    ── LUẬT ĐÚNG LÀ "GIẤU MẤT BAO NHIÊU", KHÔNG PHẢI "KHUNG DỌC"  (8/9/2026) ──────────────
+    Anh gửi khung một chiếc Camry bị phóng còn CÁNH CỬA: *"zoom bự quá … ko thấy được cái
+    muốn thể hiện"*. Bản sửa đầu của em chỉ xử khung DỌC, và đo lại thì chiều ngược lại hỏng
+    y hệt — 4/13 ảnh thật trong bản DÀI mất quá 45% một chiều:
+
+        564×835   -> thấy 100% ngang · chỉ  31% DỌC
+        1600×349  -> thấy  47% ngang · 100% dọc
+
+    Nên điều kiện không phải hướng khung mà là TỈ LỆ BỊ GIẤU. Đo ở Python vì đây là nơi biết
+    cỡ ảnh thật; engine chỉ biết sau khi ảnh tải xong, tức quá muộn để đổi cách dán.
+
+    Chỉ áp cho ẢNH THẬT: nền vẽ sinh ra để phủ kín khung, và §17.4 đã trả giá cho mép trắng
+    lọt ra. Ảnh thật thì ngược lại — nó có mặt CHỈ vì nhận ra được ngay (§19.12), nên thà
+    chừa mép còn hơn cắt mất chủ thể.
+    """
+    try:
+        from PIL import Image
+    except Exception:
+        return [False] * len(duong or [])
+    KW, KH = (1860, 860) if ngang else (1040, 1860)
+    pub = os.path.join(GOC, "..", "engine-remotion", "public")
+    ra = []
+    for a in (duong or []):
+        b = str(a or "")
+        if "anh_pd/" not in b:
+            ra.append(False)
+            continue
+        p = os.path.join(pub, b)
+        try:
+            W, H = Image.open(p).size
+            k = max(KW / W, KH / H)
+            thay = min((KW / k) / W, (KH / k) / H)
+            ra.append(thay < san)
+        except Exception:
+            ra.append(False)
+    return ra
+
+
 def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
     """Gắn ảnh THẬT vào nhịp mà nó NÓI VỀ, không rải đều theo vị trí.
 
@@ -2212,6 +2253,9 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # biểu tượng máy ảnh ("sao nó gắn trên videos từ đầu tới cuối vậy").
         "anhChens": chon_the_anh(loi, CHU_THE_TAP, LOGO_TAP, ANH_THAT),
         "anhNens": anh_nens, "soLieu": so_lieu,
+        # Tấm nào bị `cover` giấu mất quá 40% một chiều thì engine hiện TRỌN — xem
+        # `_nen_can_tron`. Đo ở đây vì Python biết cỡ ảnh, engine thì không.
+        "nenTron": _nen_can_tron(anh_nens, ngang=bool(chuong)),
         # Kênh GIẢI THÍCH tắt đồ nghề hài: thẻ hook thành dải sát đáy (không đè mặt), và bỏ
         # chữ nổ + cú rung ở câu chốt — engine bắn hiệu ứng punchline vào một câu kết trầm thì
         # khán giả đọc ra là hệ thống không hiểu nó đang kể gì.
