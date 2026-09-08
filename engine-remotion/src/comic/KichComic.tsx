@@ -486,8 +486,13 @@ const Panel: React.FC<{
 
           Hai khuôn này lấy nguyên từ `gt/Khuon.tsx` — tự chứa, chỉ nhận W/H/p (§13.1). Mọi con
           số trong đó rút TỪ CHÍNH LỜI THOẠI ở `pilot_hai._lop_ve`, không tự nghĩ ra cái nào. */}
+      {/* PHẢI BỌC BẰNG <svg> CÓ viewBox: `Truc`, `SoLieu`, `Chart` đều trả về một `<g>` —
+          nhóm SVG, không phải phần tử độc lập. Bản đầu của em bọc bằng `<div>` và trình duyệt
+          vẽ ra một thẻ số bé xíu ở góc cùng một dòng chữ li ti. Không lỗi nào báo, chỉ là hình
+          sai chỗ và sai cỡ — lỗi GHÉP của em, không phải của khuôn. */}
       {nenVe && !anhNen ? (
-        <div style={{ position: "absolute", inset: 0, zIndex: 2, opacity: 0.92 }}>
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
+             style={{ position: "absolute", inset: 0, zIndex: 2, opacity: 0.94 }}>
           {nenVe.k === "truc" ? (
             <Truc W={w} H={h} moc={nenVe.moc} vt={nenVe.vt} mau={mau}
                   p={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0} />
@@ -496,7 +501,7 @@ const Panel: React.FC<{
                     chu="" bt="" mau={mau}
                     p={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0} />
           ) : null}
-        </div>
+        </svg>
       ) : null}
 
       {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có

@@ -845,9 +845,20 @@ export const NenPanel: React.FC<{
         </>
       ) : (
         <>
-          {/* cận cảnh: chỉ mảng màu và vệt sáng chéo, giữ mắt ở khuôn mặt */}
-          <rect width={w} height={h} fill={nhat(mau, 0.8)} />
-          <path d={`M0 ${h} L${w * 0.55} 0 L${w} 0 L${w} ${h} Z`} fill={nhat(mauPhu, 0.72)} />
+          {/* ── NỀN TRỐNG PHẢI ĐỌC RA LÀ CÓ CHỦ Ý, KHÔNG PHẢI CHỖ CHƯA LÀM  (8/9/2026) ────
+              Bản trước là hai mảng chéo màu kênh pha nhạt — với `therules` ra hồng phấn cạnh
+              xanh bạc hà, và soi khung thì nó đọc ra như một placeholder chưa vẽ xong.
+              Nay: một nền giấy trung tính, thêm một quầng sáng rất nhẹ ở chỗ nhân vật đứng để
+              người nổi lên khỏi phông. Màu kênh chỉ còn là một vệt mảnh dưới chân khung — đủ
+              giữ bản sắc mà không biến khung thành hai mảng màu. */}
+          <rect width={w} height={h} fill="#EFEAE0" />
+          <radialGradient id={`qs${hat | 0}`} cx="50%" cy="78%" r="62%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+          </radialGradient>
+          <rect width={w} height={h} fill={`url(#qs${hat | 0})`} />
+          <rect x="0" y={h - Math.max(3, h * 0.012)} width={w}
+                height={Math.max(3, h * 0.012)} fill={mau} opacity={0.55} />
         </>
       )}
       <rect width={w} height={h} fill={`url(#hp${hat | 0})`} />
