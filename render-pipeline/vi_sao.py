@@ -271,10 +271,14 @@ def sinh(ma: str, i: int):
     # Sàn chứ không phải hệ số: dưới ngưỡng thì LOẠI, trên ngưỡng thì vẫn xếp bằng công thức
     # cũ. Và HỎNG MỀM — lọc sạch trơn thì trả lại danh sách đầy đủ, vì "không chủ thể nào đủ
     # nổi tiếng" không được phép biến thành "không dựng được tập nào" (§13.3).
+    # ĐO HỎNG (-1) KHÔNG ĐƯỢC TÍNH LÀ NỔI TIẾNG. Bản đầu của em ánh xạ -1 -> 10^9, tức biến
+    # "không đo được" thành "nổi tiếng nhất có thể" — đúng §15.2 ở dạng tệ nhất, vì nó không
+    # chỉ mất thông tin mà còn ĐẨY LÊN ĐẦU thứ mình không kiểm chứng được. Nay -1 trượt sàn;
+    # nhánh hỏng mềm ngay dưới vẫn giữ nguyên nên hồ không bao giờ cạn vì chuyện này.
+    # Và gọi MỘT lần rồi dùng lại — bản đầu gọi `luot_xem` hai lần cho mỗi ứng viên.
     _SAN_NHAN_BIET = 1000
     try:
-        _du = [x for x in _ung if (C.luot_xem(x[0]) if C.luot_xem(x[0]) >= 0 else 10 ** 9)
-               >= _SAN_NHAN_BIET]
+        _du = [x for x in _ung if (C.luot_xem(x[0]) or 0) >= _SAN_NHAN_BIET]
     except Exception:
         _du = []
     if _du:
@@ -286,7 +290,10 @@ def sinh(ma: str, i: int):
     _ung.sort(key=lambda x: -_diem(x))
     try:
         _t = _ung[0]
-        print(f"   🏅 chọn «{_t[0][:34]}» · {_t[2]} câu nhân quả · "
+        # KHÔNG cắt tên ở đây: dòng này là dòng CHẨN ĐOÁN. Bản cũ cắt 34 ký tự và biến
+        # «Bricks & Minifigs–Reckless Ben controversy» thành một chuỗi trông như rác,
+        # khiến em kết luận nhầm là hồ có bản ghi hỏng và suýt đi sửa thứ không hỏng.
+        print(f"   🏅 chọn «{_t[0]}» · {_t[2]} câu nhân quả · "
               f"{C.luot_xem(_t[0]):,} lượt xem/90 ngày")
     except Exception:
         pass
