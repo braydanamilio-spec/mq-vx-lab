@@ -506,7 +506,12 @@ def t_nhip_wiki_tu_noi_khi_bi_chan():
         open(C._LUC_TEP, "w").write(f"0 {C.NHIP}")
         C._nong_nhip()
         _, n1 = C._doc_so_tep(open(C._LUC_TEP))
-        assert n1 > C.NHIP * 1.5, f"429 không nới nhịp: {C.NHIP} -> {n1}"
+        # LẦN 429 ĐẦU phải nhảy thẳng tới mức an toàn, không dò dần. Bộ 144 mất trắng vì nhịp
+        # leo 1,1 -> 2,0 -> 3,6 và đốt hết 3 lượt thử của từng chủ thể ở những nhịp còn quá
+        # nhanh; đo ngay sau đó ở 12s thì một lượt gọi đọc về 83.228 ký tự bình thường — tức
+        # Wikipedia không chặn, hệ chỉ chưa tới mức an toàn. 429 là câu trả lời DỨT KHOÁT
+        # (§19.20), nghe một lần là nhảy, đừng dò bằng chính hàng hoá của mình.
+        assert n1 >= 6.0, f"429 lần đầu chỉ nới lên {n1}s — phải nhảy thẳng tới mức an toàn"
         for _ in range(30):
             C._nong_nhip()
         _, n2 = C._doc_so_tep(open(C._LUC_TEP))

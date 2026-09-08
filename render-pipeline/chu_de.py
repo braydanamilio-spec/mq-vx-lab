@@ -124,7 +124,7 @@ def _cho_nhip() -> None:
             # Thời gian trôi cũng là bằng chứng "đã hết bị chặn", nên nó phải được tính.
             _im = max(0.0, time.time() - truoc)
             if _im > 60:
-                nhip = max(NHIP, nhip * (0.5 ** (_im / 300.0)))
+                nhip = max(NHIP, nhip * (0.5 ** (_im / 900.0)))
             cho = nhip - (time.time() - truoc)
             if 0 < cho <= nhip:
                 time.sleep(cho)
@@ -149,7 +149,20 @@ def _nong_nhip() -> None:
             fcntl.flock(f, fcntl.LOCK_EX)
             truoc, nhip = _doc_so_tep(f)
             f.seek(0); f.truncate()
-            f.write(f"{time.time()} {min(_NHIP_TRAN, max(NHIP, nhip) * 1.8)}"); f.flush()
+            # ── LẦN 429 ĐẦU TIÊN PHẢI NHẢY THẲNG TỚI MỨC AN TOÀN  (8/9/2026) ───────────
+            # Bộ 144 mất trắng: 429 ở 7/7 chủ thể, dù sàng đã tắt và lùi đã 6/12/24. Nhưng đo
+            # ngay sau đó, ở nhịp 12s, một lượt gọi đọc về **83.228 ký tự bình thường** — tức
+            # Wikipedia KHÔNG chặn ta, hệ chỉ chưa tới được mức an toàn.
+            #
+            # Gốc: nhịp khởi từ 1,1s rồi nhân 1,8× sau TỪNG lần 429 (1,1 -> 2,0 -> 3,6 -> 6,4).
+            # Trong lúc leo, mỗi chủ thể chỉ có 3 lượt thử và chúng bị đốt hết ở những nhịp còn
+            # quá nhanh; sáu chủ thể ứng viên chết sạch trước khi nhịp kịp lên. Hệ "học" đúng
+            # nhưng học bằng chính hàng hoá của mình.
+            #
+            # 429 không phải tín hiệu mờ để dò dần — nó là câu trả lời DỨT KHOÁT (§19.20).
+            # Nghe một lần là nhảy thẳng tới mức đã đo được là chạy tốt, rồi mới rút dần.
+            _AN_TOAN = 6.0
+            f.write(f"{time.time()} {min(_NHIP_TRAN, max(nhip * 1.8, _AN_TOAN))}"); f.flush()
     except Exception:
         pass
 
