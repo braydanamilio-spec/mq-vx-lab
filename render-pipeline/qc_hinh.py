@@ -61,6 +61,19 @@ def truoc(props: dict) -> list:
             for x in nh]
     _noi = [t for t in _noi if len(t) > 24]
     if _noi:
+        # ── LẶP GẦN NHAU thì MỘT CẶP đã hỏng  (soi lưới bộ 138, 8/9/2026) ──────────────
+        # Khung 1 và khung 2 của bộ 138 đọc y hệt nhau. Ngưỡng 10% cho qua vì 1 cặp trong 13
+        # nhịp là 7,7%. Nhưng ngưỡng phần trăm đo TỔNG ĐỘ LẶP của cả tập, còn thứ người xem
+        # cảm được là KHOẢNG CÁCH giữa hai lần đọc (§15.15 đã đo đúng điều này ở bộ giải
+        # thích: 40% lặp là sàn số học, thứ dùng được là "cách nhau bao nhiêu giây").
+        # Hai câu cách nhau ≤3 nhịp mà giống nhau thì luôn là lỗi — kể cả một cặp duy nhất.
+        # Xa hơn thì để ngưỡng phần trăm lo, vì một chương trình được phép có điệp khúc
+        # (§13.18) và chặn nó là bắt oan.
+        _gan = [(i, j) for i in range(len(_noi)) for j in range(i + 1, min(i + 4, len(_noi)))
+                if _noi[i] and _noi[i] == _noi[j]]
+        if _gan:
+            loi.append(f"{len(_gan)} cặp lượt LẶP NGUYÊN VĂN cách nhau ≤3 nhịp "
+                       f"(nhịp {_gan[0][0]} và {_gan[0][1]})")
         _lap_van = len(_noi) - len(set(_noi))
         if _lap_van > max(1, len(_noi) * 0.10):
             loi.append(f"{_lap_van}/{len(_noi)} lượt LẶP NGUYÊN VĂN "
