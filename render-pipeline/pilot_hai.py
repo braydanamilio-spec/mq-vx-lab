@@ -2802,6 +2802,14 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         _ds = _LW.logo_va_anh(_tt)
         if _ds:
             globals()["LOGO_TAP"] = _ds[0]
+            # 8/9 — GHI SỔ Ở CẢ HAI NHÁNH SINH `anh_pd/`, không chỉ nhánh Wikimedia.
+            # Bản vá đầu chỉ cắm `_ghi_so_anh()` vào `nap_anh_that`; lượt dựng 151 tải ảnh qua
+            # ĐƯỜNG NÀY (Wikidata P154/P18) nên sổ ra **0 mục** dù log in rõ tên tệp. Đúng §6:
+            # *vá một nhánh, để nguyên nhánh song song* — và nó im lặng, vì sổ rỗng đọc y hệt
+            # "lượt này không dùng ảnh thật nào" (§15.2).
+            for _d in _ds:
+                TEN_ANH[_d] = _tt
+            _ghi_so_anh()
             print(f"   🏷 ảnh thật của «{_tt}»: {_ds[0]}")
     except Exception as e:
         print(f"   ⚠ không lấy được logo ({str(e)[:40]}) — vẫn dựng bình thường")

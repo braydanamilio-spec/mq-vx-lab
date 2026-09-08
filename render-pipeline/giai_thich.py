@@ -6833,20 +6833,44 @@ _NGOI_HAI = {
 
 
 def _du_nguoi_xem(nhip: list, can: int = 2) -> list:
-    """Đảm bảo ít nhất `can` lượt có "you/your" — bằng cách ĐỔI NGÔI câu nối, không thêm câu."""
+    """Đảm bảo ít nhất `can` lượt có "you/your" — bằng cách ĐỔI NGÔI câu nối, không thêm câu.
+
+    ── VÀ PHÉP ĐỔI KHÔNG ĐƯỢC ĐẺ RA MỘT CẶP LẶP  (8/9/2026) ────────────────────────────
+    Hàm này chạy ở dòng NGAY SAU `_tranh_lap_gan`, tức khâu khử lặp chạy XONG rồi khâu THAY
+    câu mới chạy — đúng §15.19 (*mọi lượt rải phải chạy sau mọi lượt chèn*), chỉ đảo vai.
+    Hậu quả đo trên short `v11_therules_1510`: nhịp 0 và nhịp 2 đọc y hệt
+    «You own it, sort of, since 1966.», `qc_hinh` bắt đúng, và không gì kiểm lại vì phép khử
+    lặp đã chạy trước đó.
+
+    `_NGOI_HAI` không có hai khoá nào trỏ cùng một giá trị (5 khoá, 5 giá trị — đã đo), nên
+    nguồn lặp không nằm trong bảng: nó nằm ở chỗ câu THAY VÀO trùng một câu ĐANG CÓ ở nhịp
+    khác. Nên kiểm đúng điều đó trước khi thay, thay vì đảo thứ tự hai lời gọi — đảo thứ tự
+    thì `_tranh_lap_gan` lại có thể đổi mất chính câu mang "you" và làm hụt chỉ tiêu, tức chữa
+    một đầu mở ra đầu kia (§14.8).
+    """
     import re as _re
     _co = _re.compile(r"\b(you|your|you're|you've)\b", _re.I)
+
+    def _k(t):                       # cùng phép chuẩn hoá với `_tranh_lap_gan._khoa`
+        return _re.sub(r"[^a-z0-9 ]", "", str(t or "").lower()).strip()
+
     dem = sum(1 for n in nhip if _co.search(str(n.get("loi") or "")))
     if dem >= can:
         return nhip
-    for n in nhip:
+    for j, n in enumerate(nhip):
         if dem >= can:
             break
         l = str(n.get("loi") or "").strip()
         moi = _NGOI_HAI.get(l)
-        if moi and not _co.search(l):
-            n["loi"] = moi
-            dem += 1
+        if not moi or _co.search(l):
+            continue
+        _g = _k(moi)
+        _quanh = [_k(x.get("loi")) for k, x in enumerate(nhip)
+                  if k != j and abs(k - j) < GAN_NHAT]
+        if _g in _quanh:             # thay vào là đẻ ra cặp lặp -> thử nhịp khác
+            continue
+        n["loi"] = moi
+        dem += 1
     return nhip
 
 

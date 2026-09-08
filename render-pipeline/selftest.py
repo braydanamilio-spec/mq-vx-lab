@@ -665,6 +665,35 @@ def t_so_anh_nguon_ghi_ra_dia():
         PH.TEN_ANH.clear(); PH.TEN_ANH.update(cu_ten)
 
 
+def t_doi_ngoi_khong_de_ra_lap():
+    """`_du_nguoi_xem` không được thay ra một câu ĐÃ CÓ ở nhịp gần đó.
+
+    8/9 — short `v11_therules_1510` giao đi với nhịp 0 và nhịp 2 đọc y hệt
+    «You own it, sort of, since 1966.»; `qc_hinh` bắt đúng, nhưng không gì kiểm lại được vì
+    `_tranh_lap_gan` chạy ở dòng NGAY TRƯỚC `_du_nguoi_xem` — khâu khử lặp chạy xong rồi khâu
+    thay câu mới chạy (§15.19, đảo vai).
+
+    `_NGOI_HAI` có 5 khoá và 5 giá trị khác nhau (đã đo), nên nguồn lặp không nằm trong bảng:
+    câu THAY VÀO trùng một câu ĐANG CÓ ở nhịp khác. Chữa tại chỗ thay chứ không đảo thứ tự hai
+    lời gọi — đảo thì `_tranh_lap_gan` lại có thể đổi mất chính câu mang "you" và làm hụt chỉ
+    tiêu, tức chữa một đầu mở ra đầu kia (§14.8)."""
+    import giai_thich as G
+    k, v = list(G._NGOI_HAI.items())[0]
+    # BẮT: câu thay vào đã có ở nhịp kề -> phải bỏ qua
+    n = [{"loi": v}, {"loi": "Trung gian."}, {"loi": k}]
+    G._du_nguoi_xem(n, can=2)
+    loi = [x["loi"] for x in n]
+    assert len(loi) == len(set(loi)), f"phép đổi ngôi ĐẺ RA cặp lặp: {loi}"
+    # KHÔNG BẮT OAN: an toàn thì vẫn phải đổi, nếu không chỉ tiêu "nói với người xem" chết
+    n2 = [{"loi": k}, {"loi": "A."}, {"loi": "B."}]
+    G._du_nguoi_xem(n2, can=1)
+    assert n2[0]["loi"] == v, "không đổi được cả khi KHÔNG có nguy cơ lặp"
+    # và xa hơn GAN_NHAT thì được phép trùng — đó không phải lặp tai nghe ra
+    xa = [{"loi": v}] + [{"loi": f"C{i}."} for i in range(G.GAN_NHAT + 2)] + [{"loi": k}]
+    G._du_nguoi_xem(xa, can=2)
+    assert xa[-1]["loi"] == v, "chặn cả trường hợp cách xa — quá tay"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3635,6 +3664,7 @@ def main():
     check("không dùng module chưa import", t_dung_module_chua_import)
     check("đệm bài Wikipedia thật sự chạy", t_dem_wiki_that_su_chay)
     check("sổ nguồn thẻ ảnh ghi ra đĩa", t_so_anh_nguon_ghi_ra_dia)
+    check("đổi ngôi không đẻ ra cặp lặp", t_doi_ngoi_khong_de_ra_lap)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
