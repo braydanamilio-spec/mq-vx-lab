@@ -534,6 +534,92 @@ def t_khau_hinh_dung_thang():
         "cong doc chu thich thanh ma (§17.15)"
 
 
+def t_dung_module_chua_import():
+    """Không tệp nào được dùng `X.y` khi `X` là module chuẩn mà tệp ấy chưa import.
+
+    8/9 — `chu_de.py` gọi `io.open(...)` ở CẢ hai đường của đệm Wikipedia mà **chưa bao giờ
+    `import io`**. Hai lời gọi ấy nằm trong `try/except: pass`, nên `NameError` bị nuốt và đệm
+    đĩa CHƯA TỪNG CHẠY một lần nào — trong khi docstring ngay trên nó kể rất kỹ rằng đệm là
+    "điều kiện đúng đắn" để phép đo lặp lại được (§15.12: cơ chế được tả mà không tồn tại).
+
+    Cái giá đo được đêm 8/9: mọi lượt `bai_viet` đều đi mạng, và vòng quét hồ đề tài ra
+    **392/500 dòng «đọc về 0 ký tự»** — 78% là 429 do chính nhịp gọi của mình, chứ không phải
+    Wikipedia thiếu bài (cùng tên bài đọc ở tiến trình mới ra 3.467 ký tự).
+
+    Họ lỗi: §15.2 — `except` trần ném bằng chứng đi trước khi ai kịp đọc. Cổng này bắt ở tầng
+    TĨNH nên nó không cần nhánh hỏng phải chạy mới lộ."""
+    import ast, pathlib
+    CHUAN = {"io", "os", "re", "json", "time", "math", "glob", "shutil", "random", "base64",
+             "csv", "sys", "hashlib", "subprocess", "tempfile", "itertools", "functools",
+             "pathlib", "datetime", "statistics", "unicodedata", "textwrap", "sqlite3"}
+    goc = pathlib.Path(__file__).resolve().parent
+
+    def _soi(src, ten="<mem>"):
+        cay = ast.parse(src)
+        co = set()
+        for n in ast.walk(cay):
+            if isinstance(n, ast.Import):
+                for a in n.names: co.add((a.asname or a.name).split(".")[0])
+            elif isinstance(n, ast.ImportFrom):
+                for a in n.names: co.add(a.asname or a.name)
+            elif isinstance(n, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                for t in ast.walk(n): 
+                    if isinstance(t, ast.Name) and isinstance(t.ctx, ast.Store): co.add(t.id)
+            elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                co.add(n.name)
+                for a in getattr(n, "args", None).args if getattr(n, "args", None) else []:
+                    co.add(a.arg)
+            elif isinstance(n, (ast.For, ast.comprehension, ast.withitem, ast.ExceptHandler)):
+                for t in ast.walk(n):
+                    if isinstance(t, ast.Name) and isinstance(t.ctx, ast.Store): co.add(t.id)
+        xau = []
+        for n in ast.walk(cay):
+            if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name):
+                m = n.value.id
+                if m in CHUAN and m not in co:
+                    xau.append(f"{ten}:{n.lineno} dùng `{m}.{n.attr}` mà chưa import `{m}`")
+        return xau
+
+    loi = []
+    for p in sorted(goc.glob("*.py")):
+        try: loi += _soi(p.read_text(encoding="utf-8"), p.name)
+        except SyntaxError: pass
+    assert not loi, " · ".join(loi[:6])
+
+    # THỬ NGƯỢC hai chiều (§13.11)
+    assert _soi("def f():\n    try:\n        io.open('x')\n    except Exception:\n        pass\n"), \
+        "cổng không bắt được đúng ca đã trả giá"
+    assert not _soi("import io\ndef f():\n    return io.open('x')\n"), "cổng bắt oan tệp đã import"
+    assert not _soi("def f(os):\n    return os.path\n"), "cổng bắt oan tham số trùng tên module"
+
+
+def t_dem_wiki_that_su_chay():
+    """Đệm bài Wikipedia phải LƯU ĐƯỢC — lượt thứ hai không được đi mạng.
+
+    Cổng tĩnh ở trên bắt được nguyên nhân; cổng này bắt được HẬU QUẢ, và nó là thứ chứng minh
+    cơ chế chạy thật chứ không chỉ dịch được (§13.11: mỗi cổng cần hai phép thử, và ở đây hai
+    cổng canh hai tầng của cùng một sự thật)."""
+    import chu_de as C, tempfile, os, hashlib
+    cu_dem, cu_goi = C._DEM, C._goi
+    dem = tempfile.mkdtemp(prefix="_dem_thu_")
+    dem_goi = {"n": 0}
+    def _gia(url, timeout=25):
+        dem_goi["n"] += 1
+        return {"query": {"pages": {"1": {"extract": "x" * 900}}}}
+    try:
+        C._DEM, C._goi = dem, _gia
+        a = C.bai_viet("Thu Nghiem Dem")
+        b = C.bai_viet("Thu Nghiem Dem")
+        assert len(a) == 900 and a == b, f"đệm trả sai nội dung ({len(a)} vs {len(b)})"
+        assert dem_goi["n"] == 1, f"lượt thứ hai VẪN đi mạng ({dem_goi['n']} lượt gọi)"
+        # tệp 0 byte phải đọc là CHƯA CÓ, không phải "bài rỗng"
+        d = os.path.join(dem, hashlib.sha1("Rong".encode("utf-8")).hexdigest()[:20] + ".txt")
+        open(d, "w").close()
+        assert len(C.bai_viet("Rong")) == 900, "tệp đệm 0 byte khoá cứng chủ thể"
+    finally:
+        C._DEM, C._goi = cu_dem, cu_goi
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3501,6 +3587,8 @@ def main():
     check("luật bố cục nền theo tập", t_luat_bo_cuc_nen_tap)
     check("hỏi ảnh thật bằng tên thực thể", t_hoi_anh_bang_thuc_the)
     check("hằng khẩu hình đúng thang bảng VISEME", t_khau_hinh_dung_thang)
+    check("không dùng module chưa import", t_dung_module_chua_import)
+    check("đệm bài Wikipedia thật sự chạy", t_dem_wiki_that_su_chay)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

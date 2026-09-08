@@ -27,8 +27,9 @@ MỌI HÀM Ở ĐÂY HỎNG THÌ TRẢ RỖNG, KHÔNG NÉM. Dữ liệu là gia 
 """
 from __future__ import annotations
 
-import json
-import threading
+import io                       # 8/9 — `_nho_doc`/`_nho_ghi` gọi `io.open` mà module chưa
+import json                     # bao giờ import: NameError bị `except: pass` nuốt, nên sổ
+import threading                # nhớ số nhỏ CHƯA TỪNG lưu được gì (§15.2 · §15.12).
 import time
 import os
 import urllib.parse

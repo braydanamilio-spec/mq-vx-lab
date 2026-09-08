@@ -26,6 +26,7 @@ mất uy tín cả kênh (chép đúng ranh giới của `the_he_2.py`).
 """
 from __future__ import annotations
 
+import io
 import json
 import os
 import re
@@ -217,9 +218,18 @@ def bai_viet(ten: str) -> str:
     os.makedirs(_DEM, exist_ok=True)
     k = hashlib.sha1(ten.encode("utf-8")).hexdigest()[:20]
     d = os.path.join(_DEM, k + ".txt")
+    # 8/9 — TỆP RỖNG LÀ "CHƯA CÓ", KHÔNG PHẢI "BÀI NÀY RỖNG".
+    # Đệm này CHƯA BAO GIỜ CHẠY: `chu_de` không hề `import io`, nên cả lượt đọc lẫn lượt ghi
+    # ném `NameError` và hai `except` trần nuốt sạch (§15.2). Hậu quả đo đêm 8/9: mọi lượt
+    # `bai_viet` đều đi mạng, và log vòng quét ra 392/500 dòng «đọc về 0 ký tự» — tức 78% là
+    # 429 của chính nhịp gọi mình. Docstring ngay trên kể rất kỹ về một cơ chế không tồn tại
+    # (§15.12). Và một tệp 0 byte còn sót từ trước bản vá "không ghi khi hỏng" sẽ khoá cứng
+    # đúng chủ thể ấy mãi mãi, nên rỗng phải đọc là CHƯA CÓ.
     if os.path.exists(d):
         try:
-            return io.open(d, encoding="utf-8").read()
+            _v = io.open(d, encoding="utf-8").read()
+            if _v.strip():
+                return _v
         except Exception:
             pass
     u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1"

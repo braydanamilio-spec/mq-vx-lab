@@ -31,6 +31,9 @@ import json
 import math
 import os
 import re
+import sys                      # 8/9 — dòng `file=sys.stderr` ở nhánh kho Canva
+                                # rỗng ném NameError, rơi vào `except` và VỨT LUÔN cả lớp
+                                # Canva thay vì chỉ bỏ một cảnh báo (§15.2).
 import subprocess
 
 GOC = os.path.dirname(os.path.abspath(__file__))
