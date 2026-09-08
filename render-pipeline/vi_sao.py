@@ -308,6 +308,40 @@ def sinh(ma: str, i: int):
               f"— ưu tiên nhóm ấy, phần còn lại vẫn giữ làm dự phòng")
     _ung.sort(key=lambda x: (-_tang(x), -_diem(x)))
 
+    # ── TẦNG THỨ BA: CHỦ THỂ PHẢI CÓ ẢNH TƯ LIỆU  (anh chốt, 8/9/2026) ─────────────────
+    # Anh: nền chỉ được là ảnh thật, và *"tất cả videos đều có ảnh thật chứ"*. Đo 14 bộ đã
+    # dựng: số ảnh đi theo độ nhận biết gần như tuyến tính — Kodak (87.057 lượt) 12 ảnh, South
+    # Sea Company (35.493) 5 ảnh, Charter One Airlines (53 lượt) ĐÚNG MỘT.
+    #
+    # Nên siết ở khâu CHỌN CHỦ THỂ, và siết bằng CHÍNH THỨ MÌNH CẦN — số ảnh — chứ không bằng
+    # một thứ thay thế. Lượt xem chỉ tương quan; số ảnh là điều kiện thật.
+    #
+    # Chỉ hỏi 6 ứng viên ĐẦU (đã qua hai tầng trên) để bó nhịp gọi Wikimedia, và `so_anh_co`
+    # đệm ra đĩa nên 18 kênh dùng chung một sổ — chúng rút từ CÙNG hai họ hạng mục.
+    #
+    # Và ƯU TIÊN, không CẮT: một sàn cứng đặt trước cổng chuyện đã làm đứng dây chuyền hai
+    # lượt liền sáng nay (157, 158 đều "chưa có chủ thể đủ chuyện — BỎ bộ này"). Không có ứng
+    # viên nào đủ ảnh thì vẫn dựng bằng ứng viên tốt nhất, chỉ là tập ấy nhiều nền trống hơn.
+    _SAN_ANH = 3
+    _dau = _ung[:6]
+    if len(_dau) > 1:
+        _anh = {}
+        for _x in _dau:
+            try:
+                _anh[_x[0]] = C.so_anh_co(_x[0])
+            except Exception:
+                _anh[_x[0]] = -1
+        _du_anh = [x for x in _dau if _anh.get(x[0], -1) >= _SAN_ANH]
+        if _du_anh:
+            _bo = len(_dau) - len(_du_anh)
+            if _bo:
+                print(f"   🖼 {len(_du_anh)}/{len(_dau)} ứng viên đầu có ≥{_SAN_ANH} ảnh tư liệu "
+                      f"— ưu tiên nhóm ấy")
+            _ung = _du_anh + [x for x in _ung if x not in _du_anh]
+        else:
+            print(f"   ⚠ không ứng viên nào có ≥{_SAN_ANH} ảnh tư liệu — vẫn dựng, tập sẽ "
+                  f"nhiều nền trống hơn")
+
     try:
         _t = _ung[0]
         # KHÔNG cắt tên ở đây: dòng này là dòng CHẨN ĐOÁN. Bản cũ cắt 34 ký tự và biến

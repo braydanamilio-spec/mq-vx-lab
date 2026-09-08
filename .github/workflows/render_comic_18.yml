@@ -162,6 +162,11 @@ jobs:
       - name: Dựng ${{ matrix.kenh }}
         id: ve
         env:
+          # GROQ_KEYS mang hồ 109 khoá VIẾT. Secret có từ 6/9 mà KHÔNG workflow render
+          # nào nạp — nên `sinh_thoai` thấy 0 khoá Groq, không dựng nổi lời thoại, và
+          # cả 18 luồng bỏ bộ với đúng một dòng `⚠ Groq: 0 khoá`. §18.4: một secret đã
+          # TẠO mà chưa NỐI trông y hệt một secret chưa từng có.
+          GROQ_KEYS: ${{ secrets.GROQ_KEYS }}
           CF_KEYS: ${{ secrets.CF_KEYS }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
           MM0_KEYS: ${{ secrets.MM0_KEYS }}

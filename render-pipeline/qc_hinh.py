@@ -201,6 +201,22 @@ def main() -> int:
         return 2
     n = 0
     pj = sys.argv[1]
+    # ── MẪU TỰ KHÔNG KHỚP TỆP NÀO THÌ SHELL ĐƯA NGUYÊN MẪU TỰ VÀO  (8/9/2026) ──────────
+    # Workflow gọi `python qc_hinh.py out/v11*_${ma}_*.json`. Khi lượt dựng không ra tập nào,
+    # bash không khớp được gì nên nó truyền NGUYÊN chuỗi `out/v11*_therules_*.json`, và
+    # `io.open` ném `FileNotFoundError` — một traceback về mẫu tự, đứng ngay dưới dòng nói
+    # thật sự vì sao không có tập (`⚠ Groq: 0 khoá`). Đọc log từ dưới lên thì thấy traceback
+    # trước, và nó dẫn người đọc đi sửa `qc_hinh` trong khi chỗ hỏng ở cách đó ba bước.
+    # §15.2: ta ném bằng chứng đi trước khi ai kịp đọc. Cổng QC không có gì để soi là một
+    # KẾT QUẢ hợp lệ, không phải một sự cố — nhưng phải nói ra kèm MẪU SỐ.
+    if not os.path.exists(pj) and any(c in pj for c in "*?["):
+        import glob as _glob
+        khop = sorted(_glob.glob(pj))
+        if not khop:
+            print(f"   ⏭ không có tệp nào khớp {pj!r} — không có gì để soi "
+                  f"(lý do KHÔNG nằm ở đây; xem bước dựng ngay trên)")
+            return 0
+        pj = khop[0]
     n += _in(f"TRƯỚC render · {os.path.basename(pj)}",
              truoc(json.load(io.open(pj, encoding="utf-8"))))
     if len(sys.argv) > 2:

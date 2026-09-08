@@ -641,6 +641,11 @@ const Panel: React.FC<{
                     bong bóng nằm trên đầu, không tranh chỗ với số. */
                  lech={canRong ? ((canRong ? (noiA ? "phai" : "trai") : "") === "trai"
                                     ? 0.16 : -0.16) : 0}
+                 /* Bong bóng ĐỨNG BÊN (`lech` khác 0) thì nó không tranh chiều dọc — để số
+                    ở nguyên chỗ cao nhất. Bong bóng ĐỨNG TRÊN (`lech` = 0, khung dọc) thì
+                    mép trên của khối phải là đáy bong bóng, không phải một phân số. Điều
+                    kiện lấy thẳng từ `lech` đang có, không đoán thêm một dấu hiệu nào. */
+                 dinh={canRong ? undefined : _chuaBong * h}
                  chu="Poppins, Arial, sans-serif" />
       ) : null}
 

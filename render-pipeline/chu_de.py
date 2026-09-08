@@ -199,6 +199,50 @@ _DEM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_dem_wiki")
 LY_DO_CUOI = [""]        # vì sao lượt đọc gần nhất trả rỗng — xem chú thích trong `bai_viet`
 
 
+_DEM_ANH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "so_anh_co.json")
+
+
+def so_anh_co(ten: str) -> int:
+    """Đếm ảnh TỰ DO dùng được của một chủ thể. -1 nếu không hỏi được.
+
+    ── VÌ SAO ĐẾM TRƯỚC KHI DỰNG  (anh: *"tất cả videos đều có ảnh thật chứ"*, 8/9/2026) ──
+    Anh chốt nền chỉ được là ảnh tư liệu thật. Nhưng đo 14 bộ đã dựng thì ảnh thật đi theo ĐỘ
+    NHẬN BIẾT của chủ thể gần như tuyến tính: Kodak (87.057 lượt/90 ngày) cho 16 ảnh, South
+    Sea Company (35.493) cho 7/12 nhịp, còn Charter One Airlines (53 lượt) cho ĐÚNG MỘT.
+
+    Nên muốn mọi tập có ảnh thì phải siết ở khâu CHỌN CHỦ THỂ, không phải khâu tìm ảnh. Và
+    siết bằng chính thứ mình cần — SỐ ẢNH — chứ không bằng một thứ thay thế như lượt xem:
+    lượt xem chỉ tương quan, còn số ảnh là điều kiện thật.
+
+    Đệm ra đĩa vì cùng một chủ thể sẽ được cân nhắc lại ở nhiều lượt và nhiều kênh — 18 kênh
+    rút từ CÙNG hai họ hạng mục (`vanished` 11 · `unsolved` 7), nên đệm dùng chung là đáng.
+    """
+    import json as _j
+    k = " ".join(str(ten or "").split())
+    if not k:
+        return -1
+    try:
+        d = _j.load(io.open(_DEM_ANH, encoding="utf-8")) if os.path.exists(_DEM_ANH) else {}
+    except Exception:
+        d = {}
+    if k in d:
+        return int(d[k])
+    n = -1
+    try:
+        import anh_tu_do as _A
+        n = len(_A.anh_cua(k, toi_da=12) or [])
+        if n < 3:
+            n += len(_A.anh_cua(k, toi_da=12, commons=True) or [])
+    except Exception:
+        return -1
+    try:
+        d[k] = n
+        io.open(_DEM_ANH, "w", encoding="utf-8").write(_j.dumps(d, ensure_ascii=False))
+    except Exception:
+        pass
+    return n
+
+
 def bai_viet(ten: str) -> str:
     """Thân bài Wikipedia dạng chữ thuần. `redirects=1` là bắt buộc.
 

@@ -78,6 +78,32 @@ def _so(v) -> float:
     return n * {"k": 1e3, "m": 1e6, "b": 1e9}.get((m.group(2) or "").lower(), 1)
 
 
+_CHU_SO = re.compile(r"\d")
+
+
+def _la_so(v) -> bool:
+    """Chuỗi này có phải một LƯỢNG không — tức thẻ số liệu có gì để chứng minh không.
+
+    ── VÌ SAO  (anh soi khung «SOUTH SEA COMPANY», 8/9/2026) ────────────────────────────
+    Docstring của `lop_du_lieu` ngay dưới đây khai từ đầu: *"chỉ phủ khi có SỐ THẬT"*. Mã
+    thì không kiểm lần nào — đúng §15.25 (chú thích nói một đằng, mã làm một nẻo), và loại
+    sai ấy sống lâu vì đọc lên rất thuyết phục.
+
+    Hậu quả đo trên 448 tệp props đã dựng: **40/953 thẻ số không chứa một chữ số nào**, và
+    cả 40 là mảnh TÊN CHỦ THỂ — `SOUTH|SEA COMPANY` · `SNC-LAVALIN|AFFAIR` ·
+    `MIDWAY|EXPRESS` · `BANKRUPTCY`. Không một ca oan.
+
+    Ba cái hỏng cùng chảy ra từ đây, nên chặn ở đây là chặn cả ba (§2):
+      · CHỒNG CHÉO — thẻ neo ở đỉnh panel, đúng chỗ bong bóng thoại, nên nó bị che một nửa
+      · LẶP — cùng một tên hiện lại ở 3/5 nhịp, đúng lời anh "lặp đi lặp lại một motip"
+      · THỪA — tên ấy đã có ở bong bóng hook VÀ ở huy hiệu dưới đáy: ba lớp một câu chữ
+
+    Không cần liệt kê dạng hợp lệ: `$295K` · `8 bn` · `1 IN 5` · `200+` · `0 plants` đều
+    chứa chữ số, còn tên riêng thì không. Một quy luật, không phải một danh sách (§13.9).
+    """
+    return bool(_CHU_SO.search(str(v or "")))
+
+
 def lop_du_lieu(n: dict) -> dict:
     """Nhịp cũ -> lớp phủ dữ liệu, hoặc None nếu nhịp này chỉ cần ẢNH.
 
@@ -101,7 +127,7 @@ def lop_du_lieu(n: dict) -> dict:
                 cot.append({"nhan": _nhan(m.get("nhan"), 16), "v": v})
         if len(cot) >= 2:
             return {"k": "chart", "cot": cot[:6], "don": n.get("don") or "", "nhan": ""}
-    if n.get("so"):
+    if n.get("so") and _la_so(n["so"]):
         return {"k": "so", "so": str(n["so"]), "don": str(n.get("don") or ""),
                 "nhan": str(n.get("chu") or "")[:44]}
     tr, ph = n.get("trai"), n.get("phai")
@@ -416,8 +442,17 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
     if not nhip[0].get("lop"):
         lo = None
         if hook_phu and hook_phu.strip():
+            # `hook_phu` được thiết kế cho bộ ĐO LƯỜNG, nơi nó luôn có dạng
+            # `"$295K OVER 30 YEARS"` — tách ở dấu cách đầu ra lượng + đơn vị.
+            # Bộ "VÌ SAO" đưa vào đây TÊN CHỦ THỂ (`"SOUTH SEA COMPANY"`), và cùng phép
+            # tách ấy đẻ ra `so="SOUTH" · don="SEA COMPANY"` — một thẻ số liệu không có số.
+            # §12.5 ở dạng thuần: câu luật đúng ở ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
+            # Không có lượng thì KHÔNG dựng thẻ: nhịp ấy giữ nguyên ảnh thật, và lời hứa
+            # vẫn tới người xem bằng bong bóng hook (chính chữ ấy, đọc thành tiếng).
             pp = hook_phu.strip().split(" ", 1)
-            lo = {"k": "so", "so": pp[0], "don": (pp[1] if len(pp) > 1 else ""), "nhan": ""}
+            if _la_so(pp[0]):
+                lo = {"k": "so", "so": pp[0],
+                      "don": (pp[1] if len(pp) > 1 else ""), "nhan": ""}
         else:
             ung = [n["lop"] for n in nhip if (n.get("lop") or {}).get("k") == "so"]
             if ung:

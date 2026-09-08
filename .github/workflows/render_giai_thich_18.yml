@@ -310,6 +310,12 @@ jobs:
           # 53.100 lượt ĐỌC mỗi lượt workflow, trên trần 50.000 CẢ NGÀY.
           GHI_SO_KHOA: ${{ matrix.luong == 1 && '1' || '0' }}
           GEMINI_KEYS: ${{ secrets.GEMINI_KEYS }}
+          # GROQ_KEYS mang hồ 109 khoá VIẾT. Secret có từ 6/9 mà KHÔNG workflow render
+          # nào nạp — nên `sinh_thoai` thấy 0 khoá Groq, không dựng nổi lời thoại, và
+          # cả 18 luồng bỏ bộ với đúng một dòng `⚠ Groq: 0 khoá`. §18.4: một secret đã
+          # TẠO mà chưa NỐI trông y hệt một secret chưa từng có.
+          GROQ_KEYS: ${{ secrets.GROQ_KEYS }}
+          MM0_KEYS: ${{ secrets.MM0_KEYS }}
           CF_KEYS: ${{ secrets.CF_KEYS }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
           GEMINI_SYSTEM_PROMPT: ${{ secrets.GEMINI_SYSTEM_PROMPT }}

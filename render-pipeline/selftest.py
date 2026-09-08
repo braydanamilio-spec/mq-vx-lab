@@ -1064,7 +1064,30 @@ def t_san_nhan_biet_va_hong_mem():
     # Bản đầu cắt cứng mọi chủ thể dưới sàn. Đo lượt sau: hồ chỉ còn MỘT ứng viên qua sàn, mà
     # nó có 8 câu nhân quả — dưới cổng chuyện — nên hệ bỏ cả bộ và KHÔNG DỰNG GÌ. Một cái sàn
     # cứng đặt trước một cái cổng khác thì hai cái cùng chặn mà không cái nào biết cái kia.
-    assert "_ung = _du" not in src, "sàn vẫn CẮT CỨNG — sẽ làm đứng dây chuyền khi hồ mỏng"
+    # ── PHÉP SO CHUỖI CŨ BẮT OAN NGAY KHI CÓ TẦNG THỨ HAI  (8/9/2026) ──────────────────
+    # Bản trước viết `assert "_ung = _du" not in src`. Nó đúng chừng nào chỉ có MỘT cách viết
+    # phép cắt. Tầng ưu tiên theo ẢNH (xem `t_uu_tien_chu_the_co_anh`) ghép lại danh sách bằng
+    # `_ung = _du_anh + [x for x in _ung if x not in _du_anh]` — GIỮ nguyên mọi ứng viên, chỉ
+    # đổi thứ tự — và cổng vẫn đỏ. §13.8: cổng bắt oan tệ hơn cổng không bắt, vì một dòng đỏ
+    # vĩnh viễn sẽ CHE lỗi thật nằm cạnh nó (§15.19 đã trả giá đúng chuyện này).
+    #
+    # Thứ cổng muốn đo là "phép gán có VỨT ứng viên đi không", và cây cú pháp trả lời được
+    # thẳng: gán một tên trần (`_ung = _du_anh`) là vứt; gán một phép cộng là giữ.
+    import ast as _ast
+    for _n in _ast.walk(_ast.parse(src)):
+        if not (isinstance(_n, _ast.Assign)
+                and any(getattr(t, "id", "") == "_ung" for t in _n.targets)):
+            continue
+        _v = _n.value
+        assert not (isinstance(_v, _ast.Name) and _v.id.startswith("_du")), \
+            f"`_ung = {getattr(_v, 'id', '?')}` VỨT ứng viên — đứng dây chuyền khi hồ mỏng"
+        # Comprehension DỰNG danh sách lần đầu thì hợp lệ (`_ung = [(ct, kh, …) for ct in …]`);
+        # comprehension đọc LẠI `_ung` ở vế phải mới là phép lọc, và phép lọc thì vứt phần trượt.
+        # Dấu hiệu phân biệt nằm sẵn trong cây: `_ung` có xuất hiện ở vế phải hay không.
+        _doc_lai = any(getattr(x, "id", "") == "_ung"
+                       for x in _ast.walk(_v) if isinstance(x, _ast.Name))
+        assert not (isinstance(_v, (_ast.ListComp, _ast.GeneratorExp)) and _doc_lai), \
+            "`_ung` bị LỌC thẳng bằng comprehension — phải GHÉP lại phần dư, đừng vứt"
     assert "(-_tang(x), -_diem(x))" in src, "sàn phải là tầng xếp hạng, không phải bộ lọc"
     # và "không đo được" (-1) không được coi là nổi tiếng (§15.2)
     assert "10 ** 9" not in src, "-1 vẫn được ánh xạ thành nổi tiếng nhất"
@@ -4113,6 +4136,10 @@ def main():
     check("bài nghiệm thu bắt được đúng lỗi đã lọt", t_nghiem_thu_bat_duoc_loi_that)
     check("nhịp so sánh không có hai vế bằng nhau", t_chia_doi_hai_ve_khac_nhau)
     check("biểu đồ không vẽ trục toàn số 0 hoặc trục phẳng", t_chart_co_so_that)
+    check("thẻ SỐ LIỆU phải có SỐ, không nhận tên chủ thể", t_the_so_phai_co_so)
+    check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
+    check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
+    check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
@@ -9867,6 +9894,241 @@ def t_chart_co_so_that():
     assert G._so_hook("11 MONTHS") == 11, "chữ M của MONTHS bị đọc thành hệ số triệu"
     assert G._so_hook("700,000x SMALLER") == 700000, "regex lùi khi gặp chữ sau số"
     assert G._so_hook("1 IN 36") == 36, "khuôn 1-in-N phải lấy N"
+
+
+def _ma_py(ten: str) -> str:
+    """Mã THẬT của một tệp .py cạnh selftest — chú thích và docstring đã bỏ.
+
+    §17.15 đã trả giá bốn lần trong một ngày: cổng đọc CHÚ THÍCH thành mã, và chú thích thì
+    hay trích lại chính lỗi cũ để giải thích bản vá — nên viết chú thích tử tế càng dễ tự bắn
+    vào chân. Docstring là CHUỖI, không phải chú thích, nên `#` một mình không đủ: phải đi qua
+    `ast` mới bỏ được nó.
+    """
+    import ast
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, ten + ".py"), encoding="utf-8").read())
+    ra = []
+    for nut in ast.walk(cay):
+        if isinstance(nut, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Module)):
+            than = list(nut.body)
+            if (than and isinstance(than[0], ast.Expr)
+                    and isinstance(than[0].value, ast.Constant)
+                    and isinstance(than[0].value.value, str)):
+                than = than[1:]                       # bỏ DOCSTRING
+            ra.extend(ast.unparse(x) for x in than)
+    return "\n".join(ra)
+
+
+def t_the_so_phai_co_so():
+    """Thẻ số liệu chỉ được dựng khi có một LƯỢNG — tên chủ thể không phải số liệu.
+
+    Anh soi khung bộ 165: thẻ to giữa panel ghi «SOUTH / SEA COMPANY», đè vào bong bóng thoại
+    và lặp ở 3/5 nhịp. Truy ra `phim.py` tách `hook_phu` ở dấu cách đầu — đúng cho bộ ĐO LƯỜNG
+    (`"$295K OVER 30 YEARS"`), sai cho bộ VÌ SAO (tên chủ thể). §12.5.
+
+    Đo trên 448 tệp props đã dựng: 40/953 thẻ không chứa một chữ số. Đọc tay cả 40 — toàn mảnh
+    tên riêng, KHÔNG ca oan nào (§13.21: đọc tay ca bị chặn trước khi biến phép so thành cổng).
+    """
+    import phim as P
+
+    # bắt được — cả hai cửa đều phải chặn
+    assert P.lop_du_lieu({"so": "SOUTH", "don": "SEA COMPANY"}) is None, \
+        "thẻ mang TÊN CHỦ THỂ vẫn lọt qua lop_du_lieu"
+    for xau in ("SNC-LAVALIN", "MIDWAY", "BANKRUPTCY", "PROBABLY"):
+        assert not P._la_so(xau), f"{xau!r} bị coi là một lượng"
+
+    # KHÔNG bắt oan — mọi dạng lượng thật của 18 kênh
+    for tot in ("$295K", "8 bn", "1 IN 5", "200+", "0 plants", "-320°F", "24,901 miles", "3 mph"):
+        assert P._la_so(tot), f"{tot!r} là lượng thật mà bị chặn"
+    assert P.lop_du_lieu({"so": "$295K", "don": "OVER 30 YEARS"}), "thẻ số thật bị chặn"
+
+    # và cửa GỐC: hook_phu không mở đầu bằng lượng thì không dựng thẻ nào
+    ma = _ma_py("phim")
+    assert "_la_so(pp[0])" in ma, \
+        "phim.py tách hook_phu mà không kiểm vế đầu có phải một lượng không"
+
+
+def t_khoi_so_biet_day_bong():
+    """Khối số bị kẹp giữa BONG BÓNG (trên) và ĐỈNH ĐẦU (dưới) — phải biết cả hai mép.
+
+    Bản trước chỉ nhận `tran` (đỉnh đầu) và neo mép trên vào hằng `h * 0.10`. Khung ngang thoát
+    nhờ `lech` đẩy sang bên; khung DỌC thì bong bóng rộng gần hết bề ngang nên bị che thật.
+    Cổng canh hai điều, và điều thứ hai là chỗ §15.12 đã trả giá: một trường được KHAI mà không
+    ai TRUYỀN thì nó chưa tồn tại.
+    """
+    import re as _re
+    goc = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "engine-remotion", "src", "comic")
+    so = io.open(os.path.join(goc, "SoComic.tsx"), encoding="utf-8").read()
+    kich = io.open(os.path.join(goc, "KichComic.tsx"), encoding="utf-8").read()
+    # bỏ chú thích trước khi quét — §17.15, bốn lần trong một ngày
+    _so = _re.sub(r"/\*[\s\S]*?\*/", "", so)
+    _kich = _re.sub(r"/\*[\s\S]*?\*/", "", kich)
+
+    assert "dinh?: number" in _so, "SoPanel không nhận mép trên (đáy bong bóng)"
+    assert "dinh ?? h * 0.10" in _so, "DINH không lấy đáy bong bóng làm mặc định"
+    assert "top: DINH" in _so, "chung.top chép lại hằng thay vì đọc DINH (nguồn thứ hai, §15.10)"
+    assert _so.count("h * 0.10") == 1, \
+        "còn hơn một chỗ ghi cứng h*0.10 — hai phân số cạnh nhau là lỗi §15.10"
+    assert "dinh={" in _kich, "KichComic KHAI prop mà không TRUYỀN — trường chết (§15.12)"
+    assert "_chuaBong * h" in _kich, "dinh không lấy từ caoBong() đang có mà đoán số mới"
+
+
+def t_uu_tien_chu_the_co_anh():
+    """Chủ thể có ảnh tư liệu được ƯU TIÊN, nhưng thiếu ảnh KHÔNG được làm đứng dây chuyền.
+
+    Anh: *"tất cả videos đều có ảnh thật để làm chứ e"*. Đo 14 bộ đã dựng: số ảnh tự do đi theo
+    độ nhận biết gần như tuyến tính — Kodak 12 ảnh, South Sea Company 5, Charter One Airlines
+    ĐÚNG MỘT. Nên siết ở khâu CHỌN CHỦ THỂ, và siết bằng CHÍNH thứ mình cần (số ảnh) thay vì
+    một thứ thay thế (lượt xem).
+
+    Nhưng ƯU TIÊN, không CẮT: một sàn cứng đặt trước cổng chuyện đã làm đứng dây chuyền hai lượt
+    liền (bundle 157, 158 đều bỏ). Và §19.19 — độ phủ ảnh chỉ được làm tiêu chí PHỤ, sau cổng
+    chuyện; nó không bao giờ được quyết định nội dung.
+
+    ── VÌ SAO CỔNG NÀY CHẠY MÃ THẬT  (8/9/2026) ────────────────────────────────────────────
+    Bản đầu của chính cổng này đo CHỮ: nó tìm `_ung = []` và `return None` trong nhánh thiếu
+    ảnh. Thử ngược bằng cách đổi dòng ghép thành `_ung = _du_anh` — tức CẮT sạch ứng viên
+    không đủ ảnh, đúng cái làm đứng dây chuyền — và cổng **báo xanh**. Phép so chữ chỉ thấy
+    dạng hỏng mà người viết nó nghĩ ra trước.
+    Nay trích chính khối ấy ra và CHẠY, với một `so_anh_co` giả ở hai thái cực. Không còn dạng
+    hỏng nào để bỏ sót, vì không còn mô hình nào (§13.7).
+    """
+    import ast
+    ma = _ma_py("vi_sao")
+    assert "_SAN_ANH" in ma, "vi_sao không có tầng ưu tiên theo số ảnh"
+    assert "_ung[:6]" in ma, "hỏi ảnh cho MỌI ứng viên — bó số lượt gọi Wikimedia lại"
+    assert ma.find("_diem(x)") < ma.find("_SAN_ANH"), \
+        "tầng ảnh chạy TRƯỚC tầng chuyện — độ phủ ảnh đang quyết định nội dung (§19.19)"
+
+    # ── trích khối tầng ảnh bằng AST: từ `_SAN_ANH = 3` tới hết câu `if len(_dau) > 1` ───
+    # Cắt theo DÒNG CHỮ thì phải đoán đâu là hết khối, và bản đầu đoán sai ngay. Cây cú pháp
+    # đã biết chính xác câu lệnh nào bắt đầu và kết thúc ở đâu — dùng thứ đã biết (§13.7).
+    goc_py = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vi_sao.py")
+    cay = ast.parse(io.open(goc_py, encoding="utf-8").read())
+    cau = None
+    for nut in ast.walk(cay):
+        than = getattr(nut, "body", None)
+        if not isinstance(than, list):
+            continue
+        for j, st in enumerate(than):
+            if (isinstance(st, ast.Assign) and getattr(st.targets[0], "id", "") == "_SAN_ANH"):
+                cau = than[j:j + 3]
+                break
+        if cau:
+            break
+    assert cau, "không tìm thấy khối tầng ảnh trong vi_sao.py"
+    khoi = "\n".join(ast.unparse(x) for x in cau)
+
+    class _C:                       # `chu_de` giả — không mạng, không đệm
+        def __init__(self, bang, nem=()): self.bang, self.nem = bang, set(nem)
+        def so_anh_co(self, ten):
+            # §19.20: lượt hỏi mạng HỎNG phải ra "chưa biết", không ra "đủ ảnh". Nếu nhánh
+            # `except` gán một số ≥ sàn thì một sự cố mạng vài giây sẽ ĐẨY LÊN ĐẦU một chủ thể
+            # có thể không có tấm ảnh nào — hỏng mà báo xanh.
+            if ten in self.nem: raise RuntimeError("Wikimedia 429")
+            return self.bang.get(ten, 0)
+
+    goc = [(f"ct{i}", i) for i in range(9)]        # 9 ứng viên, đã qua cổng chuyện
+    for ten, bang in (
+        ("giàu ảnh lẫn nghèo ảnh", {"ct0": 0, "ct1": 7, "ct2": 1, "ct3": 12, "ct4": 2, "ct5": 5}),
+        ("KHÔNG AI đủ ảnh",        {f"ct{i}": 1 for i in range(9)}),
+        ("hỏi ảnh HỎNG hết (-1)",  {f"ct{i}": -1 for i in range(9)}),
+        ("ai cũng đủ ảnh",         {f"ct{i}": 9 for i in range(9)}),
+        # MỘT PHẦN ném, phần còn lại nghèo ảnh: nếu `except` gán một số ≥ sàn thì đúng ba
+        # ứng viên vừa lỗi mạng bị đẩy lên đầu hồ — thứ tự đổi, nên cổng thấy được.
+        # Hai lần thử ngược đã bác hai cách chọn ba ứng viên ấy, và cả hai vì cùng một lý do:
+        # bản hỏng phải làm THỨ TỰ ĐỔI thì cổng mới phân biệt được.
+        #   · cả chín cùng ném  -> bản hỏng đẩy cả chín, thứ tự y nguyên -> cổng mù
+        #   · ba đứa ĐẦU ném    -> chúng vốn đã đứng đầu, đẩy lên cũng ở đó -> cổng mù
+        # Nên phải là ba ứng viên GIỮA (`ct3..ct5`): bản đúng để nguyên, bản hỏng nhấc chúng
+        # vượt lên trước `ct0..ct2`. Đây là §13.11 ở dạng cụ thể — một cổng chỉ chứng minh
+        # được điều gì khi ca phá THẬT SỰ tạo ra khác biệt mà nó đo.
+        ("hỏi ảnh NÉM lỗi ở 3/9",  None),
+    ):
+        moi_truong = {"_ung": list(goc),
+                      "C": _C(bang if bang is not None else {f"ct{i}": 0 for i in range(9)},
+                              nem=() if bang is not None else ("ct3", "ct4", "ct5")),
+                      "print": lambda *a, **k: None}
+        exec(khoi, moi_truong)
+        ra = moi_truong["_ung"]
+        assert len(ra) == len(goc), \
+            f"[{ten}] tầng ảnh CẮT ứng viên: {len(goc)} -> {len(ra)} — đứng dây chuyền như bundle 157/158"
+        assert set(ra) == set(goc), f"[{ten}] tầng ảnh làm mất/đổi ứng viên"
+        if ten.startswith("giàu"):
+            assert [x[0] for x in ra[:3]] == ["ct1", "ct3", "ct5"], \
+                f"nhóm ≥3 ảnh không được đẩy lên đầu: {[x[0] for x in ra]}"
+        if ten.startswith("KHÔNG AI") or ten.startswith("hỏi ảnh"):
+            assert ra == goc, \
+                f"[{ten}] thứ tự đổi dù không ứng viên nào CHỨNG MINH được là đủ ảnh"
+
+def t_workflow_nap_du_ho_khoa():
+    """Mọi khối khoá mà HÀM NẠP đọc đều phải được workflow render truyền xuống.
+
+    ── VÌ SAO  (lượt render 34233168591 ĐỎ 18/18, 8/9/2026) ─────────────────────────────
+    Cả 18 luồng chết cùng một dòng: `⚠ Groq: 0 khoá đều không trả nội dung` -> không dựng nổi
+    lời thoại -> `bản dài hỏng — bỏ cả bộ`. Máy anh có 109 khoá Groq, secret `GROQ_KEYS` đã tạo
+    từ 6/9 — mà **không workflow render nào khai nó**. Secret đã TẠO mà chưa NỐI trông y hệt
+    secret chưa từng có (§18.4).
+
+    `kiem_bien.py` đã canh đúng chuyện này từ 1/9 và vẫn để lọt, vì hai lý do — cả hai đáng ghi:
+      1. Nó đo MỘT CHIỀU: "workflow khai biến nào thì mã phải đọc". Chiều ngược lại — "mã đọc
+         biến nào thì workflow phải khai" — không ai canh. §19.3: viết xong một cổng đo chiều
+         thiếu thì hỏi ngay *"chiều ngược lại ai canh?"*, và câu trả lời "không ai" là một lỗ.
+      2. Ba luồng render KHÔNG chạy `kiem_bien.py` (chỉ ba luồng đời cũ chạy). Một cổng đặt ở
+         lối không ai đi là một cổng không tồn tại (§15.22).
+
+    Danh sách biến rút bằng AST từ CHÍNH hàm nạp khoá, không chép tay: một danh sách chép tay
+    sẽ lỗi thời đúng lúc thêm nhà cung cấp mới, và đó là cách lỗi này ra đời (§13.2).
+    """
+    import ast
+    goc = os.path.dirname(os.path.abspath(__file__))
+    wf = os.path.join(goc, "..", ".github", "workflows")
+
+    # ── biến mà HÀM NẠP thật sự đọc ──────────────────────────────────────────────────
+    can = set()
+    for tep, ham in (("phim_canh.py", "_khoa_groq"), ("phim_anh.py", "khoa")):
+        cay = ast.parse(io.open(os.path.join(goc, tep), encoding="utf-8").read())
+        for nut in ast.walk(cay):
+            if not (isinstance(nut, ast.FunctionDef) and nut.name == ham):
+                continue
+            for con in ast.walk(nut):
+                if (isinstance(con, ast.Call)
+                        and isinstance(con.func, ast.Attribute) and con.func.attr == "get"
+                        and isinstance(con.func.value, ast.Attribute)
+                        and con.func.value.attr == "environ"
+                        and con.args and isinstance(con.args[0], ast.Name)):
+                    # `os.environ.get(bien, ...)` — tên nằm ở vòng `for bien in (...)`
+                    for vong in ast.walk(nut):
+                        if (isinstance(vong, ast.For)
+                                and getattr(vong.target, "id", "") == con.args[0].id
+                                and isinstance(vong.iter, (ast.Tuple, ast.List))):
+                            can |= {e.value for e in vong.iter.elts
+                                    if isinstance(e, ast.Constant) and isinstance(e.value, str)}
+    assert can, "không rút được tên biến nào từ hàm nạp khoá — phép rút hỏng, không phải mã hỏng"
+    assert "GROQ_KEYS" in can, "hàm nạp không còn đọc GROQ_KEYS — ca đã trả giá, đừng bỏ"
+
+    # ── luồng render ĐANG SỐNG: tự tìm, đừng cầm danh sách (§13.2) ───────────────────
+    song = {}
+    for t in sorted(os.listdir(wf)):
+        if not (t.startswith("render_") and t.endswith((".yml", ".yaml"))):
+            continue
+        ma = re.sub(r"(?m)^\s*#.*$", "",
+                    io.open(os.path.join(wf, t), encoding="utf-8").read())  # §17.15
+        if "cron:" in ma:                                # luồng đã nghỉ thì không canh
+            song[t] = {b for b in can if f"{b}:" in ma}
+    assert song, "không tìm thấy luồng render nào còn cron — phép tìm hỏng, không phải repo hỏng"
+
+    # Không đòi khai MỌI biến hàm nạp đọc: `GEMINI_API_KEYS` và `MM0_KEYS` không tồn tại làm
+    # secret, nên đòi chúng là dựng một dòng đỏ vĩnh viễn — mà dòng đỏ giả thì CHE lỗi thật
+    # nằm cạnh nó (§15.19, đã trả giá). Đòi đúng thứ đã gây ra sự cố: **ba luồng phải khai
+    # GIỐNG NHAU**. Chúng chạy cùng một dây chuyền trên cùng 18 kênh, nên mọi khác biệt giữa
+    # chúng đều là trôi dạt, không phải chủ ý — và chính sự trôi dạt ấy làm GROQ_KEYS lọt.
+    hop = set().union(*song.values())
+    lech = [f"{t} thiếu {b}" for t, co in song.items() for b in sorted(hop - co)]
+    assert not lech, ("ba luồng render khai khối khoá KHÁC NHAU — trôi dạt là cách "
+                      "GROQ_KEYS lọt suốt hai ngày: " + "; ".join(lech[:6]))
+    assert all("GROQ_KEYS" in co for co in song.values()), \
+        "luồng render không nạp GROQ_KEYS — 18/18 luồng đã ĐỎ vì đúng chỗ này"
 
 
 if __name__ == "__main__":

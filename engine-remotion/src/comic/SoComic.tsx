@@ -77,11 +77,26 @@ export const SoPanel: React.FC<{
   tran?: number;
   // Độ lệch ngang, tỉ lệ với bề ngang panel. Xem `chung` — số phải TRÁNH bong bóng thoại.
   lech?: number;
-}> = ({ lop, w, h, p, mau, phu, chu, tran, lech = 0 }) => {
+  /* ĐÁY BONG BÓNG, tính bằng px từ mép trên panel. Xem `DINH` ngay dưới. */
+  dinh?: number;
+}> = ({ lop, w, h, p, mau, phu, chu, tran, lech = 0, dinh }) => {
   // Đơn vị theo CẠNH NGẮN của panel: panel comic có ô ngang và ô dọc, và một hằng theo bề
   // ngang sẽ cho hai cỡ chữ khác hẳn nhau ở hai loại ô.
   const u = Math.min(w, h);
-  const DINH = h * 0.10;                 // mép trên của khối — phải khớp `top` ở `chung`
+  /* ── MÉP TRÊN CỦA KHỐI: ĐÁY BONG BÓNG THẬT, KHÔNG PHẢI MỘT PHÂN SỐ  (8/9/2026) ─────
+     Khối số bị kẹp giữa HAI lớp: bong bóng thoại ở trên, đỉnh đầu nhân vật ở dưới. Bản
+     trước chỉ biết lớp DƯỚI (`tran`) và neo mép trên vào hằng `h * 0.10`. Ở khung ngang thì
+     thoát nhờ `lech` đẩy sang bên; ở khung DỌC bong bóng rộng gần hết bề ngang nên đẩy ngang
+     không cứu được gì — soi bộ 165 «SOUTH SEA COMPANY»: bong bóng nuốt nửa trên khối số ở
+     10/21 khung.
+     Chú thích của `lech` còn khẳng định *"khung dọc bong bóng nằm trên đầu, không tranh chỗ
+     với số"* — một giả định viết ra rồi không ai đo (§13.4).
+     Nay nhận `dinh` = đáy bong bóng THẬT, do `KichComic` tính bằng chính `caoBong()` mà nó
+     đang dùng để chừa chỗ cho nhân vật. Không thêm một hằng số đoán nào (§13.7), và không
+     tạo nguồn thứ hai cho cùng một con số (§11).
+     Và `chung.top` đọc CHÍNH biến này thay vì chép lại `h * 0.10` — hai phân số cố định đặt
+     cạnh nhau là chỗ §15.10 đã trả giá ba lần. */
+  const DINH = dinh ?? h * 0.10;         // mép trên của khối — `chung.top` đọc chính nó
   const DEM = u * 0.15;                  // đệm trên + dưới của `De`
   // Dải trống thật: từ mép trên khối tới đỉnh đầu, chừa một khoảng thở 2% chiều cao.
   const cho = Math.max(h * 0.16, (tran ?? h) - DINH - h * 0.02);
@@ -95,7 +110,7 @@ export const SoPanel: React.FC<{
   // hai bản sửa khác nhau, và bản sửa cho "cắt mép" (thu nhỏ chữ) sẽ không chữa được gì.
   // Đẩy số sang phía ĐỐI DIỆN bong bóng, biên độ theo bề ngang panel.
   const chung: React.CSSProperties = {
-    position: "absolute", left: w * lech, right: -w * lech, top: h * 0.10,
+    position: "absolute", left: w * lech, right: -w * lech, top: DINH,
     display: "flex", flexDirection: "column", alignItems: "center",
     opacity: vao, pointerEvents: "none",
   };
