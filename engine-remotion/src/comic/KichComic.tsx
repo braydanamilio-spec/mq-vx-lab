@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, Img, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { DienVienHai } from "../v4/DienVienHai";
 import { KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
 import type { Luot } from "../v4/KichHai";
@@ -615,8 +615,15 @@ const Panel: React.FC<{
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: w * 0.022, boxSizing: "border-box", zIndex: 5,
         } as React.CSSProperties}>
-          <img src={logo} style={{ maxWidth: "100%", maxHeight: "100%",
-                                   objectFit: "contain" }} />
+          {/* `Img` CỦA REMOTION, KHÔNG PHẢI `img` THÔ  (soi khung bộ 149, 8/9/2026) ─────
+              Thẻ vẽ đúng chỗ, đúng cỡ, mà ảnh bên trong VỠ — soi khung thấy rõ biểu tượng
+              ảnh hỏng. `NenComic` nạp nền bằng `<Img src={staticFile(anh)}>`; thẻ của em
+              dùng `<img src>` thô nên Remotion không phục vụ đường dẫn ấy.
+              Và phải là `Img` của Remotion chứ không chỉ thêm `staticFile`: `Img` GIỮ KHUNG
+              lại tới khi ảnh nạp xong, còn `img` thô có thể render trước lúc ảnh về và cho
+              ra một khung trắng — hỏng mà không ai báo. */}
+          <Img src={staticFile(logo)} style={{ maxWidth: "100%", maxHeight: "100%",
+                                              objectFit: "contain" }} />
         </div>
       ) : null}
 

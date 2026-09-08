@@ -2534,6 +2534,12 @@ _KHAI_NIEM = (
      "a pinboard of paper wireframe sketches with one card pulled aside"),
     (r"\b(moderat|harmful|radicali|misinformation|content|amplif|algorithm)\w*",
      "a queue of identical sealed envelopes on a conveyor with one tipped over"),
+    (r"\b(sold|selling|holdings|stake\s+in|divested|liquidated\s+its)\w*",
+     "an auction paddle resting on a cleared table beside numbered lot tags"),
+    (r"\b(value|worth|plunged|collapsed\s+to|lost\s+\d|percent|fell\s+by)\w*",
+     "a wall chart with one line dropping steeply to the floor line"),
+    (r"\b(operated|service\s+from|carrier|routes?\s+between|flew\s+between)\w*",
+     "a departure board frame with empty slats and a clock above it"),
 )
 
 # ── CÂU DẪN KHÔNG CÓ GÌ CỤ THỂ ĐỂ VẼ — NHƯNG VẪN PHẢI TRÔNG KHÁC NHAU  (8/9/2026) ──────

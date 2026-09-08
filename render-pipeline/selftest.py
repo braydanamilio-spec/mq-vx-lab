@@ -304,6 +304,15 @@ def t_logo_wikidata():
                                 "engine-remotion", "src", "comic", "KichComic.tsx"),
                    encoding="utf-8").read()
     assert "anhChens" in tsx, "engine chưa nhận prop thẻ ảnh"
+    # ── ẢNH TRONG THẺ PHẢI QUA `staticFile`, VÀ PHẢI LÀ `Img` CỦA REMOTION ────────────
+    # Soi khung bộ 149: thẻ vẽ đúng chỗ đúng cỡ mà ảnh bên trong VỠ. `<img src>` thô không
+    # được Remotion phục vụ; và `Img` còn GIỮ KHUNG tới khi ảnh nạp xong, còn `img` thô có
+    # thể render trước lúc ảnh về -> khung trắng, hỏng mà không ai báo (§12.8).
+    import re as _re2
+    _the = _re2.search(r"logo \?[^}]*\{[\s\S]{0,1200}?</div>", tsx)
+    assert _the, "không tìm thấy khối thẻ ảnh trong engine"
+    assert "staticFile(logo)" in _the.group(0), "ảnh thẻ không qua staticFile -> ảnh vỡ"
+    assert "<Img " in _the.group(0), "thẻ dùng <img> thô -> có thể ra khung trắng"
     import pilot_hai as P
     ma = _io.open(P.__file__, encoding="utf-8").read()
     assert '"anhChens": chon_the_anh(' in ma, "pipeline chưa gửi thẻ ảnh sang engine"
@@ -525,6 +534,110 @@ def t_du_luot_noi_voi_nguoi_xem():
     goi = {c.func.id for c in ast.walk(kb)
            if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
     assert "_du_nguoi_xem" in goi, "viết ra rồi không ai gọi"
+
+
+def t_lap_gan_so_gan_bang():
+    """Câu lặp chỉ khác một DẤU CHẤM vẫn là câu lặp với lỗ tai.
+
+    Bộ 138 và 139 đều giao đi hai lượt đọc y hệt ở nhịp 0 và 3 (đều là TIÊU ĐỀ TẬP), dù
+    `_tranh_lap_gan` CÓ chạy trên đường bản dài. Chỗ trượt là phép so: hai câu khác nhau một
+    dấu chấm cuối là hai chuỗi khác nhau với `==` và là MỘT CÂU với người nghe (§18.11).
+    Và khi câu lặp không có họ biến thể (tiêu đề thì không có), giữ nguyên là để người xem
+    nghe hai lần trong mười giây đầu — nay bỏ hẳn nhịp thừa, miễn là tập còn đủ dài."""
+    import giai_thich as G
+
+    def n(l):
+        return {"khuon": "canh", "loi": l, "noi": "", "bt": "nguoi"}
+
+    def khoa(t):
+        return "".join(c for c in str(t).lower() if c.isalnum() or c == " ").strip()
+
+    for ten, ds in (
+        ("dấu chấm", [n("The last place still running it"), n("b"), n("c"),
+                      n("The last place still running it."), n("d"), n("e"), n("f"), n("g")]),
+        ("chữ hoa", [n("the patent that outlived it"), n("b"), n("c"),
+                     n("The patent that outlived it"), n("d"), n("e"), n("f"), n("g")]),
+    ):
+        r = G._tranh_lap_gan([dict(x) for x in ds], "therules")
+        k = [khoa(x.get("loi")) for x in r]
+        assert len(k) == len(set(k)), f"{ten}: còn cặp lặp sau khi dọn: {k}"
+    # KHÔNG được đụng vào tập không lặp
+    sach = [n(f"cau khac nhau so {i}") for i in range(8)]
+    assert len(G._tranh_lap_gan([dict(x) for x in sach], "therules")) == 8, "bỏ nhầm nhịp"
+    # tập NGẮN thì thà lặp còn hơn cụt
+    ngan = [n("X"), n("b"), n("c"), n("X"), n("d")]
+    assert len(G._tranh_lap_gan([dict(x) for x in ngan], "therules")) == 5, "làm cụt tập ngắn"
+
+
+def t_canh_theo_khai_niem():
+    """Nền phải kể ĐÚNG CHUYỆN ĐANG NÓI, và không được mang chữ vào khung.
+
+    Anh: *"sao 1 nền duy nhất thế này"* · *"ảnh nền phải thể hiện được vấn đề được nói tới,
+    nhìn cái nhận ra ngay, ko chung chung"*. Đo bản trước: 13 nhịp ra 13 TỆP khác nhau nhưng
+    khác biệt trung bình chỉ 20,7/255 — mắt đọc ra MỘT căn phòng (§13.5: đếm tệp là đo sai
+    đại lượng).
+
+    Cách chữa giữ CẢ HAI ràng buộc: câu chỉ dùng để CHỌN khái niệm, chữ vào prompt là chữ
+    mình soạn. Chốt canh đúng hai điều ấy — không tên riêng, không danh từ mời mô hình viết
+    chữ (§13.20 · §17.6) — và canh độ phủ trên câu NỘI DUNG (câu dẫn không có gì để vẽ,
+    §17.5)."""
+    import re, pilot_hai as P
+    assert len(P._KHAI_NIEM) >= 24, f"bảng khái niệm chỉ có {len(P._KHAI_NIEM)} mục"
+    _MOI_CHU = re.compile(r"\b(sign|signage|poster|headline|banner|logo|label|newspaper|"
+                          r"letters|words|text|slogan|caption|title)\b", re.I)
+    for r, canh in P._KHAI_NIEM:
+        re.compile(r)                                   # biểu thức phải dịch được
+        hoa = [w for w in canh.split() if w[:1].isupper()]
+        assert not hoa, f"cảnh có từ viết HOA (tên riêng): {hoa} trong {canh!r}"
+        assert not _MOI_CHU.search(canh), f"cảnh mời mô hình vẽ CHỮ: {canh!r}"
+        assert len(canh.split()) >= 6, f"cảnh quá chung chung: {canh!r}"
+    # ── CHẶN TRÊN BỘ CÂU CỐ ĐỊNH, BÁO CÁO TRÊN DỮ LIỆU SỐNG  (8/9/2026) ───────────────
+    # Cổng này đỏ BA LẦN trong một đêm, lần nào cũng vì mẫu đo trượt sang bộ mới và chủ thể
+    # mới đẻ ra cách diễn đạt mới. Mỗi lần em lại nới bảng — đúng bẫy §13.9 (*"danh sách
+    # ngoại lệ là danh sách vô hạn"*), lần này áp vào chính em. Tiếng Anh không phủ hết được.
+    #
+    # Và một cổng CHẶN đỏ ngẫu nhiên theo dữ liệu mới thì chặn cả việc đẩy mã — ngược hẳn với
+    # dây chuyền chạy mượt. §13.23: mỗi cổng phải trả lời *"nếu chỉ sai mỗi chỗ này thì có
+    # đáng chặn không?"*. Ở đây: KHÔNG — nhịp không khớp khái niệm vẫn có nền trung tính đàng
+    # hoàng, sản phẩm không hỏng.
+    #
+    # Nên tách làm hai: CHẶN trên một bộ câu CỐ ĐỊNH (chứng minh cơ chế còn sống và bắt được
+    # hồi quy khi ai đó phá bảng), và BÁO CÁO độ phủ trên dữ liệu sống để còn biết mà nới.
+    mau = [
+        ("the court filed a lawsuit against the firm", True),
+        ("the airline ceased operations and entered bankruptcy", True),
+        ("shares fell after the market opened", True),
+        ("regulators in congress opened an investigation", True),
+        ("an internal document leak showed the harms", True),
+        ("the company was renamed the following year", True),
+        ("let us do this properly so you can follow it", False),
+    ]
+    for cau_thu, phai in mau:
+        co = any(re.search(r, cau_thu) for r, _ in P._KHAI_NIEM)
+        assert co == phai, f"bộ câu cố định: «{cau_thu[:44]}» -> {co}, cần {phai}"
+
+    # BÁO CÁO (không chặn) — độ phủ trên câu nội dung của các bản dài mới nhất
+    import glob, json, io as _io, vi_sao as _VS
+    _DAN = re.compile(r"\b(let us|let's|you own|you have seen|remember|nobody\s+\w*\s*repeats|"
+                      r"came back|work it out|the shape of it|so you understand|we measured|"
+                      r"answer that question|the last place on earth|that part of|"
+                      r"tell someone tomorrow|here is the honest version|what replaced|"
+                      r"we.ll explain|is rarely mentioned|he did it to)\b", re.I)
+    cau = []
+    for f in sorted(glob.glob("out/v11L_*_0*.json"))[-6:]:
+        try:
+            d = json.load(_io.open(f, encoding="utf-8"))
+        except Exception:
+            continue
+        luot = [str((x or {}).get("nar") or "") for x in (d.get("luot") or [])]
+        if luot and not _VS.hop_dinh_dang(" ".join(luot[:3])):
+            continue
+        cau += luot
+    nd = [c for c in cau if len(c) > 20 and not _DAN.search(c)]
+    if nd:
+        hit = sum(1 for c in nd if any(re.search(r, c.lower()) for r, _ in P._KHAI_NIEM))
+        print(f"      ℹ️ phủ khái niệm trên dữ liệu sống: {hit}/{len(nd)} "
+              f"({hit * 100 // len(nd)}%) — số này BÁO CÁO, không chặn")
 
 
 def t_lap_gan_so_gan_bang():
