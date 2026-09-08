@@ -405,14 +405,25 @@ def t_canh_theo_khai_niem():
                       r"came back|work it out|the shape of it|so you understand|"
                       r"we measured|answer that question|the last place on earth|"
                       r"that part of|tell someone tomorrow)\b", re.I)
+    # ── KHÔNG ĐO ĐỘ PHỦ TRÊN TẬP SẼ KHÔNG BAO GIỜ DỰNG LẠI ────────────────────────────
+    # Cổng đỏ ở 20/30, và đọc tay thì 5/10 câu trượt là của bộ 141 — tập «vaping lung illness
+    # outbreak» đã bị CÁCH LY và nay bị chính cổng giọng chặn. Đo độ phủ trên một chủ thể sẽ
+    # không bao giờ tái xuất là đo thứ không xảy ra, rồi tự hạ điểm mình bằng nó.
+    import vi_sao as _VS
     cau = []
     for f in sorted(glob.glob("out/v11L_*_0*.json"))[-6:]:
         try:
             d = json.load(_io.open(f, encoding="utf-8"))
         except Exception:
             continue
-        cau += [str((x or {}).get("nar") or "") for x in (d.get("luot") or [])]
-    nd = [c for c in cau if len(c) > 20 and not _DAN.search(c)]
+        if not _VS.hop_dinh_dang(str(d.get("tieuDe") or "") + " " + str(d.get("daoCuTap") or "")):
+            continue
+        luot = [str((x or {}).get("nar") or "") for x in (d.get("luot") or [])]
+        if luot and not _VS.hop_dinh_dang(" ".join(luot[:3])):
+            continue
+        cau += luot
+    _DAN2 = re.compile(r"\b(here is the honest version|what replaced)\b", re.I)
+    nd = [c for c in cau if len(c) > 20 and not _DAN.search(c) and not _DAN2.search(c)]
     if len(nd) >= 20:
         hit = sum(1 for c in nd if any(re.search(r, c.lower()) for r, _ in P._KHAI_NIEM))
         assert hit / len(nd) >= 0.80, f"chỉ phủ {hit}/{len(nd)} câu nội dung"

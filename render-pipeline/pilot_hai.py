@@ -2313,7 +2313,8 @@ _KHAI_NIEM = (
      "a cleared office with cardboard archive boxes stacked by an empty desk"),
     (r"\b(merger|merged|acquisition|acquired|takeover|buyout)\w*",
      "two long boardroom tables pushed together, one chair left between them"),
-    (r"\b(election|minister|parliament|government|regulator|ministry|senate)\w*",
+    (r"\b(election|minister|parliament|government|regulator|ministry|senate|"
+     r"congress|lawmaker|legislat|hearing|testimon)\w*",
      "a row of microphones on an empty podium under bright lights"),
     (r"\b(shares?|stock|market|trading|listed|ipo|shareholder)\w*",
      "a wall of green and red price boards above an empty trading desk"),
@@ -2388,6 +2389,13 @@ _KHAI_NIEM = (
      "a bound report open flat beside a pencil and a stack of loose pages"),
     (r"\b(exit|withdrew|withdraw|pulled\s+out|sold\s+its|stake|divest|left\s+the)\w*",
      "a coat missing from a rack of empty hangers by a door"),
+    # ── BA KHÁI NIỆM RÚT TỪ CHÍNH CÂU TRƯỢT CỦA BỘ 143 (§13.21 — đọc tay trước khi nới) ──
+    (r"\b(leak|leaked|internal\s+document|memo|whistle|disclos)\w*",
+     "a manila folder half open with loose pages sliding out onto a desk"),
+    (r"\b(feature|product|rollout|launch\w*\s+of|version|update|platform|app\b)\w*",
+     "a pinboard of paper wireframe sketches with one card pulled aside"),
+    (r"\b(moderat|harmful|radicali|misinformation|content|amplif|algorithm)\w*",
+     "a queue of identical sealed envelopes on a conveyor with one tipped over"),
 )
 
 # ── CÂU DẪN KHÔNG CÓ GÌ CỤ THỂ ĐỂ VẼ — NHƯNG VẪN PHẢI TRÔNG KHÁC NHAU  (8/9/2026) ──────
