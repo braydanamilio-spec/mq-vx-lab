@@ -100,6 +100,26 @@ def tong_ket() -> dict:
     return dict(_LOG)
 
 
+def census_cf() -> str:
+    """`bao nhiêu tài khoản CF còn dùng được / tổng hồ` — một con số cần MẪU SỐ (§15.2).
+
+    Log lượt PHIM v10 lúc 22:59 UTC in `'CF cạn hạn mức': 39` rồi dừng ở đó. 39 là số LƯỢT bị
+    từ chối, không phải số tài khoản chết — nên nó không phân biệt được "hồ 121 tài khoản còn
+    khoẻ, gặp 39 lần từ chối rải rác" với "hồ chỉ còn 3 tài khoản sống". Hai điều ấy dẫn tới
+    hai hành động khác hẳn nhau: một bên chờ mốc hồi 00:00 UTC, một bên phải xét lại ai đang
+    tiêu hồ (§16.5).
+
+    Phép đếm ĐÃ CÓ SẴN là `suc_khoe()` — nó trả đúng `(còn sống, tổng)` và chưa nơi nào in ra.
+    §13.1 lần thứ mười: trước khi viết cơ chế mới, hỏi *"cái gì CHẠY nó?"*. Ở đây câu trả lời
+    là "không ai", và thiếu đúng một dòng in.
+    """
+    try:
+        song, tong = suc_khoe()
+        return f"CF {song}/{tong} tài khoản còn dùng được"
+    except Exception as e:
+        return f"CF: chưa đếm được hồ ({str(e)[:30]})"
+
+
 # ══ HỒ KHOÁ ══════════════════════════════════════════════════════════════════════════════════
 # ══ TRẦN ẢNH CỦA MỘT LƯỢT CHẠY ═══════════════════════════════════════════════════════════════
 # Hồ CF là tài nguyên DÙNG CHUNG giữa 18 luồng (§13.7). Không có trần thì luồng chạy sớm ăn

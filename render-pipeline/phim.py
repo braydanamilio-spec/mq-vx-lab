@@ -386,7 +386,7 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
             n["anh"] = p
         co = sum(1 for n in nhip if n.get("anh"))
         print(f"   🖼 {co}/{len(nhip)} cảnh có ảnh AI · {time.time()-t0:.0f}s · "
-              f"{A.tong_ket()}")
+              f"{A.tong_ket()} · {A.census_cf()}")
         # ── KHÔNG MƯỢN ẢNH. MỘT NHỊP MỘT ẢNH RIÊNG, HOẶC BỎ TẬP.  (6/9/2026) ──────────
         # Anh: *"ko lấy ảnh lung tung là giảm chất lượng videos rác em nha."*
         #
