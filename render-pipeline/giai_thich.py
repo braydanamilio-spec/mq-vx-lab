@@ -6832,6 +6832,43 @@ _NGOI_HAI = {
 }
 
 
+# ── ĐỔI NGÔI BẰNG QUY LUẬT, KHÔNG BẰNG DANH SÁCH  (8/9/2026) ───────────────────────────
+# `_NGOI_HAI` khớp NGUYÊN VĂN 4 câu, trong khi hồ câu nối thật là `BIEN_THE` 611 câu +
+# `BIEN_THE_THEM` 381 câu. Đo trên 30 bản dài đã dựng: bảng ấy khớp **đúng 1 câu trên cả 30
+# tập** — một cơ chế tồn tại mà gần như chưa bao giờ chạy (§15.12), và đúng §13.9: liệt kê
+# ngoại lệ thay vì nắm quy luật sinh ra chúng.
+#
+# Quy luật chỉ áp cho câu NỐI (không mang dữ kiện), nên nó không bao giờ chạm vào một con số
+# — ràng buộc cứng "AI/máy không bao giờ cấp một con số" giữ nguyên.
+#
+# SỐ ĐO THẬT, ghi ra để phiên sau khỏi tin nhầm: phủ 1/30 -> 6/30 tập có câu đổi được, còn
+# ĐIỂM CUỐI (bản dài đạt ≥2 lượt nói với người xem) chỉ 26/30 -> 27/30 — **nằm trong nhiễu**
+# ở cỡ mẫu 30 (§13.26). Ship vì nó thay một cơ chế chết bằng một cơ chế chạy, tốn 0 lượt gọi
+# AI, và 7 câu nó sinh ra đã được ĐỌC TAY hết (§13.21). Không ship vì tin nó nâng được điểm.
+#
+# CÒN TRƯỢT, chưa giải được: 3/30 tập (0137 · 0138 · 0140) chỉ có 1 lượt mang "you" và không
+# câu nối nào khớp quy luật. Chỗ chắc chắn chữa được là câu CHỐT — nó luôn là một mệnh lệnh
+# nói thẳng với người xem («Tell someone tomorrow that…») và chỉ thiếu đại từ — nhưng câu ấy
+# do AI viết nên chưa có phép biến đổi nào chắc đọc xuôi. Ghi vào đây thay vì đoán (§13.22).
+_DUOI_NGOI = [
+    (re.compile(r"^(so )?let(’|')?s (do|put|work|run|walk|break) .*\.$", re.I), ", so you can see it."),
+    (re.compile(r"^(so )?let us (do|put|work|run|walk|break) .*\.$", re.I), ", so you can see it."),
+    (re.compile(r"^time to (do|run|check|work) .*\.$", re.I), ", so you can judge it."),
+    (re.compile(r"^we are going to .*\.$", re.I), ", so you can follow it."),
+    (re.compile(r"^and that is (the shape of it|it)\.$", re.I), " — that is what it means for you."),
+    (re.compile(r"^here is (the|what) .*\.$", re.I), ", the version you need."),
+]
+
+
+def _doi_ngoi_luat(cau: str) -> str:
+    """Câu nối -> câu nối nói với người xem. Rỗng nếu không khớp quy luật nào."""
+    c = (cau or "").strip()
+    for rx, duoi in _DUOI_NGOI:
+        if rx.match(c):
+            return c[:-1] + duoi
+    return ""
+
+
 def _du_nguoi_xem(nhip: list, can: int = 2) -> list:
     """Đảm bảo ít nhất `can` lượt có "you/your" — bằng cách ĐỔI NGÔI câu nối, không thêm câu.
 
@@ -6861,7 +6898,7 @@ def _du_nguoi_xem(nhip: list, can: int = 2) -> list:
         if dem >= can:
             break
         l = str(n.get("loi") or "").strip()
-        moi = _NGOI_HAI.get(l)
+        moi = _NGOI_HAI.get(l) or _doi_ngoi_luat(l)
         if not moi or _co.search(l):
             continue
         _g = _k(moi)
