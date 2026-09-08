@@ -2013,8 +2013,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # Thẻ ảnh thật chỉ hiện ở BA NHỊP ĐẦU — chỗ người xem cần nhận ra ngay. Không
         # hiện suốt tập: một thẻ đứng nguyên từ đầu tới cuối đúng là thứ anh đã chê ở
         # biểu tượng máy ảnh ("sao nó gắn trên videos từ đầu tới cuối vậy").
-        "logoTap": LOGO_TAP,
-        "logoNhip": [0, 1, 2],
+        "anhChens": chon_the_anh(loi, CHU_THE_TAP, LOGO_TAP, ANH_THAT),
         "anhNens": anh_nens, "soLieu": so_lieu,
         # Kênh GIẢI THÍCH tắt đồ nghề hài: thẻ hook thành dải sát đáy (không đè mặt), và bỏ
         # chữ nổ + cú rung ở câu chốt — engine bắn hiệu ứng punchline vào một câu kết trầm thì
@@ -2675,6 +2674,49 @@ def _chot_so(job: str, trang_thai: str, **them) -> None:
         FB.update_job(job, status=trang_thai, **them)
     except Exception as e:
         print(f"   ⚠ không chốt được bản ghi job ({str(e)[:44]})")
+
+
+# ── THẺ ẢNH THẬT CHỌN THEO TỪNG NHỊP  (anh, 8/9/2026) ──────────────────────────────────
+# Anh: *"nhớ phù hợp đúng kịch bản nội dung; nào không có thì dùng ảnh liên quan thực tế nếu
+# không có logo; dùng vừa logo vừa ảnh thực tế sao cho phù hợp"*.
+#
+# Bản trước gắn MỘT ảnh cố định cho ba nhịp đầu — sai đúng điều anh vừa dặn: nhịp 3 có thể
+# đang nói về một chiếc máy bay mà thẻ vẫn là logo, hoặc ngược lại.
+#
+# Ba luật, theo đúng thứ tự ưu tiên:
+#   1. Nhịp GỌI TÊN chủ thể  -> LOGO. Đó là lúc người xem cần buộc cái tên vào một hình.
+#   2. Nhịp nói về vật cụ thể -> ẢNH THẬT (trụ sở, máy bay, sản phẩm), xoay vòng để không lặp.
+#   3. Không hợp cái nào      -> ĐỂ TRỐNG. Thà không có thẻ còn hơn dán một thẻ nói chuyện khác
+#      — đúng lỗi §17.5 mà em đã trả giá: khung nói một đằng, lời nói một nẻo.
+#
+# Và TRẦN 40% số nhịp: thẻ hiện suốt tập thì mắt thôi nhìn nó, lại che nền vừa vẽ. Anh đã chê
+# đúng chuyện này ở biểu tượng máy ảnh ("sao nó gắn trên videos từ đầu tới cuối vậy").
+def chon_the_anh(loi: list, chu_the: str, logo: str, anh_that: list) -> list:
+    ten = [w.lower() for w in re.findall(r"[A-Za-z0-9][\w&.-]{2,}", thuc_the(chu_the) or chu_the)]
+    ten = [w for w in ten if w not in _BO_NEN]
+    ra = [""] * len(loi)
+    if not (logo or anh_that):
+        return ra
+    tran = max(1, int(len(loi) * 0.40))
+    kho = list(anh_that or [])
+    dung = 0
+    for i, l in enumerate(loi):
+        if dung >= tran:
+            break
+        t = str(l or "").lower()
+        goi_ten = any(w in t for w in ten) if ten else False
+        co_vat = bool(next((1 for r, _ in _KHAI_NIEM if re.search(r, t)), 0))
+        if goi_ten and logo:
+            ra[i] = logo
+        elif co_vat and kho:
+            ra[i] = kho.pop(0)
+        else:
+            continue
+        dung += 1
+    # Nhịp mở phải có thứ nhận ra ngay: nếu chưa nhịp nào được gắn thì ép nhịp 0.
+    if logo and not any(ra):
+        ra[0] = logo
+    return ra
 
 
 def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:

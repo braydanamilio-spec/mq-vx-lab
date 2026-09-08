@@ -303,10 +303,29 @@ def t_logo_wikidata():
     tsx = _io.open(os.path.join(os.path.dirname(os.path.abspath(L.__file__)), "..",
                                 "engine-remotion", "src", "comic", "KichComic.tsx"),
                    encoding="utf-8").read()
-    assert "logoTap" in tsx and "logoNhip" in tsx, "engine chưa nhận prop logo"
+    assert "anhChens" in tsx, "engine chưa nhận prop thẻ ảnh"
     import pilot_hai as P
     ma = _io.open(P.__file__, encoding="utf-8").read()
-    assert '"logoTap": LOGO_TAP' in ma, "pipeline chưa gửi logo sang engine"
+    assert '"anhChens": chon_the_anh(' in ma, "pipeline chưa gửi thẻ ảnh sang engine"
+
+    # ── THẺ PHẢI HỢP CÂU ĐANG NÓI, KHÔNG PHẢI MỘT ẢNH CỐ ĐỊNH  (anh, 8/9/2026) ────────
+    # Anh: *"nhớ phù hợp đúng kịch bản nội dung; nào không có thì dùng ảnh liên quan thực tế
+    # nếu không có logo; dùng vừa logo vừa ảnh thực tế sao cho phù hợp"*. Bản trước gắn MỘT
+    # ảnh cho ba nhịp đầu — nhịp 3 có thể đang nói về máy bay mà thẻ vẫn là logo (§17.5).
+    loi = ["Facebook was everywhere, then it wasn't.",
+           "Let us do this properly, so you can follow it.",
+           "In 2021 an internal document leak showed harms.",
+           "Lawmakers tried to muddy the waters in Congress.",
+           "That is the part nobody repeats."]
+    r = P.chon_the_anh(loi, "2021 Facebook leak", "anh_pd/LOGO.png", ["anh_pd/a.jpg"])
+    assert r[0] == "anh_pd/LOGO.png", "nhịp GỌI TÊN phải dùng logo"
+    assert r[1] == "" and r[4] == "", "câu dẫn không được gắn thẻ (khung nói một đằng)"
+    assert r[2] == "anh_pd/a.jpg", "nhịp nói vật cụ thể phải dùng ảnh thật"
+    assert sum(1 for x in r if x) <= max(1, int(len(loi) * 0.4)), "vượt trần 40% số nhịp"
+    # không có logo -> vẫn phải dùng được ảnh thật
+    assert any(P.chon_the_anh(loi, "X", "", ["anh_pd/a.jpg"])), "không có logo thì bỏ luôn ảnh"
+    # không có gì -> để trống, không được bịa
+    assert not any(P.chon_the_anh(loi, "X", "", [])), "không có tư liệu mà vẫn gắn thẻ"
 
 
 def t_user_agent_co_lien_he():

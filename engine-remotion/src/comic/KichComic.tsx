@@ -802,8 +802,10 @@ export type PropsComic = {
   // `logoNhip` = những nhịp được phép hiện nó. Không hiện suốt tập: một thẻ đứng nguyên từ
   // đầu tới cuối chính là thứ anh đã chê ở biểu tượng máy ảnh ("sao nó gắn trên videos từ
   // đầu tới cuối vậy"). Hiện ở khúc mở — chỗ người xem cần nhận ra ngay — rồi thôi.
-  logoTap?: string;
-  logoNhip?: number[];
+  // `anhChens[i]` = ảnh thật cho nhịp i ("" = nhịp ấy không có thẻ). MỘT MẢNG THEO NHỊP chứ
+  // không phải một ảnh + danh sách nhịp: anh dặn thẻ phải HỢP CÂU ĐANG NÓI, mà câu nào hợp
+  // logo, câu nào hợp ảnh trụ sở/máy bay thì chỉ khâu viết mới biết — engine chỉ hiển thị.
+  anhChens?: string[];
   // Lớp số liệu theo TỪNG panel. Bỏ trống -> không vẽ gì, nên bộ hài 20 kênh không đổi.
   soLieu?: (LopComic | null)[];
   hookDuoi?: boolean;   // thẻ hook thành dải sát đáy thay vì biển giữa khung
@@ -836,7 +838,7 @@ export const KichComic: React.FC<PropsComic> = ({
   guViTri = "giua", guKen = "vao", guNen = "moc",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
   sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
-  logoTap, logoNhip,
+  anhChens,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
@@ -889,7 +891,7 @@ export const KichComic: React.FC<PropsComic> = ({
            hai={typeof (Lx as any).canh === "boolean" ? (Lx as any).canh : coCanh(ix, luot.length, hat)}
            dangNoi={dangNoi} noi={noi}
            anhNen={(anhNens && anhNens[ix]) || anhNen}
-           logo={logoTap && (!logoNhip || logoNhip.includes(ix)) ? logoTap : undefined}
+           logo={(anhChens && anhChens[ix]) || undefined}
            soLieu={(soLieu && soLieu[ix]) || null} haiHuoc={haiHuoc}
            sang={(sangs && sangs[ix]) || sang}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLeCua(ix, luot.length, hat, tiLe)}
