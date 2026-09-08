@@ -460,6 +460,17 @@ def t_prompt_nen_khong_ten_rieng():
     # mà bản dài đi tới 32 nhịp — nhịp i và i+24 trùng CẢ HAI trục, và nếu chúng cùng khái
     # niệm nữa thì ra CÙNG một prompt, tức đệm trả về CÙNG một tệp. Đó đúng là lỗi "nền
     # trùng tệp" đang có ở 30/120 clip cũ. 7 vật cho lcm(8,7) = 56, vượt hẳn 32.
+    # Câu DẪN không có gì cụ thể để vẽ, nhưng vẫn phải TRÔNG KHÁC NHAU: bộ 137 có 6/13 nhịp
+    # rơi về nền chung dùng đúng một cảnh, và chính chúng kéo chỉ số khác biệt xuống 25,6.
+    import chu_de as _C2
+    nm2 = getattr(_C2, "NEN_CUA_HINH_MAU", {})
+    th2 = [k for k in nm2 if k not in P._NEN_TRUNG_TINH]
+    assert not th2, f"hình mẫu chưa có bố cục trung tính: {th2}"
+    it2 = [k for k, v in P._NEN_TRUNG_TINH.items() if len(v) < 7]
+    assert not it2, f"hình mẫu có dưới 7 bố cục trung tính: {it2}"
+    hoa2 = [w for v in P._NEN_TRUNG_TINH.values() for c in v
+            for w in c.split() if w[:1].isupper()]
+    assert not hoa2, f"bố cục trung tính có từ viết HOA: {hoa2[:5]}"
     from math import lcm as _lcm
     chu_ky = _lcm(len(P._KHUON_NEN), min(len(v) for v in P._VAT_HINH_MAU.values()))
     assert chu_ky > 32, (f"hai vòng quay lặp sau {chu_ky} nhịp, mà bản dài tới 32 — "

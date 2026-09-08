@@ -1116,7 +1116,9 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         if _su:
             viec.append((i, f"{_su}. {_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
         else:
-            viec.append((i, f"{_neo}{_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
+            _tt = _NEN_TRUNG_TINH.get(DAO_CU_TAP or "", ())
+            _nen0 = f"{_tt[i % len(_tt)]}, " if _tt else _neo
+            viec.append((i, f"{_nen0}{_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:
@@ -2381,6 +2383,74 @@ _KHAI_NIEM = (
     (r"\b(founded|origin|began|early\s+years|decades?|history|era)\w*",
      "a wooden drawer of index cards pulled open under a desk lamp"),
 )
+
+# ── CÂU DẪN KHÔNG CÓ GÌ CỤ THỂ ĐỂ VẼ — NHƯNG VẪN PHẢI TRÔNG KHÁC NHAU  (8/9/2026) ──────
+# Đo bộ 137 (bản đầu của bảng khái niệm): khác biệt TB 25,6 — qua sàn 24 nhưng còn xa mức
+# đường cũ (33,3). Truy ra: 13 nhịp chỉ khớp 5 khái niệm, **6 nhịp rơi về nền chung**, và
+# sáu nhịp ấy dùng đúng MỘT cảnh xoay qua 5 chữ nơi chốn — chúng kéo cả chỉ số xuống.
+#
+# Ép một cảnh cụ thể vào câu dẫn là sai (§17.5, khung nói một đằng lời nói một nẻo). Nhưng
+# "không cụ thể" KHÔNG có nghĩa là "giống nhau": bảy BỐ CỤC trung tính của cùng thế giới —
+# cầu thang, hành lang kính, sảnh thang máy, ô cửa sổ, đảo bàn, lan can lửng, lối ra — nhìn
+# ra bảy khung khác hẳn nhau mà không cãi bất kỳ câu nào. Bảy để `lcm(8,7) = 56 > 32` (§13.13).
+_NEN_TRUNG_TINH = {
+    "dong_xu":     ("a stairwell landing with a metal handrail", "a glass-walled corridor",
+                    "a lift lobby with brushed doors", "a tall window bay with blinds half open",
+                    "an island of desks seen from one end", "a mezzanine rail over an open floor",
+                    "a doorway onto a bare vestibule"),
+    "may_bay":     ("a jetway corridor curving away", "a window wall onto an empty apron",
+                    "a stair truck parked beside a fence", "a baggage belt bend",
+                    "a covered walkway between piers", "a rooftop rail over a taxiway",
+                    "a service door onto the ramp"),
+    "may_tinh":    ("a cable riser between two floors", "a glass partition beside a hot aisle",
+                    "a lift lobby with brushed doors", "a window bay above a raised floor",
+                    "an island of workbenches", "a mezzanine rail over a machine room",
+                    "a doorway onto a cable vault"),
+    "cua_hang":    ("a stockroom stair with a rail", "a glass shopfront from inside",
+                    "a service corridor behind the tills", "a window bay over the street",
+                    "an island display seen end on", "a mezzanine rail above the floor",
+                    "a loading door onto a bare yard"),
+    "may_anh":     ("a darkroom stair with a red rail", "a glazed studio partition",
+                    "a corridor of numbered doors", "a north-facing window bay",
+                    "an island bench seen end on", "a gallery rail above a set",
+                    "a doorway onto a props store"),
+    "bang_video":  ("a stair to a control gallery", "a glazed booth partition",
+                    "a corridor of cable ports", "a window bay above a studio floor",
+                    "an island of editing benches", "a rail over a scenery dock",
+                    "a doorway onto a tape store"),
+    "ten_lua":     ("a gantry stair with open treads", "a blast-glass observation panel",
+                    "a service corridor of conduit", "a window bay onto a bare pad",
+                    "an island of consoles", "a rail above an assembly bay",
+                    "a doorway onto a clean corridor"),
+    "dien_thoai":  ("a stair between production floors", "a glazed line partition",
+                    "a corridor of parts lockers", "a window bay above the line",
+                    "an island of test benches", "a rail over a packing floor",
+                    "a doorway onto a component store"),
+    "xe":          ("a stair to a parts mezzanine", "a glazed workshop office",
+                    "a corridor of roller doors", "a window bay above the bays",
+                    "an island bench between two lifts", "a rail over a service pit",
+                    "a doorway onto an empty forecourt"),
+    "lo_phan_ung": ("a steel stair between decks", "a glazed control-room panel",
+                    "a corridor of pipe runs", "a window bay over a turbine floor",
+                    "an island of gauge panels", "a walkway rail above the hall",
+                    "a doorway onto a plant corridor"),
+    "ong_nghiem":  ("a stair with a wipe-clean rail", "a glazed laboratory partition",
+                    "a corridor of numbered doors", "a window bay above a bench run",
+                    "an island bench with services", "a rail over a preparation room",
+                    "a doorway onto a sterile lobby"),
+    "tau_thuy":    ("a quayside stair with a rail", "a glazed harbour office",
+                    "a corridor between warehouse bays", "a window bay onto still water",
+                    "an island of mooring bollards", "a rail along a loading deck",
+                    "a doorway onto an empty wharf"),
+    "toa_nha":     ("a stairwell landing with a handrail", "a glass-walled corridor",
+                    "a lift lobby with brushed doors", "a tall window bay",
+                    "an island of seating", "a mezzanine rail over an atrium",
+                    "a doorway onto a bare vestibule"),
+    "sach":        ("a stair between shelf decks", "a glazed reading-room partition",
+                    "a corridor of closed stacks", "a window bay above long tables",
+                    "an island of reading desks", "a gallery rail over the floor",
+                    "a doorway onto a binding room"),
+}
 
 _DA_TIEU: set = set()
 
