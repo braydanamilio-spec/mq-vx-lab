@@ -131,7 +131,14 @@ _KHONG_HOP = re.compile(
     r"murder\w*|homicid\w*|manslaughter|assassinat\w*|"
     r"terror\w*|hijack\w*|hostage\w*|kidnap\w*|"
     r"casualt\w*|fatalit\w*|massacr\w*|"
-    r"famine\w*|epidemic\w*|pandemic\w*|plague\w*|"
+    # `outbreak` · `illness` · `disease` thiếu ở bản trước, và bộ 141 đã dựng
+    # «2019–2020 vaping lung illness outbreak» (68 người chết) thành 4 clip vì thế.
+    # Cùng họ với `hijack` trượt `hijacking`: danh sách nêu vài chữ của MỘT khái niệm
+    # rồi tưởng đã phủ hết khái niệm ấy (§13.20 — một danh sách chuỗi con không bắt
+    # được ngôn ngữ).
+    r"famine\w*|epidemic\w*|pandemic\w*|plague\w*|outbreak\w*|"
+    r"illness\w*|disease\w*|infection\w*|hospitali[sz]\w*|"
+    r"overdose\w*|contaminat\w*|toxic\w*|exposure\s+to\w*|"
     r"traffick\w*|slaver\w*|torture\w*|execution\w*|"
     # gốc MƠ HỒ -> liệt kê đúng dạng ("shoot" còn nghĩa quay phim, "bomb" còn nghĩa thất bại,
     # "abuse" còn nghĩa lạm dụng quyền, "attack" còn nghĩa cạnh tranh)

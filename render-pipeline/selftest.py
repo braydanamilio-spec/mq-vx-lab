@@ -656,11 +656,20 @@ def t_cong_giong_bao_luc():
     xau = ["1973 Rome airport attacks and hijacking", "Munich massacres", "Nazi atrocities",
            "September 11 attacks", "Terrorism in Italy", "Bombings of 1974", "Mass shootings",
            "Civilian casualties", "Fatalities at sea", "Assassinated leaders", "Child abuses",
-           "Lockerbie bombing", "1971 Iraq poison grain disaster", "Tenerife airport disaster"]
+           "Lockerbie bombing", "1971 Iraq poison grain disaster", "Tenerife airport disaster",
+           # Bộ 141 đã DỰNG «2019–2020 vaping lung illness outbreak» (68 người chết) thành
+           # 4 clip: bảng cũ có `epidemic|pandemic|plague` mà thiếu `outbreak`, `illness`,
+           # `disease`. Cùng họ `hijack` trượt `hijacking` — nêu vài chữ của MỘT khái niệm
+           # rồi tưởng đã phủ hết khái niệm ấy (§13.20).
+           "2019-2020 vaping lung illness outbreak", "Cholera outbreak",
+           "Legionnaires disease outbreak", "Opioid epidemic",
+           "Contaminated blood scandal", "Mass hospitalisations", "Heroin overdoses"]
     lot = [t for t in xau if V.hop_dinh_dang(t)]
     assert not lot, f"cổng giọng BỎ LỌT chủ thể có thương vong: {lot[:3]}"
     tot = ["Eastman Kodak", "Concorde", "Air Berlin", "ATA Airlines", "Polaroid", "Betamax",
-           "Pan Am", "Blockbuster", "Segway", "Napster", "MoviePass", "Air California"]
+           "Pan Am", "Blockbuster", "Segway", "Napster", "MoviePass", "Air California",
+           "Boston-Maine Airways", "1MDB scandal", "2003 mutual fund scandal",
+           "Alaska International Air", "Airlift International", "Toyota vehicle recalls"]
     oan = [t for t in tot if not V.hop_dinh_dang(t)]
     assert not oan, f"cổng giọng BẮT OAN chủ thể lành: {oan}"
     # thân bài: hai trật tự từ của con số thương vong, và một câu SẠCH có số
