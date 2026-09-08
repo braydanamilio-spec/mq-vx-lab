@@ -526,10 +526,20 @@ def t_nhip_wiki_tu_noi_khi_bi_chan():
         # nhất không có lượt 429 nào — bộ sàng nghỉ giữa các vòng nên không có lượt gọi nào
         # để mà rút, và giá trị cũ nằm lại vĩnh viễn. Cùng họ §15.19: cơ chế phòng thủ kẹt ở
         # mức cao nhất thôi bảo vệ và chỉ còn làm chậm (ở đây là cắt sản lượng 11 lần).
-        open(C._LUC_TEP, "w").write(f"{time.time() - 900} {C._NHIP_TRAN}")
-        C._cho_nhip()
-        _, n4 = C._doc_so_tep(open(C._LUC_TEP))
-        assert n4 < C._NHIP_TRAN / 3, f"im 15 phút mà nhịp vẫn {n4} (trần {C._NHIP_TRAN})"
+        # Chốt này ban đầu ghi "im 15 phút thì nhịp phải < trần/3", và nó ĐỎ sau khi em cố ý
+        # rút CHẬM lại (nửa đời 300s -> 900s) để lượt dựng kế không phải học lại hàng rào từ
+        # đầu. Con số 15 phút là hằng số của nhịp rút CŨ, không phải của điều cần canh.
+        # Điều cần canh là: im ĐỦ LÂU thì phải về gần sàn — nên đo ở một mốc đủ lâu, và đo
+        # thêm rằng nó GIẢM ĐƠN ĐIỆU theo thời gian im (§13.6: khi đổi một hàm, đi soát mọi
+        # hằng số mà hàm ấy từng nuôi).
+        _truoc = None
+        for _im in (300, 900, 1800, 3600):
+            open(C._LUC_TEP, "w").write(f"{time.time() - _im} {C._NHIP_TRAN}")
+            C._cho_nhip()
+            _, _n = C._doc_so_tep(open(C._LUC_TEP))
+            assert _truoc is None or _n < _truoc, f"im lâu hơn mà nhịp không giảm: {_im}s"
+            _truoc = _n
+        assert _truoc < C.NHIP * 1.6, f"im một tiếng mà nhịp vẫn {_truoc} (sàn {C.NHIP})"
         # đang dùng liên tục thì KHÔNG được tự nới lỏng
         open(C._LUC_TEP, "w").write(f"{time.time()} {C._NHIP_TRAN}")
         _, n5 = C._doc_so_tep(open(C._LUC_TEP))
