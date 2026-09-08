@@ -1501,7 +1501,21 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
         # và `except` nuốt mất. Tầng này vì thế thêm được ĐÚNG 0 ảnh mà không báo gì (§15.2).
         try:
             import anh_tu_do as _ATD
-            _cm = _ATD.anh_cua(chu_the, toi_da=toi_da - len(ra), commons=True)
+            _cm = _ATD.anh_cua(chu_the, toi_da=(toi_da - len(ra)) * 3, commons=True)
+            # ── TẦNG COMMONS PHẢI KHỚP CỤM, KHÔNG KHỚP TỪ RỜI  (anh soi bộ 159, 8/9) ────
+            # Bộ «Midway Express» lấy về «Midway Pony Express station» (trạm xe ngựa ở Utah),
+            # «Midway Plaisance Map» (công viên Chicago) và một bản đồ hội chợ 1893 — 4/6 ảnh
+            # thật là chủ thể KHÁC. Đúng thứ anh gọi *"râu ông nọ cắm cằm bà kia"*.
+            #
+            # Ảnh của BÀI Wikipedia thì an toàn (người viết bài đã chọn), nên luật này chỉ áp
+            # cho tầng Commons — nơi phép tìm khớp theo TÊN. «Midway Express» gồm hai từ rất
+            # phổ biến, nên khớp từ RỜI sẽ trúng mọi thứ có "midway" hoặc "express" ở bất kỳ
+            # đâu. Đòi CỤM LIỀN thì «Midway Pony Express» trượt vì có "Pony" chen giữa.
+            _cum = " ".join((chu_the or "").lower().split())
+            if _cum:
+                _cm = [x for x in _cm
+                       if _cum in " ".join(str(x.get("ten", "")).lower()
+                                           .replace("file:", "").split())]
         except Exception as _e:
             print(f"   ⚠ tầng Commons hỏng ({type(_e).__name__}: {str(_e)[:44]})")
             _cm = []
