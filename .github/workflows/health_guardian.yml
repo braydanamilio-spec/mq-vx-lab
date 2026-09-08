@@ -8,7 +8,23 @@ name: MM0 Health Guardian (canh hệ thống mỗi giờ)
 
 on:
   schedule:
-    - cron: "7 * * * *"   # mỗi giờ, phút 07 (lệch nhịp render_cron để đỡ chồng burst đọc Firestore)
+    # ── BỐN MỐC MỖI GIỜ, VÌ GITHUB BỎ ~4/5 SỐ TICK  (đo 8/9/2026) ──────────────────────
+    # Khai `7 * * * *` là 24 mốc/ngày. Đo lượt chạy THẬT trong 48h: 09:34 · 04:26 · 23:27 ·
+    # 20:31 · 16:24 · 10:10 · 04:27 — tức ~5 lần/ngày, cách nhau 2–6 giờ. GitHub bỏ khoảng
+    # bốn phần năm số tick của repo này (§10.2 đã ghi đúng hiện tượng, đây là số đo cho
+    # chính workflow guardian).
+    #
+    # Hậu quả không phải "báo cáo thưa": guardian LÀ cái canh gác cho cron render. Nó chạy ở
+    # 1/5 nhịp thì khi render chết, có thể mất 5 giờ mới có ai bấm lại — và hôm nay đúng thế,
+    # dây chuyền đứng hơn 10 giờ.
+    #
+    # Bốn mốc lệch phút nhau: cùng tỉ lệ rớt thì số lần nổ thật tăng gấp bốn. Mỗi lượt ~30
+    # giây runner, mà repo PUBLIC nên Actions miễn phí (§17.12) — đây là chỗ mua được độ tin
+    # cậy gần như không mất gì. `concurrency` ở dưới đã chặn hai lượt guardian chồng nhau.
+    - cron: "7 * * * *"
+    - cron: "22 * * * *"
+    - cron: "37 * * * *"
+    - cron: "52 * * * *"
   workflow_dispatch:
     inputs:
       stale_hours: { description: "Ngưỡng coi job là treo (giờ) — để trống dùng mặc định 6", default: "" }
