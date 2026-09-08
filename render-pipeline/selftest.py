@@ -273,6 +273,38 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_luat_bo_cuc_nen_tap():
+    """Luật bố cục của `_nen_theo_tap` phải tự canh được — `kiem_nen` KHÔNG canh nổi nó.
+
+    Anh: *"cf chưa tận dụng để ép prompt tạo ra ảnh như ý muốn, xem lại prompt"*. Đo thành
+    phần prompt thật: 643 ký tự mà phần nói VẼ GÌ chỉ **19%**; 45% là luật bố cục, và trong đó
+    có hai câu đánh nhau với mục tiêu — *"anything pushed far to the left and right edges"* +
+    *"the centre of the frame is empty"*. Tức mình RA LỆNH đẩy hết đồ ra mép, để giữa trống;
+    thứ khiến người xem nhận ra bị đẩy ra rìa. Hai câu ấy đúng khi engine dán người VECTOR vào
+    GIỮA; anh đã cho người dẫn đứng 1/3 lệch một bên, nên chừa MỘT DẢI BÊN mới đúng (§12.5).
+
+    VÌ SAO CHỐT NẰM Ở ĐÂY chứ không ở `kiem_nen`: thử ngược cho thấy `kiem_nen` KHÔNG bắt được
+    khi phá luật trong `pilot_hai` — tệp còn dùng `SAN_NEN` ở đường vẽ kho nền nên được cấp
+    suất miễn cho CẢ TỆP, trong khi tệp nay có HAI đường prompt với HAI luật khác nhau. Cổng ở
+    mức TỆP không diễn đạt được điều đó (§15.19 — cổng không thể đỏ thì không phải cổng)."""
+    import pilot_hai as P
+    for ben, mo, dong in (("trai", "left", "right"), ("phai", "right", "left")):
+        t = P.san_nen_ben(ben)
+        assert "bottom third" in t, "mất mệnh lệnh SÀN — người sẽ lơ lửng (§7)"
+        assert "standing eye level" in t, "mất mệnh lệnh máy ngang tầm mắt"
+        assert f"the {mo} third of the frame is open" in t, f"{ben}: không chừa chỗ cho người"
+        assert f"stand together in the {dong} two thirds" in t, f"{ben}: đồ không tụ một phía"
+        # và KHÔNG được quay lại hai câu đã bỏ
+        assert "centre of the frame is empty" not in t, "luật cũ 'giữa trống' quay lại"
+        assert "pushed far to the left and right" not in t, "luật cũ 'dồn hai mép' quay lại"
+    # phong cách không được RA LỆNH làm mọi bề mặt trơn (đó là đặt hàng sự trống rỗng)
+    assert "blank and unmarked" not in P.GU_NEN, "GU_NEN còn ra lệnh làm bề mặt trơn"
+    # phần nói VẼ GÌ phải chiếm chỗ đáng kể, không bị luật nhấn chìm
+    su = P._KHAI_NIEM[0][1]
+    pr = f"{su}. {P._KHUON_NEN[0]}. {P.san_nen_ben('trai')}. {P.GU_NEN}"
+    assert len(su) / len(pr) > 0.05, "câu tả CẢNH bị luật bố cục nhấn chìm"
+
+
 def t_hoi_anh_bang_thuc_the():
     """Ảnh thật phải hỏi bằng TÊN THỰC THỂ, không bằng tên SỰ KIỆN.
 
@@ -3151,6 +3183,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("luật bố cục nền theo tập", t_luat_bo_cuc_nen_tap)
     check("hỏi ảnh thật bằng tên thực thể", t_hoi_anh_bang_thuc_the)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)

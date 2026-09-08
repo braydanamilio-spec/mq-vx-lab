@@ -25,13 +25,27 @@ GOC = os.path.dirname(os.path.abspath(__file__))
 MENH_LENH = {
     "sàn chiếm phần ba dưới": [r"bottom third", r"lower third"],
     "máy ngang tầm mắt":      [r"standing eye level", r"eye[- ]level"],
-    "giữa để trống":          [r"cent(?:er|re) of the frame (?:completely )?empty",
+    # ── CHỪA CHỖ CHO NGƯỜI: GIỮA hay MỘT BÊN, tuỳ engine đặt người ở đâu (8/9/2026) ──
+    # Hai mệnh lệnh cũ ("giữa để trống" · "đồ dồn hai mép") sinh ra khi engine dán nhân vật
+    # VECTOR vào GIỮA khung. Anh đã cho người dẫn đứng 1/3 và LỆCH HẲN MỘT BÊN, nên `pilot_hai`
+    # nay chừa MỘT DẢI BÊN và để đồ đạc đứng tụ ở hai phần ba còn lại.
+    #
+    # Vì sao phải sửa CỔNG chứ không chỉ sửa prompt: cổng vẫn báo xanh sau khi em đổi prompt —
+    # nó xanh vì `pilot_hai` còn `import SAN_NEN_VAT`, không phải vì prompt còn tuân luật. Một
+    # cổng in ra "đồ dồn hai mép · giữa trống" cho đường vẽ đã bỏ hai điều ấy là cổng NÓI DỐI,
+    # và lần sau nó sẽ không bắt được hồi quy thật (§12.8 — hỏng mà vẫn báo xanh).
+    #
+    # Điều CẦN canh không đổi: phải có MỘT vùng trống đủ rộng cho người đứng, và đồ đạc phải
+    # tụ lại chứ không rải khắp khung. Chấp nhận cả hai cách diễn đạt.
+    "chừa chỗ cho người":     [r"cent(?:er|re) of the frame (?:completely )?empty",
                                r"cent(?:er|re) of the frame is empty",
                                r"open space in the cent(?:er|re)",
-                               r"leaving the cent(?:er|re)"],
-    "đồ đạc dồn hai mép":     [r"pushed (?:far )?to the (?:far )?left and (?:far )?right",
+                               r"leaving the cent(?:er|re)",
+                               r"(?:left|right) third of the frame is open"],
+    "đồ đạc tụ một phía":     [r"pushed (?:far )?to the (?:far )?left and (?:far )?right",
                                r"against the left and right edges",
-                               r"at the (?:two |both )?side edges"],
+                               r"at the (?:two |both )?side edges",
+                               r"stand together in the (?:left|right) two thirds"],
 }
 
 # 1/9 — CẤM VIẾT NGHỊCH. FLUX không có negative prompt: mọi danh từ trong câu đều là thứ nó sẽ
@@ -107,7 +121,7 @@ def main() -> int:
             thieu_tong.append((t, thieu + [f"viết nghịch: {x}" for x in nghich]))
 
     if not thieu_tong:
-        print("\n✅ mọi đường vẽ nền: sàn liền mạch · ngang tầm mắt · đồ dồn hai mép · giữa trống")
+        print("\n✅ mọi đường vẽ nền: sàn liền mạch · ngang tầm mắt · đồ tụ một phía · chừa chỗ cho người")
         return 0
 
     print("\n❌ có đường vẽ nền thiếu mệnh lệnh — nhân vật sẽ lơ lửng ở đó.")

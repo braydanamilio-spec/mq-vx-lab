@@ -60,7 +60,7 @@ import phim_gu as GU                           # noqa: E402
 # Chữa bằng câu KHẲNG ĐỊNH tả bề mặt TRỐNG, không nhắc tới chữ.
 GU_NEN = ("Flat 2D cartoon background painting for an animated sitcom, clean vector-like "
           "shapes, soft even lighting, muted friendly palette, soft shadows only, "
-          "every surface blank and unmarked, plain smooth walls and panels.")
+          "surfaces painted in flat solid colour.")
 
 
 def ve_nen(de: str, phong: list, ks=None) -> int:
@@ -921,6 +921,7 @@ GU_DUNG = {
 DA_GHIM = False          # `bo_1_3` đã chọn chủ thể cho cả bộ — `mot_tap` không chọn lại
 NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
+BEN_DUNG = "trai"        # người dẫn đứng bên nào — nền chừa dải trống ĐÚNG bên ấy
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
 # Trần ảnh CF cho MỘT tập. Đặt ở đây chứ không ở biến toàn cục dùng chung: mỗi tập là một
 # tiến trình riêng nên phạm vi "một tiến trình" ĐÚNG BẰNG phạm vi "một tập" — khác hẳn ca
@@ -1000,6 +1001,34 @@ _KHUON_NEN = (
 )
 
 
+# ── LUẬT BỐ CỤC RIÊNG CHO BỘ NÀY  (anh soi prompt, 8/9/2026) ───────────────────────────
+# Anh: *"cf chưa tận dụng để ép prompt tạo ra được ảnh như ý muốn, xem lại prompt"*. Đo thành
+# phần prompt thật đang gửi CF:
+#     tổng 643 ký tự — phần nói VẼ GÌ chỉ **19%** (cảnh 9% · khuôn hình 6% · đồ vật 4%)
+#     luật bố cục 45% · phong cách 33%
+# Và đọc nó NHƯ MÔ HÌNH ĐỌC (§16.2), hai câu đang đánh nhau với chính mục tiêu:
+#     "anything in the scene pushed far to the left and right edges,
+#      the centre of the frame is empty walkable floor"
+# Tức mình RA LỆNH đẩy hết đồ ra mép và để giữa trống. Cái búa gỗ + chồng hồ sơ — thứ khiến
+# người xem nhận ra — bị đẩy ra rìa, giữa khung còn sàn trống. Đó chính là "nền chung chung".
+#
+# Hai câu ấy đúng ở ngữ cảnh sinh ra chúng: engine cũ dán nhân vật VECTOR vào GIỮA khung, nên
+# giữa phải trống (§7). Nhưng anh đã cho người dẫn đứng 1/3 và LỆCH HẲN MỘT BÊN (`GU_DUNG.viTri`,
+# `_lechGu = 0,26`), nên chỗ cần chừa là MỘT DẢI BÊN — và đồ đạc không việc gì phải ra hai mép.
+# §12.5: dùng lại một câu luật ở ngữ cảnh mới thì phải hỏi lại nó còn đúng không.
+#
+# Giữ nguyên hai mệnh lệnh THẬT SỰ chống lỗi: sàn chiếm phần ba dưới (chống người lơ lửng) và
+# máy ngang tầm mắt. Bỏ hai mệnh lệnh còn lại, thay bằng một dải trống ĐÚNG BÊN người đứng.
+def san_nen_ben(ben: str) -> str:
+    _b = "left" if str(ben).lower().startswith("tr") else "right"
+    _k = "right" if _b == "left" else "left"
+    return ("wide shot, camera at standing eye level, the ground plane fills the entire "
+            "bottom third of the frame as one continuous unbroken surface running from the "
+            "left edge to the right edge, "
+            f"the {_b} third of the frame is open walkable floor, "
+            f"the objects of the scene stand together in the {_k} two thirds")
+
+
 def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -> list:
     """Vẽ nền RIÊNG cho tập này từ chính CHỦ THỂ + câu đang nói, thay cho nền kho chung.
 
@@ -1028,7 +1057,13 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         return anh_nens
     if os.environ.get("KHONG_NEN_TAP"):
         return anh_nens
-    from kich_hai import SAN_NEN_VAT
+    # ── BỎ `import SAN_NEN_VAT`: NÓ CHỈ CÒN LÀ SUẤT MIỄN CHO CỔNG  (8/9/2026) ────────
+    # Đường vẽ này nay dùng luật riêng `san_nen_ben()`, không dùng hằng chung nữa. Giữ dòng
+    # import lại "cho cổng soi theo" chính là giữ một SUẤT MIỄN: `kiem_nen` thấy tệp có
+    # import thì tha, nên nó báo xanh kể cả khi luật trong prompt bị phá.
+    # Thử ngược chứng minh: xoá mệnh lệnh chừa chỗ khỏi `san_nen_ben` -> cổng VẪN XANH.
+    # Một cổng không thể đỏ thì không phải cổng (§15.19 · §13.11).
+    _san = san_nen_ben(BEN_DUNG)
     viec = []
     bo_qua = bo_qua or set()
     for i, c in enumerate(cau[:len(anh_nens)]):
@@ -1114,11 +1149,11 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         _vat = _VAT_HINH_MAU.get(DAO_CU_TAP or "", ())
         _do = f"Further back: {_vat[i % len(_vat)]}. " if _vat else ""
         if _su:
-            viec.append((i, f"{_su}. {_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
+            viec.append((i, f"{_su}. {_canh}. {_do}{_san}. {GU_NEN}"))
         else:
             _tt = _NEN_TRUNG_TINH.get(DAO_CU_TAP or "", ())
             _nen0 = f"{_tt[i % len(_tt)]}, " if _tt else _neo
-            viec.append((i, f"{_nen0}{_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
+            viec.append((i, f"{_nen0}{_canh}. {_do}{_san}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:
@@ -1561,6 +1596,8 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     _i = next((_k for _k, _v in enumerate(_dan) if _v is vai[0]), _i)
     _j = next((_k for _k, _v in enumerate(_dan) if _v is vai[1]), _j)
 
+    global BEN_DUNG
+    BEN_DUNG = GU_DUNG.get(ma, ("giua", "vao", "moc"))[0]
     k, tieu, hook, hook_phu, nhip, muc = G.kich_ban(ma, idx, chuong > 0, chuong or 3)
     # `[KEEP]` là dấu dành cho MÔ HÌNH và cho cổng giữ cú lật — nó không được lên màn hình
     # cũng không được vào phụ đề. Gỡ khỏi chính nhịp NGAY SAU khi đã đọc ra `loi`, để mọi
