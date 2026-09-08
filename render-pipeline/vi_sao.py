@@ -248,10 +248,7 @@ def sinh(ma: str, i: int):
 
     def _diem(x):
         _ct, _kh, _nq = x
-        try:
-            v = C.luot_xem(_ct)
-        except Exception:
-            v = -1
+        v = _lx(_ct)
         return _nq * (math.log10(max(v, 10)) if v >= 0 else 2.0)
 
     # ── SÀN NHẬN BIẾT: NHÂN THÌ SỐ CÂU DÌM CHẾT ĐỘ NHẬN BIẾT  (anh, 8/9/2026) ──────────
@@ -288,11 +285,22 @@ def sinh(ma: str, i: int):
     # (không đo được) nằm tầng dưới, không được coi là nổi tiếng (§15.2).
     _SAN_NHAN_BIET = 1000
 
+    # TRA LƯỢT XEM ĐÚNG MỘT LẦN MỖI ỨNG VIÊN. `_tang` và `_diem` đều cần con số ấy, và cả hai
+    # nằm trong khoá sắp xếp — nên bản đầu gọi `luot_xem` HAI lần cho mỗi chủ thể. Có đệm đĩa
+    # thì lượt sau rẻ, nhưng lượt ĐẦU của mỗi chủ thể là một vòng mạng, và §19.20 đã đo rằng
+    # chính nhịp gọi dồn dập là thứ đẻ ra 429. Gom lại một lần và dùng chung.
+    _xem: dict = {}
+
+    def _lx(ct):
+        if ct not in _xem:
+            try:
+                _xem[ct] = C.luot_xem(ct)
+            except Exception:
+                _xem[ct] = -1
+        return _xem[ct]
+
     def _tang(x):
-        try:
-            return 1 if (C.luot_xem(x[0]) or 0) >= _SAN_NHAN_BIET else 0
-        except Exception:
-            return 0
+        return 1 if (_lx(x[0]) or 0) >= _SAN_NHAN_BIET else 0
 
     _qua = sum(_tang(x) for x in _ung)
     if _qua and _qua < len(_ung):
