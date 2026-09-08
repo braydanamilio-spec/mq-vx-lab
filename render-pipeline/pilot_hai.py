@@ -2402,6 +2402,19 @@ CHUONG_KHONG_LAP = 1
 #
 # Mười bốn hình mẫu, mỗi cái sáu vật, xoay hai vật một nhịp theo `i` — nên hai nhịp liền
 # nhau khác nhau ở thứ người xem NHÌN THẤY (§14.9), mà không nhịp nào mang chữ của câu.
+# ── ĐỒ VẬT KHÔNG ĐƯỢC MANG CHỮ  (8/9/2026) ─────────────────────────────────────────────
+# Soi lưới bộ 152 («Credit Suisse»): 2/6 khung có BIỂN CHỮ nguệch ngoạc treo trên tường —
+# đúng thứ người xem đọc ra "nghiệp dư" trong nửa giây (§12.12), và đúng chỗ FLUX hỏng nặng
+# nhất (§12.7: chuỗi dài đúng 0/2 · §13.20: chữ trong khung là chỗ mô hình hỏng nhất).
+#
+# Gốc KHÔNG phải mô hình tự bịa — bảng này ĐẶT HÀNG chữ. Bốn mục, và phải đọc tay cả bảng
+# mới thấy: `signage rails` (biển chỉ dẫn) · `quote boards` (bảng yết giá) · `price rails`
+# (nhãn giá) · `card catalogues` (phiếu mục lục). Regex đầu của em chỉ bắt `signage` rồi bỏ
+# sót ba cái kia, vì không cái nào chứa một từ nghĩa là "chữ" — đúng §13.20: *một danh sách
+# chuỗi con không bắt được ngôn ngữ*. Nên cổng canh liệt kê VẬT, không liệt kê từ "chữ".
+#
+# THAY chứ không xoá (§17.6): xoá đồ vật thì nền trống, mà trống là lỗi ở đúng trục anh quan
+# tâm. Vật thay giữ nguyên vai bố cục — một dải ngang, một mặt phẳng đứng, một khối tủ.
 _VAT_HINH_MAU = {
     "may_anh":     ("enlargers", "developing trays", "film reels", "tripods",
                     "print racks", "light boxes",
@@ -2421,7 +2434,7 @@ _VAT_HINH_MAU = {
     "may_tinh":    ("server racks", "patch panels", "desk terminals", "cable bundles",
                     "cooling ducts", "tape drives",
                     "a coiled floor cable ramp"),
-    "cua_hang":    ("shelf rows", "checkout counters", "stock trolleys", "price rails",
+    "cua_hang":    ("shelf rows", "checkout counters", "stock trolleys", "shelf edge rails",
                     "basket stacks", "window displays",
                     "a folded stack of flat cartons"),
     "xe":          ("lifts and ramps", "tool chests", "tyre stacks", "engine hoists",
@@ -2437,12 +2450,12 @@ _VAT_HINH_MAU = {
                     "cargo nets", "dock ladders",
                     "a coil of thick mooring rope"),
     "toa_nha":     ("reception desks", "lift banks", "glass partitions", "planter rows",
-                    "seating clusters", "signage rails",
+                    "seating clusters", "handrail posts",
                     "a floor polisher parked by a column"),
-    "dong_xu":     ("teller counters", "quote boards", "desk terminals", "vault doors",
+    "dong_xu":     ("teller counters", "frosted partition screens", "desk terminals", "vault doors",
                     "queue rails", "document trays",
                     "a wheeled cash cart with its lid up"),
-    "sach":        ("shelf stacks", "reading tables", "card catalogues", "print presses",
+    "sach":        ("shelf stacks", "reading tables", "wooden drawer banks", "print presses",
                     "paper reams", "desk lamps",
                     "a book trolley left mid-aisle"),
 }

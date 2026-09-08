@@ -694,6 +694,42 @@ def t_doi_ngoi_khong_de_ra_lap():
     assert xa[-1]["loi"] == v, "chặn cả trường hợp cách xa — quá tay"
 
 
+def t_do_vat_khong_dat_hang_chu():
+    """Bảng đồ vật của prompt nền không được chứa VẬT MANG CHỮ.
+
+    8/9 — lưới bộ 152 («Credit Suisse») có 2/6 khung treo biển chữ nguệch ngoạc. Gốc không
+    phải mô hình tự bịa: `_VAT_HINH_MAU` đặt hàng đúng bốn thứ mang chữ — `signage rails` ·
+    `quote boards` · `price rails` · `card catalogues`.
+
+    Cổng liệt kê VẬT chứ không liệt kê từ nghĩa là "chữ": ba trong bốn mục trên không chứa
+    một từ nào nghĩa là chữ, nên mọi phép quét theo từ "text/letter/sign" đều bỏ sót chúng
+    (§13.20: một danh sách chuỗi con không bắt được ngôn ngữ). Danh sách vật thì hữu hạn và
+    đọc tay được — mỗi lần thêm hình mẫu mới, đọc bảng một lượt là đủ."""
+    import pilot_hai as PH
+    CAM = ("signage", "sign rail", "quote board", "price rail", "price tag", "card catalogue",
+           "notice board", "menu board", "billboard", "poster", "placard", "banner",
+           "nameplate", "plaque", "marquee", "newspaper", "magazine", "headline")
+
+    def _soi(bang):
+        xau = []
+        for k, v in (bang or {}).items():
+            for vat in v:
+                t = str(vat).lower()
+                for c in CAM:
+                    if c in t:
+                        xau.append(f"{k}: «{vat}» chứa «{c}» — đặt hàng CHỮ cho FLUX")
+        return xau
+
+    xau = _soi(PH._VAT_HINH_MAU)
+    assert not xau, " · ".join(xau)
+
+    # THỬ NGƯỢC (§13.11) — đủ hai chiều, và gồm đúng ca đã trả giá
+    assert _soi({"x": ("signage rails",)}), "cổng không bắt được ca đã trả giá"
+    assert _soi({"x": ("quote boards",)}), "cổng không bắt được bảng yết giá"
+    assert not _soi({"x": ("handrail posts", "frosted partition screens")}), \
+        "cổng bắt oan vật thay thế"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3665,6 +3701,7 @@ def main():
     check("đệm bài Wikipedia thật sự chạy", t_dem_wiki_that_su_chay)
     check("sổ nguồn thẻ ảnh ghi ra đĩa", t_so_anh_nguon_ghi_ra_dia)
     check("đổi ngôi không đẻ ra cặp lặp", t_doi_ngoi_khong_de_ra_lap)
+    check("đồ vật nền không đặt hàng chữ", t_do_vat_khong_dat_hang_chu)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
