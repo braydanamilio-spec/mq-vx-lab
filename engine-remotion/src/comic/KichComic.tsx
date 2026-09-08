@@ -250,12 +250,13 @@ const Panel: React.FC<{
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
   dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string;
   guViTri?: string; guKen?: string; guNen?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
+  logo?: string;      // ẢNH THẬT của chủ thể (logo/trụ sở) — thẻ nhỏ, xem `TheLogo`
   haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
 }> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap,
-        guViTri = "giua", guKen = "vao", guNen = "moc", noi, anhNen, soLieu,
+        guViTri = "giua", guKen = "vao", guNen = "moc", noi, anhNen, soLieu, logo,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
         bongDuoi = false, boKhung = 0, chuNo = "BOOM!", sang }) => {
@@ -592,6 +593,33 @@ const Panel: React.FC<{
                  chu="Poppins, Arial, sans-serif" />
       ) : null}
 
+      {/* ── THẺ ẢNH THẬT: THỨ NGƯỜI XEM NHẬN RA TRONG NỬA GIÂY  (anh, 8/9/2026) ──────────
+          Anh: *"nói về facebook phải có logo facebook hay trụ sở… hay chèn thêm ảnh thực tế
+          trên ảnh nền thu nho nhỏ khi nói"*.
+
+          Vì sao THẺ NHỎ chứ không thay cả nền: ảnh thật thay trọn nền thì mất nét truyện
+          tranh của kênh và chỉ dùng được ở vài nhịp có ảnh. Thẻ nhỏ giữ được cả hai — nền vẽ
+          vẫn là nền vẽ, mà thứ nhận ra ngay vẫn có mặt.
+
+          Đặt NGƯỢC bên người dẫn (`guViTri`) để không đè lên mặt; `objectFit: contain` vì
+          logo méo là hỏng hẳn — khác ảnh nền, logo không được phép cắt. Đĩa trắng mờ phía sau
+          là cách nhà đã giải bài "biểu tượng tàng hình khi trùng tông nền" (§13.27). */}
+      {logo ? (
+        <div style={{
+          position: "absolute", top: h * 0.055,
+          [guViTri === "phai" ? "left" : "right"]: w * 0.05,
+          width: w * 0.20, height: w * 0.20,
+          background: "#FFFFFFEE", borderRadius: 18,
+          border: `${Math.max(3, NET - 3)}px solid #14110F`,
+          boxShadow: "5px 6px 0 #14110F22",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: w * 0.022, boxSizing: "border-box", zIndex: 5,
+        } as React.CSSProperties}>
+          <img src={logo} style={{ maxWidth: "100%", maxHeight: "100%",
+                                   objectFit: "contain" }} />
+        </div>
+      ) : null}
+
       {L.nar ? (
       <BongThoai chu={L.nar} tu={tu} giay={giay} W={w} H={h}
                  ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
@@ -769,6 +797,13 @@ export type PropsComic = {
   // một hướng sáng riêng. Bản ngắn không truyền thì rơi về `anhNen`/`sang` như cũ — đường chạy
   // đã duyệt không đụng gì.
   anhNens?: string[];
+  // ── ẢNH THẬT CỦA CHỦ THỂ, HIỆN Ở VÀI NHỊP ĐẦU  (anh, 8/9/2026) ──────────────────────
+  // `logoTap` = đường dẫn ảnh (logo hoặc trụ sở, lấy từ Wikidata P154/P18, chỉ nhận PD/CC0).
+  // `logoNhip` = những nhịp được phép hiện nó. Không hiện suốt tập: một thẻ đứng nguyên từ
+  // đầu tới cuối chính là thứ anh đã chê ở biểu tượng máy ảnh ("sao nó gắn trên videos từ
+  // đầu tới cuối vậy"). Hiện ở khúc mở — chỗ người xem cần nhận ra ngay — rồi thôi.
+  logoTap?: string;
+  logoNhip?: number[];
   // Lớp số liệu theo TỪNG panel. Bỏ trống -> không vẽ gì, nên bộ hài 20 kênh không đổi.
   soLieu?: (LopComic | null)[];
   hookDuoi?: boolean;   // thẻ hook thành dải sát đáy thay vì biển giữa khung
@@ -801,6 +836,7 @@ export const KichComic: React.FC<PropsComic> = ({
   guViTri = "giua", guKen = "vao", guNen = "moc",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
   sang, anhNens, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
+  logoTap, logoNhip,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
 }) => {
@@ -853,6 +889,7 @@ export const KichComic: React.FC<PropsComic> = ({
            hai={typeof (Lx as any).canh === "boolean" ? (Lx as any).canh : coCanh(ix, luot.length, hat)}
            dangNoi={dangNoi} noi={noi}
            anhNen={(anhNens && anhNens[ix]) || anhNen}
+           logo={logoTap && (!logoNhip || logoNhip.includes(ix)) ? logoTap : undefined}
            soLieu={(soLieu && soLieu[ix]) || null} haiHuoc={haiHuoc}
            sang={(sangs && sangs[ix]) || sang}
            netMuc={netMuc} cham={cham} boGoc={boGoc} tiLe={tiLeCua(ix, luot.length, hat, tiLe)}

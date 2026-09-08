@@ -273,6 +273,42 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_logo_wikidata():
+    """Logo/ảnh chính tra THẲNG từ Wikidata, có cổng thực thể và cổng giấy phép.
+
+    Anh: *"nói về facebook phải có logo facebook hay trụ sở… có api nào lấy logo chính xác"*.
+    Có: `P154` (logo tổ chức) và `P18` (ảnh chính) của Wikidata — tra THUỘC TÍNH nên ra ĐÚNG
+    một tệp của đúng thực thể, khác hẳn tìm theo tên rồi đoán.
+
+    Hai cổng, cả hai sinh từ ca hỏng đo được ở lần chạy đầu:
+      · NHẬN NHẦM THỰC THỂ — `Concorde` trả ga tàu điện ngầm Paris. Và bộ lọc bản đầu TRƯỢT
+        vì mô tả viết «Paris **Métro** station» có dấu còn regex viết `metro`; lần ấy thoát
+        nhờ may (thực thể sai không có logo). Nay bỏ dấu trước khi so.
+      · GIẤY PHÉP — `P154` có thể trỏ tệp lưu cục bộ ở Wikipedia diện "non-free logo". Chỉ
+        nhận PD/CC0, cùng luật `anh_tu_do`, không nới cho logo.
+
+    Chốt chỉ thử phần THUẦN (không gọi mạng)."""
+    import logo_wd as L
+    for mo in ("Paris Métro station", "Paris Metro station", "1997 film by Cameron",
+               "village in France", "song by Queen"):
+        assert L._NGHIA_LAC.search(L._khong_dau(mo)), f"không loại nghĩa lạc: «{mo}»"
+    for mo in ("American company", "former German airline", "British-French supersonic airliner"):
+        assert not L._NGHIA_LAC.search(L._khong_dau(mo)), f"loại nhầm chủ thể thật: «{mo}»"
+    import inspect
+    src = inspect.getsource(L.anh_tu_tep)
+    assert "public domain" in src.lower() and "cc0" in src.lower(), \
+        "cổng giấy phép không còn chỉ nhận PD/CC0"
+    # engine phải NHẬN được prop, và pipeline phải GỬI nó (§15.12: ghi mà không ai đọc)
+    import io as _io, os
+    tsx = _io.open(os.path.join(os.path.dirname(os.path.abspath(L.__file__)), "..",
+                                "engine-remotion", "src", "comic", "KichComic.tsx"),
+                   encoding="utf-8").read()
+    assert "logoTap" in tsx and "logoNhip" in tsx, "engine chưa nhận prop logo"
+    import pilot_hai as P
+    ma = _io.open(P.__file__, encoding="utf-8").read()
+    assert '"logoTap": LOGO_TAP' in ma, "pipeline chưa gửi logo sang engine"
+
+
 def t_user_agent_co_lien_he():
     """User-Agent gửi Wikimedia phải có LIÊN HỆ THẬT — thiếu là bị bóp cổ 429.
 
@@ -3224,6 +3260,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("logo tra từ Wikidata", t_logo_wikidata)
     check("User-Agent có liên hệ thật", t_user_agent_co_lien_he)
     check("luật bố cục nền theo tập", t_luat_bo_cuc_nen_tap)
     check("hỏi ảnh thật bằng tên thực thể", t_hoi_anh_bang_thuc_the)

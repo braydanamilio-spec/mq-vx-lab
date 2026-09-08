@@ -921,6 +921,7 @@ GU_DUNG = {
 DA_GHIM = False          # `bo_1_3` đã chọn chủ thể cho cả bộ — `mot_tap` không chọn lại
 NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
+LOGO_TAP = ""            # ảnh thật của chủ thể (logo/trụ sở) — thẻ nhỏ ở khúc mở
 BEN_DUNG = "trai"        # người dẫn đứng bên nào — nền chừa dải trống ĐÚNG bên ấy
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
 # Trần ảnh CF cho MỘT tập. Đặt ở đây chứ không ở biến toàn cục dùng chung: mỗi tập là một
@@ -2009,6 +2010,11 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         "mau": g["chinh"], "mauPhu": g["phu"],
         "netMuc": 7, "cham": 9, "boGoc": 26, "tiLe": 0.60, "soTap": idx,
         "bongDuoi": False, "boKhung": 0, "chuNo": "HUH?",
+        # Thẻ ảnh thật chỉ hiện ở BA NHỊP ĐẦU — chỗ người xem cần nhận ra ngay. Không
+        # hiện suốt tập: một thẻ đứng nguyên từ đầu tới cuối đúng là thứ anh đã chê ở
+        # biểu tượng máy ảnh ("sao nó gắn trên videos từ đầu tới cuối vậy").
+        "logoTap": LOGO_TAP,
+        "logoNhip": [0, 1, 2],
         "anhNens": anh_nens, "soLieu": so_lieu,
         # Kênh GIẢI THÍCH tắt đồ nghề hài: thẻ hook thành dải sát đáy (không đè mặt), và bỏ
         # chữ nổ + cú rung ở câu chốt — engine bắn hiệu ứng punchline vào một câu kết trầm thì
@@ -2713,6 +2719,21 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
     CHU_THE_TAP = _ch.get("chu_the", "")
     DAO_CU_TAP = _ch.get("hinh_mau", "")
     ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=14) if CHU_THE_TAP else []
+    # ── LOGO/TRỤ SỞ TRA THẲNG TỪ WIKIDATA  (anh, 8/9/2026) ──────────────────────────
+    # Khác `nap_anh_that` (tìm theo tên rồi lọc), `logo_wd` tra THUỘC TÍNH của thực thể —
+    # `P154` là logo, `P18` là ảnh chính — nên ra ĐÚNG một tệp của đúng công ty ấy, không
+    # phải một danh sách phải đoán. Vẫn chỉ nhận PD/CC0, và có cổng chống nhận nhầm thực
+    # thể (`Concorde` từng ra ga tàu điện ngầm Paris vì `wbsearchentities` khớp tên).
+    globals()["LOGO_TAP"] = ""
+    try:
+        import logo_wd as _LW
+        _tt = thuc_the(CHU_THE_TAP) or CHU_THE_TAP
+        _ds = _LW.logo_va_anh(_tt)
+        if _ds:
+            globals()["LOGO_TAP"] = _ds[0]
+            print(f"   🏷 ảnh thật của «{_tt}»: {_ds[0]}")
+    except Exception as e:
+        print(f"   ⚠ không lấy được logo ({str(e)[:40]}) — vẫn dựng bình thường")
     print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · 🖼 ảnh thật: {len(ANH_THAT)}")
     DA_GHIM = True
     n = 0
