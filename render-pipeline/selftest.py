@@ -273,6 +273,45 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_canh_theo_khai_niem():
+    """Nền phải kể ĐÚNG CHUYỆN ĐANG NÓI, và không được mang chữ vào khung.
+
+    Anh: *"sao 1 nền duy nhất thế này"* · *"ảnh nền phải thể hiện được vấn đề được nói tới,
+    nhìn cái nhận ra ngay, ko chung chung"*. Đo bản trước: 13 nhịp ra 13 TỆP khác nhau nhưng
+    khác biệt trung bình chỉ 20,7/255 — mắt đọc ra MỘT căn phòng (§13.5: đếm tệp là đo sai
+    đại lượng).
+
+    Cách chữa giữ CẢ HAI ràng buộc: câu chỉ dùng để CHỌN khái niệm, chữ vào prompt là chữ
+    mình soạn. Chốt canh đúng hai điều ấy — không tên riêng, không danh từ mời mô hình viết
+    chữ (§13.20 · §17.6) — và canh độ phủ trên câu NỘI DUNG (câu dẫn không có gì để vẽ,
+    §17.5)."""
+    import re, pilot_hai as P
+    assert len(P._KHAI_NIEM) >= 24, f"bảng khái niệm chỉ có {len(P._KHAI_NIEM)} mục"
+    _MOI_CHU = re.compile(r"\b(sign|signage|poster|headline|banner|logo|label|newspaper|"
+                          r"letters|words|text|slogan|caption|title)\b", re.I)
+    for r, canh in P._KHAI_NIEM:
+        re.compile(r)                                   # biểu thức phải dịch được
+        hoa = [w for w in canh.split() if w[:1].isupper()]
+        assert not hoa, f"cảnh có từ viết HOA (tên riêng): {hoa} trong {canh!r}"
+        assert not _MOI_CHU.search(canh), f"cảnh mời mô hình vẽ CHỮ: {canh!r}"
+        assert len(canh.split()) >= 6, f"cảnh quá chung chung: {canh!r}"
+    # độ phủ: đo trên câu NỘI DUNG thật của các bản dài đã dựng, nếu có
+    import glob, json, io as _io
+    _DAN = re.compile(r"\b(let us|let's|you own|you have seen|remember|nobody repeats|"
+                      r"came back|work it out|the shape of it|so you understand)\b", re.I)
+    cau = []
+    for f in sorted(glob.glob("out/v11L_*_0*.json"))[-6:]:
+        try:
+            d = json.load(_io.open(f, encoding="utf-8"))
+        except Exception:
+            continue
+        cau += [str((x or {}).get("nar") or "") for x in (d.get("luot") or [])]
+    nd = [c for c in cau if len(c) > 20 and not _DAN.search(c)]
+    if len(nd) >= 20:
+        hit = sum(1 for c in nd if any(re.search(r, c.lower()) for r, _ in P._KHAI_NIEM))
+        assert hit / len(nd) >= 0.80, f"chỉ phủ {hit}/{len(nd)} câu nội dung"
+
+
 def t_nhip_wiki_tu_noi_khi_bi_chan():
     """Gặp 429 thì nhịp phải NỚI cho cả máy, và rút dần về khi trót lọt.
 
@@ -2892,6 +2931,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("nền kể đúng chuyện đang nói", t_canh_theo_khai_niem)
     check("nhịp Wikipedia tự nới khi bị chặn", t_nhip_wiki_tu_noi_khi_bi_chan)
     check("scale PHIM v10 cho cỡ nguyên", t_scale_phim_ra_so_nguyen)
     check("nhịp Wikipedia ghìm được cả hai tiến trình", t_nhip_wiki_lien_tien_trinh)

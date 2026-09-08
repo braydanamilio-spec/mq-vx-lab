@@ -1108,10 +1108,15 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
         # Đa dạng theo nhịp KHÔNG mất: neo cảnh xoay theo `i % len(_nh)` (nơi chốn của chính
         # hình mẫu) và khuôn hình xoay theo `i % len(_KHUON_NEN)` — hai trục người xem NHÌN
         # THẤY (§14.9), không phải một danh sách từ mà mô hình đem viết lên tường.
+        # KHÁI NIỆM CỦA CHÍNH CÂU dẫn cảnh; hình mẫu chỉ còn giữ thế giới cho nhất quán.
+        _tho = str(noi).lower()
+        _su = next((c for r, c in _KHAI_NIEM if re.search(r, _tho)), "")
         _vat = _VAT_HINH_MAU.get(DAO_CU_TAP or "", ())
-        _do = (f"Objects in view: {_vat[i % len(_vat)]} and "
-               f"{_vat[(i + 3) % len(_vat)]}. ") if _vat else ""
-        viec.append((i, f"{_neo}{_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
+        _do = f"Further back: {_vat[i % len(_vat)]}. " if _vat else ""
+        if _su:
+            viec.append((i, f"{_su}. {_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
+        else:
+            viec.append((i, f"{_neo}{_canh}. {_do}{SAN_NEN_VAT}. {GU_NEN}"))
     if not viec:
         return anh_nens
     try:
@@ -2264,6 +2269,104 @@ _VAT_HINH_MAU = {
     "sach":        ("shelf stacks", "reading tables", "card catalogues", "print presses",
                     "paper reams", "desk lamps"),
 }
+
+# ── NỀN PHẢI KỂ ĐÚNG CHUYỆN ĐANG NÓI  (anh, 8/9/2026) ───────────────────────────────────
+# Anh: *"sao 1 nền duy nhất thế này đâu phải nền hợp bối cảnh"* rồi *"ảnh nền phải thể hiện
+# được vấn đề được nói tới trong clip, nhìn cái nhận ra ngay, ko chung chung"*.
+#
+# Anh đúng, và đo được: bản trước cho 13 nhịp ra 13 TỆP khác nhau — phép đo cũ nói "không
+# lặp" — nhưng khác biệt trung bình chỉ **20,7/255**, cặp khác nhất **36,0/255**. Mười ba
+# tấm nằm trong một dải rất hẹp, mắt đọc ra MỘT căn phòng. Đếm tệp là đo sai đại lượng
+# (§13.5): thứ người xem cảm được là "hai khung liền nhau có khác nhau không".
+#
+# Gốc: sau khi bỏ danh từ lấy từ câu (để chặn chữ nguệch ngoạc), thứ duy nhất còn đổi theo
+# nhịp là 3 chữ nơi chốn của hình mẫu — `dong_xu` -> bank/office/trading, cùng một thế giới.
+# Nền đi theo CHỦ THỂ, không đi theo CÂU.
+#
+# Cách chữa giữ được cả hai ràng buộc: câu chỉ dùng để CHỌN khái niệm; chữ đi vào prompt là
+# chữ EM soạn. Nên không tên riêng nào lọt vào khung (§13.20), mà cảnh vẫn bám nội dung.
+#
+# Và tả SỰ VIỆC, không tả CĂN PHÒNG. "a courtroom" vẫn là chung chung; "a judge's gavel
+# resting on a stack of bound case files" thì nhìn phát biết đang nói chuyện kiện tụng. Mô
+# hình khuếch tán vẽ vật thể và tình huống giỏi hơn hẳn vẽ một danh từ nơi chốn.
+_KHAI_NIEM = (
+    (r"\b(court|lawsuit|sued?|suing|litigat|judge|verdict|trial|settlement)\w*",
+     "a wooden gavel resting on a tall stack of bound case files"),
+    (r"\b(bankrupt|insolven|liquidat|chapter\s*11|receivership|wound\s+up)\w*",
+     "a cleared office with cardboard archive boxes stacked by an empty desk"),
+    (r"\b(merger|merged|acquisition|acquired|takeover|buyout)\w*",
+     "two long boardroom tables pushed together, one chair left between them"),
+    (r"\b(election|minister|parliament|government|regulator|ministry|senate)\w*",
+     "a row of microphones on an empty podium under bright lights"),
+    (r"\b(shares?|stock|market|trading|listed|ipo|shareholder)\w*",
+     "a wall of green and red price boards above an empty trading desk"),
+    (r"\b(audit|investigat|inquiry|probe|forensic|whistleblow)\w*",
+     "an open ledger under a desk lamp beside a magnifier and paper clips"),
+    (r"\b(loan|debt|bond|borrow|repaid|interest|creditor|default)\w*",
+     "banded bundles of banknotes on a counter beside a locked cash drawer"),
+    (r"\b(transfer|wired?|account|deposit|offshore|laundering|funds?)\w*",
+     "a vault door standing open with empty numbered deposit boxes inside"),
+    (r"\b(fraud|scam|scandal|bribe|corrupt|embezzl|kickback)\w*",
+     "a briefcase open on a desk with unmarked envelopes spilling out"),
+    (r"\b(fine|penalt|sanction|banned|revoked|licen[cs]e|complian)\w*",
+     "a rubber stamp pressed onto a thick bound folder on a bare desk"),
+    (r"\b(layoff|redundan|fired|staff|employee|workers?|union)\w*",
+     "rows of emptied desks with chairs pushed in and cables coiled on top"),
+    (r"\b(factory|manufactur|production|assembly|plant|machinery)\w*",
+     "a stopped assembly line with half-built units still clamped in place"),
+    (r"\b(recall|defect|faulty|malfunction|safety|inspect)\w*",
+     "a workbench with a dismantled part laid out beside measuring tools"),
+    (r"\b(airline|flight|aircraft|airport|fleet|boeing|airbus|terminal)\w*",
+     "an empty boarding gate with a closed shutter and idle jet bridge"),
+    (r"\b(ship|vessel|port|harbour|harbor|cargo|freight|container)\w*",
+     "stacked shipping containers beside a still gantry crane at dusk"),
+    (r"\b(rail|train|locomotive|track|station|metro)\w*",
+     "an empty platform with a signal light and rails curving into the dark"),
+    (r"\b(store|retail|shop|customers?|sales|chain|outlet)\w*",
+     "long shelf rows stripped bare with empty baskets stacked at the end"),
+    (r"\b(film|camera|photo|print|studio|broadcast|television|tape)\w*",
+     "a cutting bench with film reels, a loupe and strips of negatives"),
+    (r"\b(phone|mobile|handset|device|electronic|circuit|chip)\w*",
+     "a repair bench with an opened handset, tweezers and tiny screws"),
+    (r"\b(software|internet|website|server|data|computer|online|app)\w*",
+     "a server aisle with one rack door open and patch cables hanging"),
+    (r"\b(drug|medicine|patient|clinical|hospital|vaccine|trial\s+result)\w*",
+     "a laboratory bench with sample vials in a rack and gloves laid beside"),
+    (r"\b(oil|gas|refiner|pipeline|drilling|energy|reactor|turbine)\w*",
+     "a pipe run and valve wheels along a walkway inside a turbine hall"),
+    (r"\b(build|construct|property|estate|tower|developer|site)\w*",
+     "an unfinished concrete floor with scaffolding and a stalled hoist"),
+    (r"\b(bank|deposit|branch|teller|central\s+bank|reserve)\w*",
+     "a row of closed teller windows with queue posts and no rope between"),
+    (r"\b(founder|chairman|executive|chief|board|resign|stepped\s+down)\w*",
+     "one empty chair at the head of a long polished table"),
+    (r"\b(protest|riot|strike|boycott|public\s+anger|outrage)\w*",
+     "a barricade rail on an empty street with scattered paper on the ground"),
+    (r"\b(ceased|closed|shut|halted|grounded|final|last\s+day|wound\s+down)\w*",
+     "a rolled-down metal shutter with a chain and padlock at floor level"),
+    (r"\b(profit|loss|losses|revenue|earnings|unprofitable|margin|cash\s+flow)\w*",
+     "a desk calculator beside long columns of figures on ruled paper"),
+    (r"\b(billion|million|thousand|dollars?|us\$|amount|total)\w*",
+     "a counting tray of banded notes beside a closed ledger on a wide desk"),
+    (r"\b(route|expansion|expanded|network|service\s+to|opened|launch)\w*",
+     "a wall map with coloured pins and taut threads stretched between them"),
+    (r"\b(price|fare|ticket|fee|charge|discount|cheap)\w*",
+     "a stack of blank cardboard tags and a punch tool on a bare counter"),
+    (r"\b(contract|agreement|signed|deal|clause|terms)\w*",
+     "a fountain pen laid across a thick unsigned document on a desk"),
+    # ── BỐN KHÁI NIỆM THÊM SAU KHI ĐỌC TAY 17 CÂU TRƯỢT (§13.21) ─────────────────────
+    # 11/17 câu trượt là câu DẪN (*"let us work it out together"*) — không có gì cụ thể để
+    # vẽ, và ép một cảnh cụ thể vào đó là đúng lỗi §17.5. Nền trung tính ở đấy là ĐÚNG.
+    # Sáu câu còn lại mới là lỗ thật, và đây là chúng.
+    (r"\b(rebrand|renamed?|identity|new\s+name|became\s+known)\w*",
+     "a painted wall panel half stripped back, showing an older coat beneath"),
+    (r"\b(vanish|disappear|demise|gone|no\s+longer|wiped\s+out|collapse)\w*",
+     "a bare hook and a clean unfaded rectangle on a wall where something hung"),
+    (r"\b(sec|faa|ftc|fda|doj|commission|authority|watchdog|oversight)\w*",
+     "a counter window with a bell, a date stamp and a wire tray of forms"),
+    (r"\b(founded|origin|began|early\s+years|decades?|history|era)\w*",
+     "a wooden drawer of index cards pulled open under a desk lamp"),
+)
 
 _DA_TIEU: set = set()
 
