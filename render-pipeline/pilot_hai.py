@@ -2158,7 +2158,8 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # cùng nhau, dãy `(noi_idx + i*buoc) % len(co)` đi qua các phòng KHÁC NHAU cho tới khi
         # quay vòng, nên số phòng riêng = min(số ô, cỡ kho) — tức mỗi ô một phòng đã là tối ưu
         # và không phép gộp nào cải thiện được. Bỏ hẳn phép gộp.
-        anh_nens = [_co(co[(noi_idx + i * buoc) % len(co)]) for i in range(len(cau))]
+        anh_nens = ([""] * len(cau) if NEN_CHI_ANH_THAT
+                    else [_co(co[(noi_idx + i * buoc) % len(co)]) for i in range(len(cau))])
         # THỨ TỰ: ảnh THẬT trước, rồi mới vẽ bù chỗ còn trống. Bản đầu làm ngược và log tự
         # tố cáo: *"nền vẽ theo chủ thể: 8/8 nhịp"* đứng cạnh *"ảnh thật: 11"* — 11 ảnh thật
         # phủ hết 8 nhịp nên **cả 8 nền vừa vẽ bị thay ngay**, tức tiêu 8 ảnh hạn mức cho thứ
@@ -2185,7 +2186,8 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # mất tấm nào: cái gì bản dài đặt đúng chỗ thì short đã mang theo.
         if not NEN_SAN:
             anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
-        anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
+        if not NEN_CHI_ANH_THAT:
+            anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
     else:
         anh_nens = []
 
@@ -2606,6 +2608,18 @@ def _lat_short(nhip: list, san: int = SAN_LUOT) -> list:
 # Nên số chương = 1. Bản dài ngắn đi (≈75 giây) và đó là SỰ THẬT về lượng tư liệu đang có;
 # muốn dài hơn thì phải lấy thêm câu nhân quả cho mỗi chủ thể, không phải đọc lại câu cũ.
 # §19.4: khi lời thoại rỗng, đi xem kịch bản có đủ sự thật không — đừng bơm cho dài.
+# ── NỀN: CHỈ ẢNH THẬT LIÊN QUAN, KHÔNG THÌ ĐỂ TRỐNG  (anh chốt, 8/9/2026) ──────────────
+# Anh: *"nền 100% là ảnh thật liên quan, ko dùng ảnh ko có nghĩa, hay nền trống"*.
+#
+# Lý do đo được, không phải sở thích: nền CF **không biết thời đại của câu chuyện**. Lưới bộ
+# 162 («Hoosac Tunnel», chuyện năm 1866) có hai khung là VĂN PHÒNG KÍNH HIỆN ĐẠI — prompt
+# không mang một thông tin niên đại nào, nên mô hình luôn vẽ hiện đại. Ảnh tư liệu thì đúng
+# thời tự nhiên, vì nó chính là tư liệu của thời ấy.
+#
+# Một khung trống sạch không nói sai điều gì; một căn phòng vô can thì nói sai. Và bỏ hẳn
+# đường vẽ nền CF cắt gần trọn hạn mức ảnh của mỗi tập — thứ anh đã dặn tiết kiệm.
+NEN_CHI_ANH_THAT = True
+
 CHUONG_KHONG_LAP = 1
 
 # ── ĐỒ VẬT THEO HÌNH MẪU, KHÔNG THEO CÂU  (8/9/2026) ────────────────────────────────────

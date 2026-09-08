@@ -814,7 +814,17 @@ export const NenPanel: React.FC<{
           giữa, hở 286px mỗi bên: thừa chỗ cho một vật lớn.
           Vậy mà bản trước vẽ nền PHẲNG ở đúng cảnh cận — bỏ phí chỗ duy nhất còn chỗ, rồi cố
           nhồi vật lớn vào chỗ không còn chỗ. Đảo lại: cận cảnh mới là nơi khoe bối cảnh. */}
-      {true ? (
+      {/* ── KHÔNG CÓ ẢNH THẬT THÌ ĐỂ TRỐNG, ĐỪNG VẼ MỘT CĂN PHÒNG VÔ CAN  (anh chốt, 8/9) ──
+          Anh: *"nền 100% là ảnh thật liên quan, ko dùng ảnh ko có nghĩa, hay nền trống"*.
+
+          Lý do đo được: nền vẽ KHÔNG BIẾT THỜI ĐẠI của câu chuyện. Lưới bộ 162 («Hoosac
+          Tunnel», chuyện năm 1866) có hai khung là văn phòng kính hiện đại — không prompt nào
+          mang niên đại, nên mô hình luôn vẽ hiện đại. Ảnh tư liệu thì đúng thời tự nhiên.
+
+          Một khung TRỐNG sạch không nói sai điều gì; một căn phòng vô can thì nói sai. Nên khi
+          không có ảnh, vẽ mảng màu của kênh + một vệt sáng chéo — chính nhánh "cận cảnh" đã có
+          sẵn dưới đây, nay thành mặc định. */}
+      {anh ? (
         <>
           {/* 31/8 — BỐI CẢNH NAY LẮP TỪ MÔ-ĐUN, KHÔNG CÒN MỖI KÊNH MỘT HÀM VẼ.
               Mười kênh × một nơi chốn là thứ bó tay cả người viết kịch bản lẫn mắt người xem:

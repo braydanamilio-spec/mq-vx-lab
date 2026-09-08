@@ -1163,6 +1163,32 @@ def t_anh_that_hien_tron_va_khong_lap_ca_bo():
         "short vẫn rải lại ảnh thật — cùng ba tấm sẽ xuất hiện ở cả bốn clip"
 
 
+def t_nen_chi_anh_that_hoac_trong():
+    """Nền chỉ được là ẢNH THẬT liên quan, hoặc TRỐNG — không có căn phòng vô can.
+
+    8/9 — anh chốt: *"nền 100% là ảnh thật liên quan, ko dùng ảnh ko có nghĩa, hay nền trống"*.
+
+    Lý do đo được, không phải sở thích: nền vẽ KHÔNG BIẾT THỜI ĐẠI của câu chuyện. Lưới bộ 162
+    («Hoosac Tunnel», chuyện năm 1866) có hai khung là VĂN PHÒNG KÍNH HIỆN ĐẠI — không prompt
+    nào mang một thông tin niên đại nào, nên mô hình luôn vẽ hiện đại. Ảnh tư liệu thì đúng
+    thời một cách tự nhiên, vì nó chính là tư liệu của thời ấy.
+
+    Một khung TRỐNG sạch không nói sai điều gì; một căn phòng vô can thì nói sai. Và bỏ đường
+    vẽ nền CF cắt gần trọn hạn mức ảnh mỗi tập."""
+    import inspect, pathlib, pilot_hai as PH
+    assert getattr(PH, "NEN_CHI_ANH_THAT", False) is True, "chưa bật chế độ chỉ-ảnh-thật"
+    src = inspect.getsource(PH.mot_tap)
+    # không được gọi đường vẽ nền CF khi cờ đang bật
+    i = src.find("_nen_theo_tap(")
+    assert i < 0 or "if not NEN_CHI_ANH_THAT:" in src, \
+        "vẫn vẽ nền CF vô điều kiện — sẽ lại ra căn phòng sai thời đại"
+    assert '[""] * len(cau) if NEN_CHI_ANH_THAT' in src, \
+        "vẫn lấy nền KHO khi không có ảnh thật"
+    nc = (pathlib.Path(PH.__file__).resolve().parent.parent
+          / "engine-remotion" / "src" / "comic" / "NenComic.tsx").read_text(encoding="utf-8")
+    assert "{anh ? (" in nc, "engine vẫn vẽ căn phòng vector khi KHÔNG có ảnh"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -4145,6 +4171,7 @@ def main():
     check("sàn nhận biết chủ thể · hỏng mềm", t_san_nhan_biet_va_hong_mem)
     check("tên gọi khác · khử trùng theo tiêu đề", t_ten_goi_khac_va_khu_trung_theo_tieu_de)
     check("ảnh thật hiện trọn · không lặp cả bộ", t_anh_that_hien_tron_va_khong_lap_ca_bo)
+    check("nền chỉ ảnh thật hoặc trống", t_nen_chi_anh_that_hoac_trong)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
