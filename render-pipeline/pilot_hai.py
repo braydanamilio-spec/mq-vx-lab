@@ -33,6 +33,7 @@ import io
 import json
 import os
 import re
+import unicodedata
 import subprocess
 import sys
 
@@ -184,6 +185,73 @@ _DON_VI = {0:"zero",1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven
            9:"nine",10:"ten",11:"eleven",12:"twelve",13:"thirteen",14:"fourteen",15:"fifteen",
            16:"sixteen",17:"seventeen",18:"eighteen",19:"nineteen"}
 _CHUC = {2:"twenty",3:"thirty",4:"forty",5:"fifty",6:"sixty",7:"seventy",8:"eighty",9:"ninety"}
+
+
+def loc_the_so(so_lieu: list, cau: list) -> tuple:
+    """Bỏ thẻ số KHÔNG được đọc lên, và thẻ mang con số đã hiện rồi. Sửa TẠI CHỖ.
+
+    ── VÌ SAO LÀ HÀM RIÊNG, KHÔNG PHẢI KHỐI INLINE  (8/9/2026) ─────────────────────────
+    Bản đầu viết thẳng trong `mot_tap`, và cổng canh nó chỉ kiểm được *"tên `_duoc_noi` có
+    xuất hiện trong tệp không"*. Thử ngược: đổi `if not _duoc_noi(...)` thành `if False:` —
+    cổng vẫn XANH, vì `def _duoc_noi` phía trên vẫn còn đó. Một cổng đo sự có mặt của một cái
+    tên không đo được gì (§13.11 · §13.10: cổng phải CHẠY chính mã ấy).
+
+    ── HAI LUẬT ────────────────────────────────────────────────────────────────────────
+    1. Số trên thẻ phải nằm trong lời thoại của CHÍNH lượt ấy — dạng chữ số hoặc dạng đọc
+       thành chữ. Đo 967 thẻ: 346 (35%) mang số không hề được nói, phần lớn ở NHỊP CHỐT nơi
+       §19.2 cố ý cấm số. Người xem NGHE một số và ĐỌC một số khác thì thà không có thẻ.
+    2. Một con số chỉ làm thẻ MỘT lần mỗi tập. Bộ 170 hiện `1720` ba lần và `1717` ba lần —
+       cơ chế không hỏng, nhưng màn hình lặp, đúng lời anh *"lặp đi lặp lại quá nhiều lần"*.
+       Giữ lần ĐẦU: đó là lúc con số mang tin.
+
+    Đo kết quả CUỐI trên 228 tập thật (§13.23): thẻ 1.070 -> 514, mà **213 tập (93%) vẫn còn
+    ≥1 thẻ**; 14 tập mất hết, và chúng mất vì MỌI thẻ đều sai số hoặc trùng.
+    """
+    def _duoc_noi(v, noi) -> bool:
+        g = str(v or "").replace(",", "").strip()
+        if not g:
+            return True
+        if g in (noi or "").replace(",", ""):
+            return True
+        m = re.fullmatch(r"[$]?(\d+)", g)
+        if m:
+            try:
+                if _chuan_so(_doc_so(int(m.group(1)))) in _chuan_so(noi):
+                    return True
+            except Exception:
+                pass
+        return False
+
+    bo_lech = 0
+    for t, x in enumerate(so_lieu):
+        if x and x.get("k") == "so" and t < len(cau):
+            if not _duoc_noi(x.get("so"), str(cau[t].get("nar") or "")):
+                so_lieu[t] = None
+                bo_lech += 1
+    da, bo_lap = set(), 0
+    for t, x in enumerate(so_lieu):
+        if x and x.get("k") == "so":
+            k = str(x.get("so") or "").replace(",", "").strip().lower()
+            if k in da:
+                so_lieu[t] = None
+                bo_lap += 1
+            else:
+                da.add(k)
+    return bo_lech, bo_lap
+
+
+def _chuan_so(s: str) -> str:
+    """Chuẩn hoá để so dạng ĐỌC THÀNH CHỮ: bỏ dấu, hạ chữ thường, gộp mọi gạch nối.
+
+    `_du_so` đã trả giá cho đúng chỗ này: mô hình viết `Fifty‑nine` bằng U+2011 nên phép so
+    ASCII trượt và đốt ba vòng gọi AI mỗi tập (§18.11). Sáu dạng gạch nối Unicode, không phải
+    một."""
+    # NFKD gộp các biến thể gạch nối về dạng cơ sở, rồi phép thay MỌI ký tự không phải
+    # chữ-số bằng dấu cách nuốt nốt phần còn lại — nên không cần liệt kê sáu dấu gạch nối
+    # Unicode như bản đầu của em: danh sách ấy KHÔNG làm gì cả, và một dòng mã trông có việc
+    # mà không có việc là chỗ phiên sau tin nhầm (§15.12).
+    return re.sub(r"[^a-z0-9 ]", " ",
+                  unicodedata.normalize("NFKD", str(s or "")).lower())
 
 
 def _doc_so(n: int) -> str:
@@ -2298,8 +2366,12 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
             j2 += 1
         if j2 < len(cau):
             so_lieu[j2] = lop_cua[_i]
+    _bo_lech, _bo_lap = loc_the_so(so_lieu, cau)
     _ns = sum(1 for x in so_lieu if x)
-    print(f"   🔢 {_ns} lượt có lớp số liệu")
+    _ghi = f"   🔢 {_ns} lượt có lớp số liệu"
+    if _bo_lech or _bo_lap:
+        _ghi += f" (bỏ {_bo_lech} thẻ số KHÔNG được đọc lên · {_bo_lap} thẻ trùng số)"
+    print(_ghi)
     props = {
         "luot": luot, "tu": tu, "voMp3": rel, "nhac": KC.NHAC[de],
         "kieuA": kieuA, "kieuB": kieuB, "kieuTuyA": tuyA, "kieuTuyB": tuyB,

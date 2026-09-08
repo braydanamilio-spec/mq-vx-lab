@@ -187,13 +187,51 @@ _LUC_BAI = [0.0]     # nhịp gọi riêng cho bước đọc BÀI VIẾT, xem `
 SANG = os.path.join(GOC, "so_sang.json")      # chủ thể -> số câu nhân quả đã đo
 
 
+VAN_TAY = os.path.join(GOC, "so_sang.vantay")   # bộ trích nào đã chấm sổ này
+
+
+def _van_tay() -> str:
+    """Vân tay của BỘ TRÍCH đang dùng — đổi biểu thức là đổi vân tay."""
+    import hashlib
+    import chu_de as C
+    return hashlib.sha1(C._CAU_CHUYEN.pattern.encode("utf-8")).hexdigest()[:16]
+
+
 def _doc_sang() -> dict:
-    if os.path.exists(SANG):
+    """Sổ điểm, đã BỎ những mục chấm bằng bộ trích cũ mà còn dưới sàn.
+
+    ── VÌ SAO  (8/9/2026) ────────────────────────────────────────────────────────────────
+    Nới `_CAU_CHUYEN` xong thì mã đúng và DỮ LIỆU thì không: 9.423 mục trong sổ mang điểm của
+    bộ trích cũ, trong đó 3.800 mục đứng ở 1–3 câu — mà một nửa số ấy có bài dày và sẽ chấm
+    khác hẳn. Vá đường tính, để nguyên thứ đã tính là §6, và ở đây nó khoá cứng đúng phần hồ
+    mà bản nới sinh ra để cứu.
+    Không xoá gì và cũng không chấm lại tất: nới biểu thức chỉ có thể làm điểm TĂNG, nên mục
+    đã ≥ sàn thì vẫn ≥ sàn — giữ nguyên. Chỉ mục DƯỚI sàn mới cần đo lại, và bỏ nó khỏi sổ là
+    đủ để `co_chuyen` xếp nó vào hàng chưa sàng.
+    Vân tay lấy từ CHÍNH biểu thức, nên không ai phải nhớ tăng một số phiên bản bằng tay —
+    thứ sẽ bị quên đúng lần quan trọng (§13.6).
+    """
+    if not os.path.exists(SANG):
+        return {}
+    try:
+        d = json.load(io.open(SANG, encoding="utf-8"))
+    except Exception:
+        return {}
+    vt = _van_tay()
+    cu = ""
+    if os.path.exists(VAN_TAY):
         try:
-            return json.load(io.open(SANG, encoding="utf-8"))
+            cu = io.open(VAN_TAY, encoding="utf-8").read().strip()
         except Exception:
-            pass
-    return {}
+            cu = ""
+    if cu == vt:
+        return d
+    giu = {k: v for k, v in d.items() if isinstance(v, int) and v >= 8}
+    print(f"   ♻️ bộ trích đổi — giữ {len(giu)}/{len(d)} mục đã ĐẠT, "
+          f"{len(d) - len(giu)} mục dưới sàn sẽ đo lại bằng biểu thức mới")
+    io.open(SANG, "w", encoding="utf-8").write(json.dumps(giu, ensure_ascii=False))
+    io.open(VAN_TAY, "w", encoding="utf-8").write(vt)
+    return giu
 
 
 def co_chuyen(gocs: list, san: int = 8, them: int = 6, sau: int = 2) -> list:
@@ -369,8 +407,67 @@ def tiep(kenh: str, gocs: list, khuons: list, so_luong: int = 1, sau: int = 2) -
     return ra
 
 
+def sang_hang_loat(gocs: list, tran: int = 500, san: int = 8, moi_me: int = 40) -> None:
+    """Sàng nhiều chủ thể một lượt, có ĐIỂM LƯU — dùng ngoài giờ dựng.
+
+    ── VÌ SAO  (8/9/2026) ────────────────────────────────────────────────────────────────
+    `co_chuyen(them=6)` cố ý sàng nhỏ giọt: nó chạy TRONG lượt dựng, nên mỗi chủ thể sàng thêm
+    là một vòng mạng chen vào giữa việc đang gấp (§18.8 — chi phí phải tỉ lệ với PHẦN MỚI).
+    Đúng cho lúc dựng. Sai khi cần MỞ hồ: ở nhịp 6 chủ thể/lượt và ~54 lượt/ngày thì 34.000
+    chủ thể chưa đo cần hơn ba tháng, và cả hồ 43.558 chủ thể chỉ hiện ra từng giọt.
+    Sàng là việc đọc-thuần, không tốn một neuron CF nào và không đụng hạn mức ảnh — nên nó
+    thuộc về một lượt chạy riêng, ngoài giờ, không phải bám vào lượt dựng.
+
+    `moi_me` là điểm lưu: `co_chuyen` chỉ ghi sổ ở cuối mỗi lượt gọi, nên gọi một lượt 5.000
+    chủ thể là đặt cược cả 5.000 vào việc không có gì gián đoạn. Chia mẻ thì mất nhiều nhất
+    một mẻ — và một lượt bị ngắt vẫn giữ trọn phần đã đo (§15.2: đừng ném bằng chứng đi).
+    """
+    # ── SÀNG PHẢI ĐI HẾT MỌI GỐC ĐÃ ĐỆM  (đo 8/9/2026) ─────────────────────────────────
+    # `co_chuyen` chỉ mở thêm gốc khi hồ hiện có còn dưới 200 chủ thể — đúng cho lúc DỰNG, nơi
+    # mở một gốc mới tốn vài phút cào cây và tập đang chờ. Nhưng đem nguyên luật ấy sang lượt
+    # sàng thì nó khoá cứng: gốc «Defunct airlines» có 757 chủ thể nên không bao giờ xuống dưới
+    # 200, và 31 gốc còn lại trong đệm — 42.800 chủ thể — không bao giờ được chạm tới.
+    # §12.5: câu luật đúng ở ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
+    # Lượt sàng thì ngược lại: nó chạy ngoài giờ, và việc của nó CHÍNH LÀ đi hết hồ.
+    if not gocs:
+        gocs = []
+        if os.path.exists(DEM):
+            try:
+                for k in json.load(io.open(DEM, encoding="utf-8")):
+                    g = k.rsplit("|", 1)[0]
+                    if g not in gocs:
+                        gocs.append(g)
+            except Exception:
+                pass
+        print(f"   🌳 sàng trên TOÀN BỘ {len(gocs)} gốc đã đệm")
+    xong = 0
+    while xong < tran:
+        me = min(moi_me, tran - xong)
+        truoc = len(_doc_sang())
+        try:
+            co_chuyen(gocs, san=san, them=me)
+        except KeyboardInterrupt:
+            print("   ⏹ dừng theo yêu cầu — phần đã sàng vẫn còn trong sổ")
+            break
+        sau = len(_doc_sang())
+        if sau == truoc:
+            print("   ⏹ không còn chủ thể nào chưa sàng trong các gốc đã mở")
+            break
+        xong += sau - truoc
+        d = _doc_sang()
+        dat = sum(1 for v in d.values() if isinstance(v, int) and v >= san)
+        print(f"   📊 đã sàng {xong}/{tran} lượt này · sổ {len(d)} mục · ĐẠT {dat} "
+              f"({dat * 100 // max(1, len(d))}%)")
+
+
 if __name__ == "__main__":
     import sys
+    if "--sang" in sys.argv:
+        i = sys.argv.index("--sang")
+        n = int(sys.argv[i + 1]) if len(sys.argv) > i + 1 else 500
+        g = [x for x in sys.argv[1:i] if not x.startswith("--")]   # rỗng = mọi gốc đã đệm
+        sang_hang_loat(g, tran=n)
+        raise SystemExit(0)
     gocs = sys.argv[1:] or ["Defunct companies of the United States", "Discontinued products"]
     tong = set()
     for g in gocs:

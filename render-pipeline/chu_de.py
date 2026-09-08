@@ -335,9 +335,40 @@ def bai_viet(ten: str) -> str:
 # phép kiểm là "câu này có trong bài không", so chuỗi chính xác. SỐ chỉ cần cho cái THẺ trên
 # màn hình, không cần cho SỰ THẬT. Nên lấy cả hai loại, đánh dấu loại nào có số, rồi khâu
 # dựng cho câu có số thành nhịp `so_lieu` và câu không số thành nhịp `canh`.
+# ── HAI HỌ CHỮ CÒN THIẾU  (đo 90 bài, 8/9/2026) ──────────────────────────────────────────
+# Đo sổ sàng: 18,4% chủ thể qua cổng ≥8 câu, và 3.800 chủ thể đứng ở 1–3 câu — trong đó một
+# nửa có bài DÀY (trung vị 3.380 ký tự). Bài dày mà chấm 1–3 là dấu hiệu bộ trích hẹp, không
+# phải chủ thể nghèo chuyện (§19.5: phép đo này đo nguồn, hay đo chính bộ lọc của mình?).
+#
+# Đọc tay 54 câu bị loại của «LBRY» — bài 8.024 ký tự, chấm 2 câu. Phần lớn đúng là câu MÔ TẢ
+# và loại đúng. Nhưng bốn câu bị bỏ sót lại là chính cái chết của chủ thể:
+#   «…Securities and Exchange Commission which FOUND THAT LBRY had sold unregistered securities»
+#   «It STOPPED being supported in December 2019, IN FAVOR OF LBRY, Inc.»
+#   «Odysee was split… AS LBRY FACED A LAWSUIT…»
+# Thiếu hẳn hai họ: ĐỘNG TỪ KẾT CỤC (kiện · phán quyết · thu hồi giấy phép · giải thể) và
+# LIÊN TỪ NHÂN QUẢ (due to · as a result · prompted · amid).
+#
+# ── VÀ MỘT BẢN NỚI ĐÃ BỊ BÁC  (§13.21: đọc tay ca được NHẬN, không chỉ đếm) ──────────────
+# Bản nới đầu thêm cả `acquired · merged · recalled · stopped · closed · ruled · found that`.
+# Nó cho 1,87× — nghe hay hơn hẳn. Đọc tay thì «Republic New York» thêm 11 câu mà 6 câu đầu
+# đều là *"in 1974, it ACQUIRED Kings Lafayette Bank"*: một NHẬT KÝ THÂU TÓM, đúng dạng đã
+# làm hỏng tập Periscope (§19.19 — kịch bản tụt thành nhật ký cập nhật phiên bản).
+# Và `recalled` trong «"The ambiance was very special there," RECALLED Bob Gibson» là NHỚ LẠI,
+# không phải thu hồi — §13.22: một chữ hai nghĩa là chữ không dùng làm cổng được.
+#
+# Nên giữ bản 1,47×: mỗi chữ dưới đây chỉ có MỘT nghĩa, và nghĩa ấy là kết thúc hoặc nguyên
+# nhân. 0,4× còn lại của bản kia mua bằng rác, và rác đi thẳng lên màn hình.
 _CAU_CHUYEN = re.compile(r"[^.\n]*?\b(?:because|after|when|until|failed|refused|declined|"
                          r"collapsed|bankrupt|replaced|abandoned|banned|lost|blamed|"
-                         r"led to|resulted|caused|forced|never|no longer|instead)\b"
+                         r"led to|resulted|caused|forced|never|no longer|instead|"
+                         # kết cục — không lẫn nghĩa nào khác
+                         r"ceased|shut down|dissolved|liquidated|seized|sued|lawsuit|"
+                         r"convicted|indicted|fined|revoked|grounded|discontinued|halted|"
+                         r"expelled|stripped of|filed for bankruptcy|filed for Chapter|"
+                         r"went bankrupt|"
+                         # liên từ nhân quả
+                         r"due to|owing to|as a result|prompted|triggered|sparked|"
+                         r"in favor of|amid |over allegations)\b"
                          r"[^.\n]*\.")
 
 

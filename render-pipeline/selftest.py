@@ -4140,6 +4140,8 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("kho đệm chọn chủ thể phải nằm TRONG GIT (CI mới có)", t_dem_chu_de_phai_trong_git)
+    check("thẻ số trên màn phải ĐƯỢC ĐỌC LÊN, và không trùng", t_the_so_phai_duoc_doc_len)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
@@ -10129,6 +10131,94 @@ def t_workflow_nap_du_ho_khoa():
                       "GROQ_KEYS lọt suốt hai ngày: " + "; ".join(lech[:6]))
     assert all("GROQ_KEYS" in co for co in song.values()), \
         "luồng render không nạp GROQ_KEYS — 18/18 luồng đã ĐỎ vì đúng chỗ này"
+
+
+def t_dem_chu_de_phai_trong_git():
+    """Hai kho đệm chọn chủ thể phải đi theo git, không chỉ nằm trên máy anh.
+
+    ── VÌ SAO  (8/9/2026) ────────────────────────────────────────────────────────────────
+    `so_sang.json` (chủ thể -> số câu nhân quả đã đo) và `ho_chu_de.json` (cây hạng mục) chưa
+    bao giờ được `git add` — không bị `.gitignore` chặn, chỉ là không ai thêm. Hậu quả trên CI:
+    `_doc_sang()` trả RỖNG và `duyet()` phải cào lại cây hạng mục từ đầu MỖI LƯỢT (~3 phút mỗi
+    gốc theo chính chú thích của `co_chuyen`). Nên production sàng nổi vài chủ thể rồi in
+    `⏭ chưa có chủ thể đủ chuyện — BỎ bộ này`, trong khi máy anh có sẵn 1.800 chủ thể đã đo.
+
+    Máy nào chạy thử cũng đẹp, CI thì đói — đúng lớp lỗi "chạy được ở máy tôi" mà cổng nhạc
+    nền ngay trên đã trả giá một lần (27/8), và `.gitignore` dòng 28 còn ghi lại lần thứ hai
+    với `am_luong.json` + 110 ảnh nền. Đây là lần thứ ba, nên nó thành cổng.
+
+    Danh sách tệp lấy từ CHÍNH hằng số của module, không chép tay: thêm một kho đệm mới mà quên
+    commit thì cổng đỏ ngay, không đợi ai nhớ (§13.2).
+    """
+    import subprocess as _sp
+    import ho_chu_de as _H
+    goc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    can = {}
+    for ten in ("SANG", "DEM"):
+        p = getattr(_H, ten, "")
+        if p:
+            can[ten] = os.path.relpath(p, goc)
+    assert can, "không rút được đường dẫn kho đệm từ ho_chu_de — phép rút hỏng"
+    try:
+        r = _sp.run(["git", "ls-files"] + list(can.values()),
+                    cwd=goc, capture_output=True, text=True, timeout=30)
+    except Exception as e:
+        print(f"      ⏭️ bỏ qua: không chạy được git ({str(e)[:40]})")
+        return
+    co = {x.strip() for x in r.stdout.splitlines() if x.strip()}
+    thieu = [f"{k} ({v})" for k, v in can.items() if v not in co]
+    assert not thieu, ("kho đệm chọn chủ thể KHÔNG có trong git — CI sẽ cào lại từ đầu mỗi "
+                       "lượt và gần như không sàng được ai: " + " · ".join(thieu))
+
+
+def t_the_so_phai_duoc_doc_len():
+    """Con số hiện trên màn phải là con số ĐANG ĐƯỢC NÓI, và mỗi số chỉ làm thẻ một lần.
+
+    ── VÌ SAO  (anh soi bộ 170, 8/9/2026) ────────────────────────────────────────────────
+    Bong bóng đọc *"…collapsed in … 1720"* trong khi thẻ hiện **1599**. Người xem NGHE một số
+    và ĐỌC một số khác — tệ hơn hẳn không có thẻ, vì nó phá đúng thứ kênh này đi bán. Đo 967
+    thẻ trên 448 tệp props: 346 (35%) mang số không hề được đọc lên, phần lớn rơi vào NHỊP
+    CHỐT nơi §19.2 cố ý cấm số. Và `1720` hiện ba lần trong một tập.
+
+    ── ĐO BẰNG KẾT QUẢ CUỐI  (§13.23, anh nhắc 8/9: *"ko làm phá chất lượng"*) ───────────
+    Hai bộ lọc bỏ 52% số thẻ — nghe như phá sản phẩm. Chạy thử trên 228 tập thật: **213 tập
+    (93%) vẫn còn ≥1 thẻ**, 14 tập mất hết, và chúng mất vì MỌI thẻ đều sai số hoặc trùng.
+
+    ── VÌ SAO CỔNG NÀY CHẠY HÀM, KHÔNG QUÉT CHỮ ────────────────────────────────────────
+    Bản đầu kiểm *"chuỗi `_duoc_noi(` có trong tệp không"*. Thử ngược bốn ca: KHÔNG BẮT ca
+    nào — đổi `if not _duoc_noi(...)` thành `if False:` mà cổng vẫn xanh, vì `def _duoc_noi`
+    vẫn còn. Lần thứ hai trong phiên em viết một cổng đo CHỮ cho một thứ cần đo HÀNH VI.
+    """
+    import pilot_hai as PH
+
+    def chay(the, loi):
+        sl = [{"k": "so", "so": x} for x in the]
+        PH.loc_the_so(sl, [{"nar": n} for n in loi])
+        return [x["so"] if x else None for x in sl]
+
+    # BẮT: số không được đọc lên  ·  số trùng
+    assert chay(["1599"], ["It collapsed in 1720."]) == [None], \
+        "thẻ mang con số KHÔNG có trong lời thoại vẫn lọt"
+    assert chay(["1720", "1720"], ["Fell in 1720.", "Again in 1720."]) == ["1720", None], \
+        "cùng một con số làm thẻ hai lần"
+    assert chay(["2008"], ["Tell someone tomorrow that the sale changed everything."]) == [None], \
+        "nhịp chốt không có số mà vẫn đeo thẻ số"
+
+    # KHÔNG BẮT OAN: chữ số thẳng · dạng ĐỌC THÀNH CHỮ · có dấu phẩy · có ký hiệu tiền
+    assert chay(["1720"], ["It collapsed in 1720."]) == ["1720"]
+    assert chay(["3,200"], ["three thousand two hundred degrees Fahrenheit"]) == ["3,200"], \
+        "số đọc bằng CHỮ bị coi là không được nói (§18.11 — so chuỗi thay vì so tương đương)"
+    assert chay(["$295K"], ["It cost $295K over thirty years."]) == ["$295K"]
+    assert chay(["1720", "1717"], ["Fell in 1720.", "Founded 1717."]) == ["1720", "1717"], \
+        "hai số KHÁC nhau bị coi là trùng"
+
+    # bộ lọc phải chạy TRƯỚC lúc ghi props — đo trên NGUỒN thật, vì `_ma_py` gộp thân mọi hàm
+    # nên vị trí trong chuỗi của nó không nói gì về thứ tự chạy (bản đầu của cổng dính đúng đó)
+    src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "pilot_hai.py"), encoding="utf-8").read()
+    i_loc, i_ghi = src.find("loc_the_so(so_lieu, cau)"), src.find('"soLieu": so_lieu')
+    assert i_loc > 0 and i_ghi > 0, "không tìm thấy mốc lọc/ghi trong pilot_hai.py"
+    assert i_loc < i_ghi, "lọc thẻ chạy SAU khi props đã ghi — không có tác dụng gì"
 
 
 if __name__ == "__main__":
