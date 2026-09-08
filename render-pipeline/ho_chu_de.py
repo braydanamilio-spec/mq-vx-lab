@@ -312,6 +312,20 @@ def co_chuyen(gocs: list, san: int = 8, them: int = 6, sau: int = 2) -> list:
         if n >= san:
             dat.append(ct)
     if moi:
+        # ── GHI CÓ HỢP NHẤT, KHÔNG GHI ĐÈ BẢN CHỤP  (đo 8/9/2026) ──────────────────────
+        # Bản trước ghi thẳng `da` — bản chụp đọc lúc VÀO hàm. Chạy một lượt sàng cạnh một
+        # lượt dựng thì bên đọc trước ghi sau, và phần bên kia vừa đo BIẾN MẤT: đo thật, số
+        # chủ thể ĐẠT tụt 1.776 -> 1.753 giữa hai lần xem, không một dòng lỗi nào.
+        # Mỗi lượt đo là một vòng mạng đã trả tiền, nên mất nó là mất tiền thật (§15.2 —
+        # ném bằng chứng đi trước khi ai kịp đọc).
+        # Đọc lại ngay trước khi ghi rồi hợp nhất: mục của mình đè mục cũ CÙNG KHOÁ, còn khoá
+        # người khác vừa thêm thì giữ. Không cần khoá tệp — phép hợp nhất này giao hoán.
+        try:
+            cu = json.load(io.open(SANG, encoding="utf-8")) if os.path.exists(SANG) else {}
+        except Exception:
+            cu = {}
+        cu.update(da)
+        da = cu
         io.open(SANG, "w", encoding="utf-8").write(json.dumps(da, ensure_ascii=False))
         print(f"   🔎 sàng thêm {moi} chủ thể · hồ ĐỦ CHUYỆN: {len(dat)}/{len(da)} đã đo "
               f"({len(het)} trong hồ)")
