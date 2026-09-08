@@ -2492,6 +2492,44 @@ def _tieu_short(tieu_dai: str, lat: list, c: int) -> str:
     return f"{tieu_dai} — {c + 1}"
 
 
+# ── SỔ JOB: HAI ĐƯỜNG DỰNG NÀY CHƯA BAO GIỜ GHI  (8/9/2026) ────────────────────────────
+# Anh soi dashboard: `Hôm nay 0 · Video trong kho 0 · Đang chạy 0 · Lỗi 0` và hỏi *"sao trên
+# site ko ghi nhận 1 cái gì"*. Đi tìm thì `pilot_hai` và `phim` KHÔNG gọi `new_job` /
+# `update_job` một lần nào — chúng dựng video, đẩy Drive, mà không để lại bản ghi.
+#
+# Nên dashboard không mù vì lỗi hiển thị: nó KHÔNG CÓ GÌ ĐỂ ĐỌC. Và tệ hơn, ô ❌ đếm bản ghi
+# `failed`, nên một lượt chết trước khi kịp tạo bản ghi thì không có mặt ở cả ba ô — đúng
+# §10.1 (*"hỏng mà không để lại tệp nào thì trông y hệt chưa từng chạy"*), cộng một tầng nữa:
+# nó còn không báo lỗi.
+#
+# NGÂN SÁCH GHI: một bản ghi cho MỘT BỘ (không phải mỗi clip) — mở lúc bắt đầu, chốt lúc kết
+# thúc. 18 kênh × 4 mốc cron = 72 bộ/ngày ≈ 144 lượt ghi, so với trần free 20.000 (§13.7 —
+# "số nhỏ" không phải bảo vệ, nên tính ra thay vì cảm giác).
+#
+# HỎNG MỀM Ở MỌI NHÁNH (§13.3): sổ hỏng thì video vẫn phải ra. Không bao giờ để một lượt ghi
+# Firestore giết một bộ đã tốn ảnh để dựng.
+def _mo_so(ma: str, idx: int) -> str:
+    try:
+        import firestore_bridge as FB
+        owner = os.environ.get("OWNER_UID") or ""
+        if not owner:
+            return ""
+        return FB.new_job(owner, ma, vtype="bo", pver=f"v11:{idx}") or ""
+    except Exception as e:
+        print(f"   ⚠ không mở được bản ghi job ({str(e)[:44]}) — vẫn dựng bình thường")
+        return ""
+
+
+def _chot_so(job: str, trang_thai: str, **them) -> None:
+    if not job:
+        return
+    try:
+        import firestore_bridge as FB
+        FB.update_job(job, status=trang_thai, **them)
+    except Exception as e:
+        print(f"   ⚠ không chốt được bản ghi job ({str(e)[:44]})")
+
+
 def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
     """MỘT BỘ = 1 bản dài + 3 short, DÙNG CHUNG một bộ ảnh VÀ một chủ thể. Trả số clip.
 
@@ -2523,6 +2561,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         print(f"   ⏭ {ma} tập {idx}: chưa có chủ thể đủ chuyện — BỎ bộ này, không dựng bừa")
         return 0
     _ma_sinh = k_ma_sinh(ma)
+    _job = _mo_so(ma, idx)
 
     def _ghim(bo_nhip):
         _G1.BO_SINH[_ma_sinh] = lambda _i, _x=bo_nhip: _x
@@ -2541,6 +2580,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         n += 1
     else:
         print(f"   ⚠ {ma} tập {idx}: bản dài hỏng — bỏ cả bộ, không dựng short lẻ")
+        _chot_so(_job, "failed", error="bản dài hỏng")
         return 0
 
     # Bộ ảnh của bản dài, đọc từ chính tệp props nó vừa ghi.
@@ -2588,6 +2628,8 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         else:
             os.environ["KHONG_NEN_TAP"] = _cu
     print(f"   📦 bộ {ma}/{idx}: {n}/{1 + len(_lats)} clip · chủ thể «{CHU_THE_TAP}»")
+    _chot_so(_job, "done" if n >= 1 else "failed",
+             clips=n, subject=CHU_THE_TAP[:80])
     return n
 
 

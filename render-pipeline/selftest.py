@@ -273,6 +273,36 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_hai_luong_ghi_so_job():
+    """Hai đường dựng phải GHI SỔ JOB — mở lúc bắt đầu, chốt done/failed lúc kết thúc.
+
+    Anh soi dashboard: `Hôm nay 0 · Video trong kho 0 · Đang chạy 0 · Lỗi 0` và hỏi *"sao
+    trên site ko ghi nhận 1 cái gì"*. `pilot_hai` và `phim` KHÔNG gọi `new_job`/`update_job`
+    một lần nào — chúng dựng video mà không để lại bản ghi, nên dashboard không có gì để đọc.
+    Và vì ô ❌ đếm bản ghi `failed`, một lượt chết trước khi kịp tạo bản ghi thì vắng mặt ở
+    CẢ BA ô — §10.1 cộng thêm một tầng: nó còn không báo lỗi.
+
+    Chốt canh cả hai chiều: có nối, VÀ hỏng mềm (§13.3 — sổ hỏng thì video vẫn phải ra)."""
+    import inspect, pilot_hai as P, phim as PH
+    src = inspect.getsource(P.bo_1_3)
+    assert "_mo_so(" in src, "bo_1_3 không mở bản ghi job"
+    assert src.count("_chot_so(") >= 2, "bo_1_3 không chốt đủ nhánh done/failed"
+    m = inspect.getsource(PH.main)
+    assert "_mo_so(" in m, "phim.main không mở bản ghi job"
+    assert m.count("_chot_so(") >= 3, "phim.main không chốt đủ nhánh (done/failed/ratelimited)"
+    # HỎNG MỀM: không có OWNER_UID / Firestore chết -> trả rỗng, KHÔNG ném
+    import os
+    cu = os.environ.pop("OWNER_UID", None)
+    try:
+        assert P._mo_so("therules", 1) == "", "thiếu OWNER_UID mà không trả rỗng"
+        assert PH._mo_so("therules", 1, True) == "", "thiếu OWNER_UID mà không trả rỗng"
+        P._chot_so("", "done")          # job rỗng -> không được ném
+        PH._chot_so("", "failed")
+    finally:
+        if cu is not None:
+            os.environ["OWNER_UID"] = cu
+
+
 def t_du_luot_noi_voi_nguoi_xem():
     """Máy phải tự đủ 2 lượt "you", và chỉ bằng cách ĐỔI NGÔI câu nối — không thêm khẳng định.
 
@@ -3036,6 +3066,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
     check("lặp gần: so gần bằng, không so bằng", t_lap_gan_so_gan_bang)
     check("nền kể đúng chuyện đang nói", t_canh_theo_khai_niem)

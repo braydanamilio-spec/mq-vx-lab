@@ -548,6 +548,38 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
 DICH_LUFS = -14.0
 
 
+# ── SỔ JOB: LUỒNG NÀY CŨNG CHƯA BAO GIỜ GHI  (8/9/2026) ────────────────────────────────
+# Cùng lỗ với `pilot_hai`: `phim.py` dựng video mà không gọi `new_job`/`update_job` lần nào,
+# nên lượt PHIM v10 chết 18/18 luồng vẫn để dashboard ở `Hôm nay 0 · Đang chạy 0 · Lỗi 0`.
+# Một lượt hỏng KHÔNG để lại bản ghi thì không phân biệt được với một lượt chưa từng chạy
+# (§10.1), và ô ❌ đếm bản ghi `failed` nên nó im luôn.
+#
+# Một bản ghi cho MỘT TẬP ở đây (khác `pilot_hai` ghi theo BỘ) vì đơn vị hỏng của luồng này
+# là tập: 18 luồng × ~2 tập = ~36 bản ghi mỗi lượt, ~144/ngày với 4 mốc cron.
+# Hỏng mềm ở mọi nhánh (§13.3) — sổ hỏng thì video vẫn phải ra.
+def _mo_so(ma: str, idx: int, long: bool) -> str:
+    try:
+        import firestore_bridge as FB
+        owner = os.environ.get("OWNER_UID") or ""
+        if not owner:
+            return ""
+        return FB.new_job(owner, ma, vtype="long" if long else "short",
+                          pver=f"v10:{idx}") or ""
+    except Exception as e:
+        print(f"   ⚠ không mở được bản ghi job ({str(e)[:44]}) — vẫn dựng bình thường")
+        return ""
+
+
+def _chot_so(job: str, trang_thai: str, **them) -> None:
+    if not job:
+        return
+    try:
+        import firestore_bridge as FB
+        FB.update_job(job, status=trang_thai, **them)
+    except Exception as e:
+        print(f"   ⚠ không chốt được bản ghi job ({str(e)[:44]})")
+
+
 def chuan_am(mp4: str) -> bool:
     tam = mp4 + ".am.mp4"
     r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", mp4, "-c:v", "copy",
@@ -592,21 +624,28 @@ def main() -> int:
     def chay(t):
         if dung["can"]:
             return ""
+        _job = _mo_so(t[0], t[1], a.long)
         try:
-            return mot_tap(t[0], t[1], doc=not a.ngang, long=a.long, so_chuong=a.chuong,
-                           khong_anh=a.khong_anh, luong=a.luong, kieu=a.kieu)
+            _ra = mot_tap(t[0], t[1], doc=not a.ngang, long=a.long, so_chuong=a.chuong,
+                          khong_anh=a.khong_anh, luong=a.luong, kieu=a.kieu)
+            _chot_so(_job, "done" if _ra else "failed",
+                     error="" if _ra else "mot_tap trả rỗng")
+            return _ra
         except ThieuAnh as e:
             # Hoãn MỘT tập. Sổ cảnh + cache ảnh còn nguyên nên lượt sau vẽ nốt phần thiếu.
             print(f"   ⏭ {t[0]} tập {t[1]}: {e}")
+            _chot_so(_job, "ratelimited", error=str(e)[:120])
             return ""
         except HoCan as e:
             # Hồ cạn là chuyện của CẢ MẺ, không của một tập: mọi tập sau sẽ cạn y hệt. Dựng
             # tiếp chỉ để đốt thời gian runner và sinh video hỏng.
             print(f"   ⛔ {t[0]} tập {t[1]}: {e}")
+            _chot_so(_job, "ratelimited", error=str(e)[:120])
             dung["can"] = True
             return ""
         except Exception as e:                       # một tập hỏng không được giết cả mẻ
             print(f"   ❌ {t[0]} tập {t[1]}: {type(e).__name__}: {str(e)[:120]}")
+            _chot_so(_job, "failed", error=f"{type(e).__name__}: {str(e)[:100]}")
             return ""
 
     # SONG SONG Ở MỨC TẬP: mỗi tập ghi tệp mang tên kênh + số tập nên không đè nhau, và hồ
