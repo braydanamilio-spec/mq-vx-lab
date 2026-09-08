@@ -90,6 +90,14 @@ const VISEME: Record<string, Viseme> = {
   f: { w: 0.56, h: 0.14, tron: 0 },      // f, v — răng chạm môi
 };
 
+/**
+ * Trần chiều cao khẩu hình, SUY TỪ CHÍNH BẢNG trên — đừng chép con số ra chỗ khác.
+ * `KichComic` từng chia độ mở miệng cho hằng `26` (mẫu số của một thang đã bỏ) để lấy cường độ
+ * nhấn thân người; với thang 0..1 thì phép chia ấy luôn ra ~0,03, tức cú nhấn chưa bao giờ xảy
+ * ra. Xuất trần ra đây để chỗ dùng quy về 0..1 mà không sinh nguồn sự thật thứ hai (§11).
+ */
+export const CAO_MIENG_MAX = Math.max(...Object.values(VISEME).map((v) => v.h));
+
 /** Chuỗi khẩu hình của một từ, suy từ nguyên âm; phụ âm môi chèn hình khép vào giữa. */
 const chuoiHinh = (tu: string): string[] => {
   const t = (tu || "").toLowerCase().replace(/[^a-z]/g, "");

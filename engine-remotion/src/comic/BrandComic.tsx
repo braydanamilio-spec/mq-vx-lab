@@ -149,7 +149,7 @@ export const BrandComic: React.FC<PropsBrand> = ({
           <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
             <DienVienHai
               kieu={N} camXuc={camXuc} cuChi={"nghi" as TenCuChi} nhin={[0, 0]}
-              noi={{ w: 20, h: 14, tron: 0.1 } as any} t={0.8} dangNoi={false}
+              noi={/* 8/9 — thang 0..1 của bảng VISEME. Trước là `{ w: 20, h: 14 }` (thang đã bỏ): `trn` kẹp nên MIỆNG ra y hệt, nhưng `gat = noi.h*3,4` KHÔNG kẹp, nên đầu bị đẩy xuống 48px trong khi trần hợp lệ là 2,4px. */ { w: 1, h: 1, tron: 0.1 }} t={0.8} dangNoi={false}
               kyHieu={false} ghimNguc
               x={S / 2} y={S * 0.15 + CAO_NG * caoA * k} scale={k}
             />
@@ -288,14 +288,14 @@ export const BrandComic: React.FC<PropsBrand> = ({
           {xa != null ? (
             <DienVienHai
               kieu={A} camXuc={"bat_ngo" as TenCamXuc} cuChi={"mo_tay" as TenCuChi} nhin={[0.4, 0]}
-              noi={{ w: 24, h: 18, tron: 0.1 } as any} t={1.1} dangNoi={false} kyHieu={false} ghimNguc
+              noi={/* 8/9 — thang 0..1 của bảng VISEME. Trước là `{ w: 24, h: 18 }` (thang đã bỏ): `trn` kẹp nên MIỆNG ra y hệt, nhưng `gat = noi.h*3,4` KHÔNG kẹp, nên đầu bị đẩy xuống 61px trong khi trần hợp lệ là 2,4px. */ { w: 1, h: 1, tron: 0.1 }} t={1.1} dangNoi={false} kyHieu={false} ghimNguc
               x={AT.x + AT.w * xa} y={AT.y + AT.h * 0.06 + CAO_NG * caoMaxB * kChung} scale={kA}
             />
           ) : null}
           {xb != null ? (
             <DienVienHai
               kieu={B} camXuc={"tu_tin" as TenCamXuc} cuChi={"khoanh_tay" as TenCuChi} nhin={[-0.4, 0]}
-              noi={{ w: 20, h: 12, tron: 0.1 } as any} t={1.7} dangNoi={false} kyHieu={false} ghimNguc lat
+              noi={/* 8/9 — thang 0..1 của bảng VISEME. Trước là `{ w: 20, h: 12 }` (thang đã bỏ): `trn` kẹp nên MIỆNG ra y hệt, nhưng `gat = noi.h*3,4` KHÔNG kẹp, nên đầu bị đẩy xuống 41px trong khi trần hợp lệ là 2,4px. */ { w: 1, h: 1, tron: 0.1 }} t={1.7} dangNoi={false} kyHieu={false} ghimNguc lat
               x={AT.x + AT.w * xb} y={AT.y + AT.h * 0.06 + CAO_NG * caoMaxB * kChung} scale={kB}
             />
           ) : null}

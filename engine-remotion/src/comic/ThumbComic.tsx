@@ -117,7 +117,7 @@ export const ThumbComic: React.FC<PropsThumb> = ({
         <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
           <DienVienHai
             kieu={A} camXuc={camXuc} cuChi={"mo_tay" as TenCuChi} nhin={[0, 0]}
-            noi={{ w: 26, h: 22, tron: 0.1 } as any} t={1.4} dangNoi kyHieu={false} ghimNguc
+            noi={/* 8/9 — thang 0..1 của bảng VISEME. Trước là `{ w: 26, h: 22 }` (thang đã bỏ): `trn` kẹp nên MIỆNG ra y hệt, nhưng `gat = noi.h*3,4` KHÔNG kẹp, nên đầu bị đẩy xuống 75px trong khi trần hợp lệ là 2,4px. */ { w: 1, h: 1, tron: 0.1 }} t={1.4} dangNoi kyHieu={false} ghimNguc
             x={cx} y={yChan} scale={k}
           />
         </svg>

@@ -9335,3 +9335,49 @@ minh được gì nếu chưa RÀ TRÊN TOÀN BỘ phạm vi — mọi lỗi tr�
 thay vì kênh đang sửa dở. Và git stash trên repo có cửa sổ khác đang làm phải tránh tuyệt
 đối (§15.18) — nó gộp luôn brand_gt/* của cửa sổ kia; `git stash pop` cứu lại kịp nhưng đó
 là may, không phải cách làm đúng.
+
+## 8p1 — "Nhép miệng không khớp sub": ĐO BA ĐƯỜNG, cả ba nói KHÔNG có độ trễ (8/9/2026)
+
+**Triệu chứng.** Anh: *"nhép miện chưa khớp với sub e nha"*.
+
+**Đo trước khi sửa (§12.10), và cả ba phép đo bác giả thuyết "lệch thời gian":**
+
+| đo cái gì | cách đo | kết quả |
+|---|---|---|
+| mốc từ ↔ giọng thật | tương quan chéo đường bao năng lượng, ±1,00s | đỉnh ≤ 60 ms · nghỉ/nói 0,32 |
+| sub ↔ miệng | mô phỏng đúng hai luật chọn từ trên 5.165 khung | **cùng một từ ở 100% khung** |
+| độ mở miệng ↔ khẩu hình | đo diện tích lòng miệng trên ảnh, 105 khung | **đỉnh ở ĐÚNG 0 khung, r = +0,73** |
+
+**Gốc rễ — một HẰNG LẠC THANG, không phải một độ trễ.** `KichComic` khai
+`imLang = { w: 12, h: 3, tron: 0 }` trong khi bảng `VISEME` chạy 0..1. `DienVienHai` tính
+`trn(2.5, 34, noi.h)` và `trn` gọi `kep`, nên h = 3 kẹp về 1 → miệng ra **34px thay vì 4px của
+hình ngậm — 8,4× quá mở, và còn rộng hơn cả khẩu hình nói to nhất (25px)**. Panel vừa nói xong
+(`veCanh(Lcu, …, false)`) vì thế **há miệng tối đa** suốt 0,34s mỗi nhát cắt: 5–6% thời lượng,
+rơi đúng chỗ mắt người đang chuyển cảnh.
+
+**HỌ LỖI.** *Chép hằng sang hệ quy chiếu khác* (§6) — và `kep` làm nó **im lặng**: giá trị sai
+gấp mấy lần cũng chỉ kẹp về trần chứ không vỡ hình, nên không có gì báo. `KichV2` và `KichHai`
+không dính vì chúng **không tự chế hằng**: chúng gọi `visemeTai([], …)`, mảng rỗng thì hàm trả
+về đúng hình ngậm CỦA BẢNG (§13.1).
+
+**Hai lỗi cùng chỗ, cùng thang cũ:**
+- `kep(viseme.h / 26)` — mẫu số 26 của thang cũ, nên cú nhấn thân người luôn ra ~0,03: một tính
+  năng **chưa bao giờ chạy** (§15.12). Nay chia `CAO_MIENG_MAX`, suy từ chính bảng (§11).
+- `BrandComic` (3 chỗ) và `ThumbComic` (1 chỗ) cùng idiom: `{ w: 20..26, h: 12..22 }`. Miệng ra
+  y hệt vì `trn` kẹp, **nhưng `gat = noi.h * 3,4` KHÔNG kẹp** — đầu bị đẩy xuống 41–75px trong
+  khi chú thích của chính nó ghi *"đầu chúi xuống MỘT CHÚT"* (trần hợp lệ 2,4px).
+
+**Cổng `t_khau_hinh_dung_thang`** — tự đọc thang từ bảng, bỏ chú thích trước khi quét (§17.15:
+chú thích giải thích bản vá có trích lại chính hằng sai), thử ngược đủ 5 chiều. Và trần phải là
+**1,0** chứ không phải `max(bảng)` = 0,72: lấy 0,72 làm trần thì `{w:1,h:1}` (há hết cỡ, dùng cho
+ảnh brand) bị tố oan — §13.8, cổng bắt oan tệ hơn cổng không bắt. Bản đầu của cổng dính đúng lỗi ấy.
+
+**Lỗi thứ hai tìm được khi soi khung để nghiệm thu:** panel đang trượt vào không bị cắt nên bong
+bóng của nó **đè lên dải tên kênh** — hai khối chữ đậm chồng nhau (§12.12). Cắt nhóm panel trượt
+ở `height − CAO_TEN`; đáy ô panel còn cách mép cắt đúng `LE` nên trạng thái nghỉ không đổi một
+điểm ảnh (đã nghiệm thu bằng khung 20,0s dựng trước/sau).
+
+**Bài kiểm của em sai HAI lần trước khi đúng (§13.15):** đo đường bao trên mp4 (có nhạc nền
+`nhacVol=0,692` lấp khoảng nghỉ → r=0,075, suýt kết luận "mốc từ vô nghĩa"), rồi đo chiều cao hộp
+bao điểm tối (bão hoà 259/260 mọi khung). Chỉ khi đo **diện tích lòng miệng theo màu** trên
+**track giọng thuần** thì con số mới có nghĩa.

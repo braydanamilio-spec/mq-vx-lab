@@ -474,6 +474,66 @@ def t_hoi_anh_bang_thuc_the():
     assert "thuc_the(chu_the)" in src, "nap_anh_that chưa nối nhánh hỏi lại bằng thực thể"
 
 
+def t_khau_hinh_dung_thang():
+    """Mọi hằng khẩu hình trong engine phải nằm trong THANG của bảng `VISEME`.
+
+    8/9 — anh: *"nhép miệng chưa khớp với sub"*. Đo trước khi sửa (§12.10), và cả ba phép đo
+    đều nói KHÔNG có độ trễ:
+        mốc từ  <-> giọng thuần   : lệch <= 60 ms, tỉ số năng lượng nghỉ/nói 0,32
+        sub     <-> miệng         : cùng một từ ở 100% khung (5.165 khung của bộ 0111)
+        độ mở miệng đo trên ảnh <-> khẩu hình dự đoán : đỉnh tương quan ở ĐÚNG 0 khung, r = +0,73
+
+    Thứ hỏng là một hằng LẠC THANG: `KichComic` khai `imLang = { w: 12, h: 3, tron: 0 }` trong
+    khi bảng `VISEME` chạy 0..1 (`im.h = 0,05` ngậm · `a.h = 0,72` há rộng nhất). `Mieng` tính
+    `mH = dauR*(0,02 + h*0,26)`, nên h = 3 cho ra 0,80·dauR — gấp 3,9 lần hình há rộng nhất.
+    Kết quả: mỗi nhát cắt, panel vừa nói xong há miệng TỐI ĐA suốt 0,34 giây (5–6% thời lượng).
+    Cùng chỗ ấy còn `kep(viseme.h / 26)`: mẫu số 26 cũng của thang cũ, nên cú nhấn thân người
+    luôn ra ~0,03 — một tính năng chưa bao giờ chạy (§15.12).
+
+    Cổng TỰ ĐỌC trần từ chính bảng, không chép số (§13.2 · §11), và bỏ chú thích trước khi quét
+    vì chú thích giải thích bản vá có trích lại chính hằng sai (§17.15, đã dính bốn lần)."""
+    import re, pathlib
+    goc = pathlib.Path(__file__).resolve().parent.parent / "engine-remotion" / "src"
+    dv = (goc / "v2" / "DienVien.tsx").read_text(encoding="utf-8")
+    m = re.search(r"const VISEME[^{]*\{(.*?)\n\};", dv, re.S)
+    assert m, "khong doc duoc bang VISEME"
+    # TRẦN LÀ 1,0, KHÔNG PHẢI hình lớn nhất bảng có. `DienVienHai` tính
+    # `trn(2.5, 34, noi.h)` và `trn` gọi `kep` — nên thang thật của `noi` là 0..1, còn `a.h=0,72`
+    # chỉ là hình rộng nhất bảng TÌNH CỜ định nghĩa. Lấy nó làm trần thì `{w:1,h:1}` (há hết cỡ,
+    # dùng cho ảnh brand/bìa) bị tố oan — đúng §13.8: cổng bắt oan tệ hơn cổng không bắt.
+    tran_h = tran_w = 1.0
+    bang_h = max(float(x) for x in re.findall(r"h:\s*([0-9.]+)", m.group(1)))
+    assert bang_h <= 1.0, f"bang VISEME vuot thang 0..1 ({bang_h}) - doc lai cong nay"
+
+    def _bo_chu_thich(t):
+        t = re.sub(r"/\*.*?\*/", "", t, flags=re.S)
+        t = re.sub(r"(?m)^\s*//.*$", "", t)
+        return re.sub(r"(?m)\s//\s.*$", "", t)
+
+    def _soi(ma):
+        loi = []
+        for w, h in re.findall(r"\{\s*w:\s*([0-9.]+)\s*,\s*h:\s*([0-9.]+)\s*,\s*tron:", ma):
+            if float(h) > tran_h + 1e-9 or float(w) > tran_w + 1e-9:
+                loi.append(f"hang khau hinh lac thang w={w} h={h} (tran w={tran_w} h={tran_h})")
+        for d in re.findall(r"\.h\s*/\s*([0-9.]+)", ma):
+            if float(d) > tran_h + 1e-9:
+                loi.append(f"chia do mo mieng cho {d} - mau so cua thang cu (tran {tran_h})")
+        return loi
+
+    xau = []
+    for p in sorted(goc.rglob("*.tsx")):
+        xau += [f"{p.name}: {x}" for x in _soi(_bo_chu_thich(p.read_text(encoding="utf-8")))]
+    assert not xau, " . ".join(xau)
+
+    # THU NGUOC du hai chieu (§13.11) - cong chua thu nguoc la cong chua biet co chay khong.
+    assert _soi("const imLang = { w: 12, h: 3, tron: 0 };"), "cong khong bat duoc hang lac thang"
+    assert _soi("kep(viseme.h / 26)"), "cong khong bat duoc mau so thang cu"
+    assert not _soi("const im = { w: 0.42, h: 0.05, tron: 0 };"), "cong bat oan hang dung thang"
+    assert not _soi("kep(viseme.h / CAO_MIENG_MAX)"), "cong bat oan mau so suy tu bang"
+    assert not _soi(_bo_chu_thich("  // cu: { w: 12, h: 3, tron: 0 } - da bo\n  const a = 1;")), \
+        "cong doc chu thich thanh ma (§17.15)"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3440,6 +3500,7 @@ def main():
     check("User-Agent có liên hệ thật", t_user_agent_co_lien_he)
     check("luật bố cục nền theo tập", t_luat_bo_cuc_nen_tap)
     check("hỏi ảnh thật bằng tên thực thể", t_hoi_anh_bang_thuc_the)
+    check("hằng khẩu hình đúng thang bảng VISEME", t_khau_hinh_dung_thang)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

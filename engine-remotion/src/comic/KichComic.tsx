@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Img, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { DienVienHai } from "../v4/DienVienHai";
-import { KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
+import { CAM_XUC, CAO_MIENG_MAX, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
 import type { Luot } from "../v4/KichHai";
 import { NenPanel, NenGan, DaoCu, doDaoCu } from "./NenComic";
 import { noiCuaTap, Noi, SAN } from "./NoiChon";
@@ -412,8 +412,24 @@ const Panel: React.FC<{
   // 31/8 — Anh: *"lúc nói thì tất cả hình nhân vật đều mấp máy miệng"*. Gốc nằm ở một dòng:
   // `visemeTai(tu, giay, 0)` tra mốc từ của CẢ VIDEO tại giây hiện tại, nên cảnh nào cũng nhận
   // khẩu hình ấy — kể cả cảnh đã nói xong. Khẩu hình CHỈ thuộc về lượt đang phát.
-  const imLang = { w: 12, h: 3, tron: 0 } as any;
-  const viseme = dangNoi ? visemeTai(tu, giay, 0) : imLang;
+  //
+  // 8/9 — VÀ `imLang` VIẾT BẰNG THANG CŨ, NÊN "IM LẶNG" LÀ MIỆNG HÁ TO NHẤT.
+  // Bảng `VISEME` dùng thang 0..1 (`im.h = 0,05` ngậm · `a.h = 0,72` há rộng nhất), còn
+  // `{ w: 12, h: 3 }` là số của một thang đã bỏ. `Mieng` tính `mH = dauR*(0,02 + h*0,26)`, nên
+  // h = 3 ra 0,80·dauR — GẤP 3,9 LẦN hình há rộng nhất. Đo trên bộ 0150: mỗi nhát cắt, panel
+  // vừa nói xong (`veCanh(Lcu, …, false)`) há miệng tối đa suốt 0,34 giây — 5–6% thời lượng, và
+  // rơi đúng vào chỗ mắt người đang chuyển cảnh.
+  // `KichV2` và `KichHai` KHÔNG dính vì chúng không tự chế hằng: chúng gọi `visemeTai([], …)`,
+  // mảng rỗng thì hàm trả về đúng hình ngậm CỦA BẢNG. §13.1 — cơ chế đã có sẵn, đừng viết hằng
+  // thứ hai cho nó; §6 — chép hằng sang hệ quy chiếu khác thì không báo lỗi, chỉ làm hình sai.
+  //
+  // Và truyền SÀN CẢM XÚC chứ không truyền 0, cũng theo đúng hai engine kia. Đo 673 lượt thật:
+  // chỉ có `tu_tin` (sàn 0,040) và `trung_tinh` (0,030), đều dưới hình ngậm 0,05 nên hôm nay nó
+  // không đổi khung nào. Sửa vì để 0 là bỏ rơi một tham số mà chỗ khác đang dùng — và đúng chỗ
+  // bỏ rơi ấy là nơi hằng lạc thang mọc ra.
+  const haSan = CAM_XUC[(L.camXuc || "trung_tinh") as TenCamXuc].ha;
+  const imLang = visemeTai([], giay, haSan);
+  const viseme = dangNoi ? visemeTai(tu, giay, haSan) : imLang;
 
   // Hướng sáng đọc từ chính ảnh nền đang dùng. Không có số đo thì đổ thẳng — mặc định an
   // toàn, và cũng đúng với 63/100 nền là phòng trong sáng đều.
@@ -528,7 +544,7 @@ const Panel: React.FC<{
             // vòng lặp. `nhan` lấy từ độ mở miệng: nói to thì cả người nhấn theo.
             cuChiTruoc={"nghi" as TenCuChi}
             doiCuChi={0.5 + 0.5 * Math.sin((giay - L.s) * 2.3 - 1.2)}
-            nhan={noiA ? kep((viseme as any).h / 26) : 0}
+            nhan={noiA ? kep(viseme.h / CAO_MIENG_MAX) : 0}
             doVat={L.vatA || ""}
             x={cxA} y={yChan} scale={k}
           />
@@ -544,7 +560,7 @@ const Panel: React.FC<{
             t={giay + 0.7} dangNoi={!noiA} kyHieu={false} ghimNguc nghieng={doiNguoi ? -0.09 : 0}
             cuChiTruoc={"nghi" as TenCuChi}
             doiCuChi={0.5 + 0.5 * Math.sin((giay - L.s) * 1.9 + 0.7)}
-            nhan={!noiA ? kep((viseme as any).h / 26) : 0}
+            nhan={!noiA ? kep(viseme.h / CAO_MIENG_MAX) : 0}
             doVat={L.vatB || ""}
             x={cxB} y={yChan} scale={k} lat
           />
@@ -924,18 +940,31 @@ export const KichComic: React.FC<PropsComic> = ({
         </svg>
       </AbsoluteFill>
 
-      {/* khung CŨ đi ra — vẽ trước, để khung mới nằm đè lên khi dùng kiểu "quét" */}
-      {Lcu && pChuyen < 1 ? (
-        <AbsoluteFill style={bienCanh(kieu, pChuyen, true, width, height)}>
-          {veCanh(Lcu, iL - 1, false)}
-        </AbsoluteFill>
-      ) : null}
+      {/* 8/9 — CẮT NHÓM PANEL TRƯỢT, ĐỪNG ĐỂ NÓ CHẢY VÀO DẢI TÊN KÊNH.
+          Soi khung 30,30s bộ 0150: bong bóng của panel đang trượt VÀO đè thẳng lên
+          «THE RULES NOBODY READS» — hai khối chữ đậm chồng nhau, đúng dấu hiệu nghiệp dư ở
+          §12.12. Hai panel nằm trong `AbsoluteFill` mang một phép `translate`, mà không gì cắt
+          chúng, nên trong 0,34 giây chuyển cảnh phần thò ra ngoài ô vẫn vẽ. Đo: 13 nhát cắt ×
+          0,34s = 4,4/68,4 giây, 6% thời lượng.
+          Cắt ở `height − CAO_TEN`: đáy ô panel là `height − LE − CAO_TEN`, tức còn cách mép cắt
+          đúng `LE` — trạng thái NGHỈ không mất một điểm ảnh nào, chỉ phần tràn bị chặn. */}
+      <div style={{
+        position: "absolute", left: 0, top: 0, width, height: height - CAO_TEN,
+        overflow: "hidden",
+      }}>
+        {/* khung CŨ đi ra — vẽ trước, để khung mới nằm đè lên khi dùng kiểu "quét" */}
+        {Lcu && pChuyen < 1 ? (
+          <AbsoluteFill style={bienCanh(kieu, pChuyen, true, width, height)}>
+            {veCanh(Lcu, iL - 1, false)}
+          </AbsoluteFill>
+        ) : null}
 
-      {L ? (
-        <AbsoluteFill style={bienCanh(kieu, pChuyen, false, width, height)}>
-          {veCanh(L, iL, true)}
-        </AbsoluteFill>
-      ) : null}
+        {L ? (
+          <AbsoluteFill style={bienCanh(kieu, pChuyen, false, width, height)}>
+            {veCanh(L, iL, true)}
+          </AbsoluteFill>
+        ) : null}
+      </div>
 
       <div style={{
         position: "absolute", left: LE, right: LE, bottom: 14, height: CAO_TEN - 20,
