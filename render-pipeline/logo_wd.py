@@ -75,6 +75,46 @@ def thuc_the_qid(ten: str) -> tuple:
     return None, "", ""
 
 
+def ten_khac(ten: str) -> list:
+    """[tên chính, các TÊN GỌI KHÁC] của thực thể — lấy từ nhãn + `aliases` của Wikidata.
+
+    ── VÌ SAO CẦN  (anh chọn hướng này, 8/9/2026) ─────────────────────────────────────────
+    Tầng Commons phải khớp CỤM LIỀN để khỏi nhận nhầm («Midway Pony Express station» cho chủ
+    thể «Midway Express»). Nhưng khớp cụm cứng thì loại oan đúng những tấm hay nhất: đo trên
+    «MetLife Building» mất hết ảnh **«Pan Am Building»** — mà đó chính là TÊN CŨ của cùng toà
+    nhà ấy. Ảnh đúng bị loại vì tên đã đổi.
+
+    Wikidata giữ sẵn danh sách ấy ở `aliases`, nên không phải đoán và không phải chép tay
+    (§13.9: nắm quy luật sinh ra ngoại lệ, đừng liệt kê chúng). Hỏng thì trả về danh sách chỉ
+    có tên gốc — không được làm đứng đường lấy ảnh (§13.3).
+    """
+    ra = [str(ten or "").strip()]
+    try:
+        qid, nhan, _mo = thuc_the_qid(ten)
+        if not qid:
+            return [x for x in ra if x]
+        d = _goi("https://www.wikidata.org/w/api.php?action=wbgetentities&format=json"
+                 f"&props=labels|aliases&languages=en&ids={qid}")
+        e = ((d.get("entities") or {}).get(qid) or {})
+        lb = ((e.get("labels") or {}).get("en") or {}).get("value")
+        if lb:
+            ra.append(str(lb))
+        for a in ((e.get("aliases") or {}).get("en") or []):
+            v = str(a.get("value") or "").strip()
+            if v:
+                ra.append(v)
+    except Exception:
+        pass
+    # khử trùng, giữ thứ tự, và bỏ tên quá ngắn (một chữ 3 ký tự khớp bừa)
+    thay, sach = set(), []
+    for x in ra:
+        k = " ".join(x.lower().split())
+        if len(k) >= 4 and k not in thay:
+            thay.add(k)
+            sach.append(x)
+    return sach
+
+
 def tep_logo(ten: str) -> tuple:
     """(tên tệp logo, tên tệp ảnh chính) trên Commons — chuỗi rỗng nếu không có."""
     qid, _, _ = thuc_the_qid(ten)

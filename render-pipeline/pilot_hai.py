@@ -1474,9 +1474,14 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
             if not d:
                 continue
             ten = _o.path.basename(d)
-            if ten in thay:
+            # KHỬ TRÙNG THEO CẢ TIÊU ĐỀ NGUỒN — xem chú thích ở nhánh Commons phía dưới. Hai
+            # vòng tải là hai nhánh song song, và bản vá đầu chỉ chạm một (§6).
+            _tt = " ".join(str(a.get("ten", "")).lower().replace("file:", "").split())
+            if ten in thay or (_tt and _tt in thay):
                 continue
             thay.add(ten)
+            if _tt:
+                thay.add(_tt)
             dich = _o.path.join(pub, ten)
             if not _o.path.exists(dich):
                 _sh.copyfile(d, dich)
@@ -1511,11 +1516,21 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
             # cho tầng Commons — nơi phép tìm khớp theo TÊN. «Midway Express» gồm hai từ rất
             # phổ biến, nên khớp từ RỜI sẽ trúng mọi thứ có "midway" hoặc "express" ở bất kỳ
             # đâu. Đòi CỤM LIỀN thì «Midway Pony Express» trượt vì có "Pony" chen giữa.
-            _cum = " ".join((chu_the or "").lower().split())
-            if _cum:
+            # KHỚP CỤM VỚI CẢ TÊN GỌI KHÁC. Khớp cụm cứng loại oan đúng những tấm hay nhất:
+            # «MetLife Building» mất hết ảnh «Pan Am Building» — TÊN CŨ của chính toà nhà ấy —
+            # và «Credit Suisse» mất «Schweizerische Kreditanstalt». Wikidata giữ sẵn danh
+            # sách tên gọi khác ở `aliases`, nên không phải đoán và không phải chép tay.
+            try:
+                import logo_wd as _LW2
+                _ten_ds = _LW2.ten_khac(chu_the) or [chu_the]
+            except Exception:
+                _ten_ds = [chu_the]
+            _cums = [" ".join(str(t).lower().split()) for t in _ten_ds if t]
+            _cums = [c for c in _cums if len(c) >= 4]
+            if _cums:
                 _cm = [x for x in _cm
-                       if _cum in " ".join(str(x.get("ten", "")).lower()
-                                           .replace("file:", "").split())]
+                       if any(c in " ".join(str(x.get("ten", "")).lower()
+                                            .replace("file:", "").split()) for c in _cums)]
         except Exception as _e:
             print(f"   ⚠ tầng Commons hỏng ({type(_e).__name__}: {str(_e)[:44]})")
             _cm = []
@@ -1525,9 +1540,16 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
                 if not d:
                     continue
                 ten = _o.path.basename(d)
-                if ten in thay:
+                # KHỬ TRÙNG THEO CẢ TIÊU ĐỀ NGUỒN. Tên tệp là BĂM CỦA URL, nên cùng một tấm
+                # phục vụ ở hai bề ngang khác nhau ra hai tệp khác nhau và lọt cả hai — đo
+                # trên «Credit Suisse»: «Schweizerische Kreditanstalt 1898» vào hai lần. Một
+                # tập có hai khung y hệt thì người xem đọc ra là lỗi, không đọc ra là dụng ý.
+                _tt = " ".join(str(a.get("ten", "")).lower().replace("file:", "").split())
+                if ten in thay or (_tt and _tt in thay):
                     continue
                 thay.add(ten)
+                if _tt:
+                    thay.add(_tt)
                 dich = _o.path.join(pub, ten)
                 if not _o.path.exists(dich):
                     _sh.copyfile(d, dich)

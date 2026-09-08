@@ -1070,6 +1070,36 @@ def t_san_nhan_biet_va_hong_mem():
     assert "10 ** 9" not in src, "-1 vẫn được ánh xạ thành nổi tiếng nhất"
 
 
+def t_ten_goi_khac_va_khu_trung_theo_tieu_de():
+    """Tầng Commons khớp CỤM, nhưng phải chấp nhận cả TÊN GỌI KHÁC — và không trùng ảnh.
+
+    8/9 — bộ demo «Midway Express» đạt 50% nền là ảnh thật, nhưng soi lưới thì 4/6 tấm là chủ
+    thể KHÁC: «Midway Pony Express station» (trạm xe ngựa Utah), «Midway Plaisance Map» (công
+    viên Chicago). Hai từ trong tên đều rất phổ biến nên phép so theo TỪ RỜI trúng mọi thứ.
+
+    Siết thành khớp CỤM LIỀN thì hết ảnh sai, nhưng loại oan đúng những tấm hay nhất: đo ra
+    «MetLife Building» mất hết ảnh «Pan Am Building» — TÊN CŨ của chính toà nhà ấy — và
+    «Credit Suisse» mất «Schweizerische Kreditanstalt». Anh chọn chữa tên gọi khác trước rồi
+    mới siết, và Wikidata giữ sẵn danh sách ấy ở `aliases` nên không phải chép tay (§13.9).
+
+    Đo lại sau khi nối: MetLife 2 -> 6 · Credit Suisse 4 -> 5 · Midway Express vẫn 0 (chủ thể
+    ấy thật sự không có ảnh của chính nó — đó là sự thật, không phải lỗi lọc).
+
+    Và khử trùng phải theo TIÊU ĐỀ NGUỒN chứ không chỉ tên tệp: tên tệp là băm của URL, nên
+    cùng một tấm phục vụ ở hai bề ngang ra hai tệp và lọt cả hai. Bản vá đầu của em chỉ chạm
+    MỘT trong hai vòng tải — §6, lần thứ ba trong phiên."""
+    import inspect, pilot_hai as PH, logo_wd as LW
+    assert hasattr(LW, "ten_khac"), "chưa có tra tên gọi khác"
+    src = inspect.getsource(PH.nap_anh_that)
+    assert "ten_khac(" in src, "phép lọc cụm chưa dùng tên gọi khác — sẽ loại oan tên cũ"
+    assert src.count("_tt in thay") == 2, \
+        f"khử trùng theo tiêu đề mới có ở {src.count('_tt in thay')}/2 vòng tải (§6)"
+    # tên gọi khác phải là DANH SÁCH có tên gốc đứng đầu, và bỏ tên quá ngắn
+    r = LW.ten_khac("Credit Suisse")
+    assert r and r[0].lower().startswith("credit suisse"), f"tên gốc phải đứng đầu: {r[:3]}"
+    assert all(len(x) >= 4 for x in r), f"tên quá ngắn sẽ khớp bừa: {r}"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -4050,6 +4080,7 @@ def main():
     check("loại trang văn bản và ảnh đồng màu", t_loai_trang_van_ban_va_anh_trong)
     check("ảnh thật vào được mọi dạng ô · short gắn nền theo câu", t_anh_that_vao_duoc_moi_dang_o)
     check("sàn nhận biết chủ thể · hỏng mềm", t_san_nhan_biet_va_hong_mem)
+    check("tên gọi khác · khử trùng theo tiêu đề", t_ten_goi_khac_va_khu_trung_theo_tieu_de)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
