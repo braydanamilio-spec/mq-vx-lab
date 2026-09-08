@@ -653,6 +653,9 @@ export const NenPanel: React.FC<{
   // phần CÓ đồ vật. Không tốn một lượt CF nào, tức không đụng tới đòn bẩy 1 long : 3 short
   // (§19.18). `benVat` là bên chứa đồ vật — ngược với bên người dẫn đứng.
   const _doc = h > w * 1.2;
+  // Ảnh THẬT nhận ra bằng thư mục `anh_pd/` — đó là nơi DUY NHẤT ảnh tải về được chép vào
+  // (§19.12). Nền vẽ theo tập nằm ở `phim_nen/`, nền kho ở `comic_nen/`.
+  const _anhThat = String(anh || "").indexOf("anh_pd/") >= 0;
   const _viTriNen = !_doc ? "50% 50%"
     : benVat === "trai" ? "22% 50%"
     : benVat === "phai" ? "78% 50%"
@@ -693,10 +696,33 @@ export const NenPanel: React.FC<{
             phải đọc ra là TRANH NỀN chứ không phải ảnh chụp.
             Nên cách chữa là hạ chi tiết chứ không phải thêm hiệu ứng: mờ thêm chút, giảm tương
             phản, giảm bão hoà. Nền lùi thành phông, người nổi lên phía trước. */}
+        {/* ── ẢNH THẬT Ở KHUNG DỌC: HIỆN TRỌN, ĐỪNG CẮT  (anh soi short, 8/9/2026) ────────
+            Anh: *"vẫn xấu zoom bự quá … ko thấy được cái muốn thể hiện"*, kèm khung một chiếc
+            Camry bị phóng tới mức chỉ còn một cánh cửa và cái tay nắm.
+
+            Đo phép `cover` của chính engine trên ảnh thật của short 1601:
+                948×664   -> phóng 2,89× · thấy 39% BỀ NGANG
+                2388×1212 -> phóng 1,58× · thấy 29%
+                1780×920  -> phóng 2,09× · thấy 29%
+            Với NỀN VẼ, cắt 29% bề ngang vẫn còn là một căn phòng. Với ẢNH THẬT của một chiếc
+            xe, 29% là một cánh cửa — tức xoá đúng thứ mình bỏ công đi tìm về (§19.12: ảnh thật
+            có mặt ở đây CHỈ vì nó nhận ra được ngay).
+
+            Nên ảnh thật ở khung dọc hiện TRỌN (`contain`), và mép thừa lấp bằng chính nó phóng
+            to + làm mờ — cách mọi kênh dọc xử lý tư liệu ngang. Nền vẽ giữ nguyên `cover`: nó
+            sinh ra để phủ kín, và §17.4 đã trả giá cho việc để lọt mép trắng. */}
         <AbsoluteFill style={{ overflow: "hidden" }}>
+          {_anhThat && _doc ? (
+            <Img src={staticFile(anh)} style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", filter: "blur(26px) saturate(0.7) brightness(0.82)",
+              transform: "scale(1.12)",
+            } as React.CSSProperties} />
+          ) : null}
           <Img src={staticFile(anh)} style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            objectPosition: _viTriNen,
+            width: "100%", height: "100%",
+            objectFit: (_anhThat && _doc ? "contain" : "cover"),
+            objectPosition: (_anhThat && _doc ? "50% 42%" : _viTriNen),
             /* ── KEN BURNS: PHÓNG CHẬM + TRÔI  (anh yêu cầu, 7/9/2026) ──────────────────
                Nền giờ là ẢNH TĨNH thật (trụ sở Kodak 1900, thẻ logo). Một ảnh tĩnh đứng yên
                tám giây sau lưng một nhân vật đang nói thì đọc ra là ảnh dán — người xem thấy

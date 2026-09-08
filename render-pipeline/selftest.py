@@ -1100,6 +1100,39 @@ def t_ten_goi_khac_va_khu_trung_theo_tieu_de():
     assert all(len(x) >= 4 for x in r), f"tên quá ngắn sẽ khớp bừa: {r}"
 
 
+def t_anh_that_hien_tron_va_khong_lap_ca_bo():
+    """Ảnh thật ở khung DỌC phải hiện trọn, và không được lặp khắp cả bộ 1:3.
+
+    8/9 — anh gửi khung short một chiếc Camry bị phóng tới mức chỉ còn CÁNH CỬA và tay nắm:
+    *"vẫn xấu zoom bự quá … ko thấy được cái muốn thể hiện"*. Đo phép `cover` của engine trên
+    chính ba ảnh thật của short 1601:
+
+        948×664   -> phóng 2,89× · thấy 39% BỀ NGANG
+        2388×1212 -> phóng 1,58× · thấy 29%
+        1780×920  -> phóng 2,09× · thấy 29%
+
+    Với NỀN VẼ, cắt còn 29% vẫn là một căn phòng. Với ẢNH THẬT của một chiếc xe, 29% là một
+    cánh cửa — xoá đúng thứ mình bỏ công tìm về, mà ảnh thật có mặt CHỈ vì nó nhận ra được
+    ngay (§19.12). Nên ảnh thật ở khung dọc hiện TRỌN, mép thừa lấp bằng chính nó làm mờ.
+    Nền vẽ giữ `cover` vì nó sinh ra để phủ kín (§17.4 đã trả giá cho mép trắng lọt ra).
+
+    Và anh: *"nhiều footage lặp đi lặp lại quá nhiều lần"*. Đo bộ 160: **15/28 khung nền của
+    cả bộ là dùng lại (54%)**, ba tấm ảnh thật có mặt ở CẢ BỐN clip. Gốc không phải kho ảnh
+    mỏng: `ANH_THAT` là biến chung và mọi clip đều gọi `_chen_anh_that` với cùng danh sách,
+    trong khi short vốn ĐÃ thừa hưởng nền của bản dài qua `_nen_theo_loi`."""
+    import pathlib, inspect, pilot_hai as PH
+    nc = (pathlib.Path(PH.__file__).resolve().parent.parent
+          / "engine-remotion" / "src" / "comic" / "NenComic.tsx").read_text(encoding="utf-8")
+    assert "_anhThat" in nc, "engine chưa phân biệt ảnh THẬT với nền vẽ"
+    assert 'objectFit: (_anhThat && _doc ? "contain" : "cover")' in nc, \
+        "ảnh thật ở khung dọc vẫn bị CẮT — thứ cần nhận ra sẽ mất"
+    assert "blur(" in nc, "thiếu lớp lấp mép bằng bản mờ — sẽ hở nền"
+    # short không được rải lại ảnh thật
+    src = inspect.getsource(PH.mot_tap)
+    assert "if not NEN_SAN:" in src, \
+        "short vẫn rải lại ảnh thật — cùng ba tấm sẽ xuất hiện ở cả bốn clip"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -4081,6 +4114,7 @@ def main():
     check("ảnh thật vào được mọi dạng ô · short gắn nền theo câu", t_anh_that_vao_duoc_moi_dang_o)
     check("sàn nhận biết chủ thể · hỏng mềm", t_san_nhan_biet_va_hong_mem)
     check("tên gọi khác · khử trùng theo tiêu đề", t_ten_goi_khac_va_khu_trung_theo_tieu_de)
+    check("ảnh thật hiện trọn · không lặp cả bộ", t_anh_that_hien_tron_va_khong_lap_ca_bo)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

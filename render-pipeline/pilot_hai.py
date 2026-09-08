@@ -2133,7 +2133,17 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
                         if x != NEN_SAN[i % len(NEN_SAN)])
             print(f"   ♻️ dùng lại {len(NEN_SAN)} nền của bản dài (short không gọi CF)"
                   f" · {_khop}/{len(anh_nens)} nhịp ghép lại THEO CÂU")
-        anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
+        # ── SHORT ĐỪNG RẢI LẠI ẢNH THẬT  (anh: *"footage lặp đi lặp lại quá nhiều"*, 8/9) ──
+        # Đo bộ 160: 15/28 khung nền của cả bộ là DÙNG LẠI (54%), và ba tấm ảnh thật xuất hiện
+        # ở CẢ BỐN clip. Gốc không phải kho ảnh mỏng: `ANH_THAT` là biến chung, và MỌI clip —
+        # cả long lẫn ba short — đều gọi `_chen_anh_that` với cùng danh sách ấy.
+        #
+        # Nhưng short vốn ĐÃ thừa hưởng nền của bản dài qua `_nen_theo_loi`, kể cả những tấm
+        # ảnh thật bản dài đã đặt. Chạy lại lượt rải chỉ dán thêm đúng ba tấm ấy lần nữa —
+        # tức nhân bản, không phải làm giàu. Bỏ lượt rải ở nhánh short là hết lặp mà không
+        # mất tấm nào: cái gì bản dài đặt đúng chỗ thì short đã mang theo.
+        if not NEN_SAN:
+            anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
         anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
     else:
         anh_nens = []
