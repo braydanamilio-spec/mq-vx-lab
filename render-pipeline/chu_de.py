@@ -34,7 +34,23 @@ import time
 import urllib.parse
 import urllib.request
 
-UA = {"User-Agent": "MM0-pipeline/1.0 (youtube explainer; contact via repo owner)"}
+# ── USER-AGENT PHẢI CÓ LIÊN HỆ THẬT — ĐÂY LÀ GỐC CỦA MỌI 429 ĐÊM NAY  (8/9/2026) ──
+# Chính sách User-Agent của Wikimedia đòi định danh công cụ KÈM một địa chỉ liên hệ.
+# Chuỗi cũ ghi "contact via repo owner" — nghe như có liên hệ mà KHÔNG PHẢI liên hệ,
+# nên Wikimedia coi ta là bot ẩn danh và bóp cổ ngay. Đo tách bạch bằng `curl`:
+#     UA cũ ("contact via repo owner")      -> HTTP 429
+#     không UA                              -> HTTP 429
+#     UA có URL repo                        -> HTTP 200  (wikipedia · wikidata · commons)
+#
+# Đây là §13.15 ở mức đắt nhất của cả đêm: em kết luận "Wikipedia đang chặn vì mình gọi
+# nhiều", rồi dựng đồng hồ dùng chung, nới nhịp tự động, rút theo thời gian, lùi 6/12/24
+# — cả một bộ máy để đi vòng qua một vấn đề mà nguyên nhân là MỘT DÒNG HEADER. Hai bộ
+# 142 và 144 mất trắng vì nó, và hồ đề tài đọc về 0 ký tự suốt nhiều giờ.
+# (Bộ máy nhịp vẫn giữ: nó đúng và cần khi thật sự bị giới hạn — chỉ là nó không phải
+#  thứ đang hỏng.)
+#
+# KHÔNG đưa email cá nhân của anh vào header gửi bên thứ ba: đo được URL repo là ĐỦ.
+UA = {"User-Agent": "MM0-pipeline/1.0 (+https://github.com/braydanamilio-spec/mq-vx-lab)"}
 
 # Đơn vị PHẢI có mặt thì con số mới "cảm được" — một năm trần (1996) không nói lên quy mô.
 # Danh sách này cố ý HẸP: rộng ra thì nhặt cả số trang, số hiệu, số chú thích.

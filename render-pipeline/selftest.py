@@ -273,6 +273,34 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_user_agent_co_lien_he():
+    """User-Agent gửi Wikimedia phải có LIÊN HỆ THẬT — thiếu là bị bóp cổ 429.
+
+    Đây là gốc của mọi 429 trong đêm 8/9, và là §13.15 ở mức đắt nhất: em kết luận *"Wikipedia
+    đang chặn vì mình gọi nhiều"* rồi dựng cả một bộ máy nhịp (đồng hồ dùng chung qua tệp, nới
+    tự động khi 429, rút theo thời gian, lùi 6/12/24) để đi vòng qua một vấn đề mà nguyên nhân
+    là MỘT DÒNG HEADER. Hai bộ 142 và 144 mất trắng vì nó; hồ đề tài đọc về 0 ký tự nhiều giờ.
+
+    Tách bạch bằng `curl`, cùng lúc, cùng máy:
+        UA cũ ("contact via repo owner")  -> HTTP 429
+        không UA                          -> HTTP 429
+        UA có URL repo                    -> HTTP 200   (wikipedia · wikidata · commons)
+
+    Chốt canh HÌNH DẠNG, không canh chuỗi cụ thể: phải có tên công cụ VÀ một liên hệ tra được
+    (URL hoặc email). Và KHÔNG được là email cá nhân của anh — đó là dữ liệu cá nhân gửi bên
+    thứ ba, mà đo được URL repo là đủ."""
+    import re
+    for ten in ("chu_de", "ho_chu_de", "anh_tu_do", "anh_nara", "nguon_mo"):
+        m = __import__(ten)
+        ua = (getattr(m, "UA", {}) or {}).get("User-Agent", "")
+        assert ua, f"{ten}: không khai User-Agent"
+        assert re.search(r"https?://|@", ua), \
+            f"{ten}: User-Agent thiếu LIÊN HỆ tra được -> Wikimedia trả 429 ({ua!r})"
+        assert "contact via repo owner" not in ua, f"{ten}: còn chuỗi liên hệ GIẢ"
+        assert "@gmail" not in ua and "@yahoo" not in ua, \
+            f"{ten}: không đưa email cá nhân vào header gửi bên thứ ba ({ua!r})"
+
+
 def t_luat_bo_cuc_nen_tap():
     """Luật bố cục của `_nen_theo_tap` phải tự canh được — `kiem_nen` KHÔNG canh nổi nó.
 
@@ -3196,6 +3224,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("User-Agent có liên hệ thật", t_user_agent_co_lien_he)
     check("luật bố cục nền theo tập", t_luat_bo_cuc_nen_tap)
     check("hỏi ảnh thật bằng tên thực thể", t_hoi_anh_bang_thuc_the)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
