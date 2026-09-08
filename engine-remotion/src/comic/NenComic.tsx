@@ -633,8 +633,32 @@ export const NenPanel: React.FC<{
   kenHat?: number;   // hạt chọn hướng trôi, để hai nhịp liền nhau không trôi cùng chiều
   kenKieu?: string;  // "vao" phóng vào · "ra" lùi ra · "ngang" trôi ngang — bản sắc của kênh
   guNen?: string;    // "am" ấm · "lanh" lạnh · "moc" mộc (chất tư liệu)
+  benVat?: string;   // bên nào của NỀN chứa đồ vật — xem `_viTriNen` bên dưới
 }> = ({ kenh, noi, w, h, mau, mauPhu, hat, rong, bien = 0, net = 5, cham = 9, anh = "",
-        ken = 0, kenHat = 0, kenKieu = "vao", guNen = "moc" }) => {
+        ken = 0, kenHat = 0, kenKieu = "vao", guNen = "moc", benVat = "giua" }) => {
+  // ── KHUNG DỌC KHÔNG ĐƯỢC CẮT VÀO ĐÚNG CHỖ ĐÃ ĐẶT HÀNG LÀ TRỐNG  (anh soi short, 8/9) ──
+  // Anh gửi hai khung short: hai phần ba trên là mảng tường trơn, nhân vật bé tí dưới đáy —
+  // *"tình trạng trống … sơ sài quá nhiều"*. Đo trên chính nền của short 1532:
+  //
+  //     nền 1344×768 · khung dọc 1080×1920 -> `cover` chỉ thấy 32% BỀ NGANG
+  //     độ "đầy" (lệch chuẩn độ sáng)  toàn ảnh 25,5 -> DẢI THẤY ĐƯỢC 10,6
+  //
+  // Nghĩa là dải short nhìn thấy phẳng hơn ảnh gốc 2,4 lần. Và đó không phải ngẫu nhiên:
+  // `san_nen_ben()` ở `pilot_hai` ĐẶT HÀNG đúng điều ấy — *"the centre of the frame is empty
+  // walkable floor, the objects stand at the left and right edges"* — để nhân vật vector có
+  // chỗ đứng trong khung 16:9. Hai luật đúng ở hai ngữ cảnh, đánh nhau ở ngữ cảnh thứ ba
+  // (§12.5): một bên chừa trống chính giữa, một bên cắt đúng chính giữa.
+  //
+  // Chữa bằng chỗ CẮT, không bằng cách vẽ thêm ảnh: cùng bộ ảnh ấy, chỉ dịch khung nhìn sang
+  // phần CÓ đồ vật. Không tốn một lượt CF nào, tức không đụng tới đòn bẩy 1 long : 3 short
+  // (§19.18). `benVat` là bên chứa đồ vật — ngược với bên người dẫn đứng.
+  const _doc = h > w * 1.2;
+  const _viTriNen = !_doc ? "50% 50%"
+    : benVat === "trai" ? "22% 50%"
+    : benVat === "phai" ? "78% 50%"
+    // "giua" nghĩa là đồ vật ở CẢ HAI mép và giữa trống — cắt vào mép nào cũng hơn cắt giữa.
+    // Xoay theo hạt để hai nhịp liền nhau không cùng lấy một mép.
+    : (hat % 2 === 0 ? "20% 50%" : "80% 50%");
   // 31/8 — MỖI PANEL MỘT GÓC NHÌN KHÁC. Khung thử cho ra sáu panel với cùng cái màn hình ở
   // cùng một chỗ, và sáu lần lặp lại một hình trong hai mươi giây thì mắt đọc ra là ảnh dán,
   // không phải là sáu ô truyện tranh. Cùng một căn phòng nhìn từ ba chỗ đứng vẫn là một căn
@@ -672,6 +696,7 @@ export const NenPanel: React.FC<{
         <AbsoluteFill style={{ overflow: "hidden" }}>
           <Img src={staticFile(anh)} style={{
             width: "100%", height: "100%", objectFit: "cover",
+            objectPosition: _viTriNen,
             /* ── KEN BURNS: PHÓNG CHẬM + TRÔI  (anh yêu cầu, 7/9/2026) ──────────────────
                Nền giờ là ẢNH TĨNH thật (trụ sở Kodak 1900, thẻ logo). Một ảnh tĩnh đứng yên
                tám giây sau lưng một nhân vật đang nói thì đọc ra là ảnh dán — người xem thấy

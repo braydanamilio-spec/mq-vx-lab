@@ -462,6 +462,9 @@ const Panel: React.FC<{
                     ? ` translate(${Math.sin(trong * 62) * 5}px, ${Math.cos(trong * 54) * 4}px)` : ""),
     }}>
       <NenPanel kenh={kenh} noi={noi} anh={anhNen} w={w} h={h} mau={mau} mauPhu={mauPhu} hat={hat + thuTu * 13}
+                /* Đồ vật nằm NGƯỢC bên người dẫn: `san_nen_ben` chừa trống đúng bên người
+                   đứng. Khung dọc vì thế phải cắt sang bên kia, không cắt vào giữa. */
+                benVat={guViTri === "trai" ? "phai" : guViTri === "phai" ? "trai" : "giua"}
                 bien={(hat + thuTu * 5) % 3} rong net={netMuc} cham={cham} 
                 /* Tiến độ của CHÍNH nhịp này (0->1) cho Ken Burns. Dùng `L.s`/`L.e` chứ không
                    dùng `giay/DAI`: mỗi nhịp là một cú máy riêng, và một phép trôi trải trên cả

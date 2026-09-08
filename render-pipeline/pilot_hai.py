@@ -1400,6 +1400,46 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
             _ghi_so_anh()
             if len(ra) >= toi_da:
                 break
+    # ── TẦNG CUỐI: TÌM THẲNG TRÊN COMMONS  (anh: *"ảnh thực tế quá ít"*, 8/9/2026) ────
+    # `generator=images` chỉ trả ảnh ĐƯỢC DÙNG TRONG BÀI Wikipedia — đo bốn chủ thể ra 1–10
+    # ảnh qua cổng. Tìm thẳng trên Commons cho 27–30 ảnh đủ lớn mỗi chủ thể, và sau khi đi
+    # qua ĐÚNG bộ lọc cũ thì thêm được thật: MetLife 1 -> 6 · Kodak 10 -> 16.
+    #
+    # Nhưng nó đứng CUỐI, không đứng đầu, vì nó mang rủi ro TRÙNG TÊN: «Hôtel Le Concorde
+    # Québec» là một khách sạn, không phải máy bay — đúng thứ anh gọi *"râu ông nọ cắm cằm
+    # bà kia"*, và §19.13 đã trả giá đúng chuyện ấy với ga tàu điện ngầm Paris. Ảnh của BÀI
+    # có độ chính xác cao hơn hẳn (chúng được người viết bài chọn), nên chúng đi trước và
+    # Commons chỉ LẤP phần còn thiếu. Một ảnh sai đắt hơn một ảnh thiếu.
+    if len(ra) < toi_da:
+        # GỌI THẲNG `anh_tu_do`, KHÔNG dùng `_M`: sau vòng lặp nguồn ở trên, `_M` đang trỏ
+        # vào `anh_nara` — module ấy không có tham số `commons`, nên lời gọi ném `TypeError`
+        # và `except` nuốt mất. Tầng này vì thế thêm được ĐÚNG 0 ảnh mà không báo gì (§15.2).
+        try:
+            import anh_tu_do as _ATD
+            _cm = _ATD.anh_cua(chu_the, toi_da=toi_da - len(ra), commons=True)
+        except Exception as _e:
+            print(f"   ⚠ tầng Commons hỏng ({type(_e).__name__}: {str(_e)[:44]})")
+            _cm = []
+        for a in (_cm or []):
+            try:
+                d = _M.tai_ve(a)
+                if not d:
+                    continue
+                ten = _o.path.basename(d)
+                if ten in thay:
+                    continue
+                thay.add(ten)
+                dich = _o.path.join(pub, ten)
+                if not _o.path.exists(dich):
+                    _sh.copyfile(d, dich)
+                ra.append("anh_pd/" + ten)
+                TEN_ANH["anh_pd/" + ten] = a.get("ten", "")
+                _ghi_so_anh()
+                if len(ra) >= toi_da:
+                    break
+            except Exception:
+                continue
+
     # ── HỎI LẠI BẰNG TÊN THỰC THỂ KHI TÊN SỰ KIỆN KHÔNG RA GÌ ────────────────────────
     # Đo: «2021 Facebook leak» -> 0 ảnh, «Facebook» -> 8. Wikimedia xếp ảnh theo THỰC THỂ,
     # hồ đề tài cấp tên SỰ KIỆN. Hỏi lần hai bằng thực thể là cách duy nhất lấy được thứ

@@ -83,6 +83,7 @@ def _tu_do(em: dict) -> bool:
 # Ảnh PD vẫn có thể là CHÂN DUNG NGƯỜI. Ảnh một cái máy ảnh cổ thì vô tư; ảnh một người còn
 # sống là chuyện quyền hình ảnh cá nhân, khác hẳn bản quyền. Bộ lọc này thô và cố ý NGHIÊNG
 # VỀ PHÍA BỎ: thà mất một ảnh còn hơn đưa mặt một người thật lên kênh.
+_DU_LON = 900         # cạnh dài tối thiểu của ẢNH GỐC BITMAP (SVG được miễn)
 _NGUOI = re.compile(r"\b(portrait|headshot|selfie|posing|actor|actress|singer|player|"
                     r"ceo|president|founder|speaking at|interview)\b", re.I)
 # ── DẤU CẮT CHÂN DUNG CỦA COMMONS  (8/9/2026) ──────────────────────────────────────────
@@ -108,11 +109,31 @@ _RAC = re.compile(r"(icon|flag|arrow|increase|decrease|symbol|commons-logo|"
                   r"edit-|ambox|question_book|wiki|padlock)", re.I)
 
 
-def anh_cua(chu_the: str, toi_da: int = 8) -> list:
-    """[{ten, url, giay_phep}] — CHỈ ảnh tự do, đã bỏ chân dung người và rác biểu tượng."""
-    u = ("https://en.wikipedia.org/w/api.php?action=query&format=json&generator=images"
-         f"&titles={urllib.parse.quote(chu_the)}&gimlimit=40&prop=imageinfo"
-         "&iiprop=url|extmetadata&iiurlwidth=1000"
+def anh_cua(chu_the: str, toi_da: int = 8, commons: bool = False) -> list:
+    """[{ten, url, giay_phep}] — CHỈ ảnh tự do, đã bỏ chân dung người và rác biểu tượng.
+
+    ── HAI NGUỒN, MỘT BỘ LỌC  (anh: *"ảnh thực tế quá ít"*, 8/9/2026) ──────────────────
+    `generator=images` trên bài Wikipedia chỉ trả những ảnh ĐƯỢC DÙNG TRONG BÀI — thường
+    một nhúm. Đo bốn chủ thể: bài cho 1–8 ảnh qua cổng, còn tìm thẳng trên Commons cho
+    **27–30 ảnh đủ lớn** mỗi chủ thể. Gấp 5–30 lần, và đó đúng là thứ anh thiếu.
+
+    `commons=True` chỉ đổi CÂU HỎI, không đổi bộ lọc: cùng cổng giấy phép, cùng cổng chân
+    dung, cùng sàn cỡ, cùng luật tên-phải-mang-tên-chủ-thể. Một nguồn rộng hơn mà lọc lỏng
+    hơn thì chỉ là đổ thêm rác vào (§19.14 — kho không phân biệt được "không có" với "có"
+    thì mọi phép lọc sau nó đều đang lọc rác)."""
+    _goc = (("https://commons.wikimedia.org/w/api.php?action=query&format=json"
+             "&generator=search&gsrnamespace=6&gsrlimit=40"
+             f"&gsrsearch={urllib.parse.quote(chu_the)}")
+            if commons else
+            ("https://en.wikipedia.org/w/api.php?action=query&format=json&generator=images"
+             f"&titles={urllib.parse.quote(chu_the)}&gimlimit=40"))
+    # ĐUÔI CHUNG cho cả hai nguồn. Bản đầu của em ghép nó bằng phép nối chuỗi liền kề, nên nó
+    # chỉ dính vào NHÁNH ELSE — URL Commons đi ra không có `extmetadata`, cổng giấy phép loại
+    # sạch, và nguồn 30 ảnh đọc ra thành 0. Hỏng CÂM, đúng dạng §15.2.
+    u = (_goc + "&prop=imageinfo"
+         # `size` để biết cỡ ẢNH GỐC. `iiurlwidth` chỉ XIN 1400px — nguồn nhỏ hơn thì
+         # Wikimedia trả nguyên bản nhỏ, nên xin to KHÔNG làm ảnh to lên (xem `_DU_LON`).
+         "&iiprop=url|size|extmetadata&iiurlwidth=1400"
          "&iiextmetadatafilter=License|LicenseShortName|"
          "UsageTerms|AttributionRequired|ImageDescription|Categories|ObjectName")
     try:
@@ -144,6 +165,21 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
         elif _duoi not in (".jpg", ".jpeg", ".png"):
             continue                      # gif/ogg/pdf: không dán được
         if _RAC.search(ten) or _NGUOI.search(ten) or _CAT_CHAN_DUNG.search(ten):
+            continue
+        # ── ẢNH GỐC PHẢI ĐỦ LỚN  (anh: *"cần ảnh chất lượng"*, 8/9/2026) ────────────────
+        # Đo kho `anh_pd`: 33/142 ảnh có bề ngang dưới 900px, nhỏ nhất **235px**. Phóng một
+        # tấm 299×399 lên panel 1080×1920 thì đúng là thứ anh gọi "sơ sài".
+        # `iiurlwidth` KHÔNG cứu được: nó chỉ XIN một bản thu nhỏ, còn nguồn nhỏ hơn thì
+        # Wikimedia trả nguyên bản. Nên phải LOẠI TỪ NGUỒN, và muốn loại thì phải hỏi `size`.
+        # Ngưỡng theo cạnh DÀI: nền cần phủ 1080 hoặc 1920 tuỳ khung, còn thẻ chèn chỉ chiếm
+        # 20% bề ngang. Lấy 1000 làm sàn — dưới mức ấy thì kể cả làm thẻ cũng đã nhoè.
+        # SVG ĐƯỢC MIỄN: Wikimedia kết xuất nó ở đúng bề ngang mình xin (`iiurlwidth`), nên
+        # kích thước "gốc" của một SVG không nói gì về chất lượng. Sàn theo ảnh gốc mà áp cho
+        # SVG thì loại đúng thứ dễ nhận ra nhất — LOGO công ty, thứ anh dặn phải có từ đầu
+        # (*"nói về facebook phải có logo facebook"*). Đúng §13.8: cổng bắt oan tệ hơn không bắt.
+        _w = int(ii.get("width") or 0)
+        _h = int(ii.get("height") or 0)
+        if _duoi != ".svg" and _w and _h and max(_w, _h) < _DU_LON:
             continue
         mo = str((em.get("ImageDescription") or {}).get("value", ""))
         if _NGUOI.search(mo):

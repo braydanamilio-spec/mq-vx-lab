@@ -887,6 +887,56 @@ def t_khong_dung_chan_dung_nguoi_that():
     assert "_khop_ten" in src, "logo_wd chưa nối cổng tên chủ thể"
 
 
+def t_nen_doc_khong_cat_vao_cho_trong():
+    """Khung DỌC không được cắt vào đúng dải mà prompt đã đặt hàng là TRỐNG.
+
+    8/9 — anh gửi hai khung short: hai phần ba trên là mảng tường trơn, nhân vật bé tí dưới
+    đáy, *"tình trạng trống … sơ sài quá nhiều"*. Đo trên chính nền của short 1532:
+
+        nền 1344×768 · khung dọc 1080×1920 -> `cover` chỉ thấy 32% BỀ NGANG
+        độ "đầy" (lệch chuẩn độ sáng): toàn ảnh 25,5 -> DẢI THẤY ĐƯỢC 10,6
+
+    Dải short nhìn thấy phẳng hơn ảnh gốc 2,4 lần, và đó KHÔNG ngẫu nhiên: `san_nen_ben()`
+    đặt hàng đúng điều ấy — *"the centre of the frame is empty walkable floor"* — để nhân vật
+    vector có chỗ đứng trong khung 16:9. Hai luật đúng ở hai ngữ cảnh, đánh nhau ở ngữ cảnh
+    thứ ba (§12.5). Chữa bằng chỗ CẮT (`objectPosition`), không bằng cách vẽ thêm ảnh — nên
+    không tốn một lượt CF nào và không đụng đòn bẩy 1 long : 3 short (§19.18)."""
+    import pathlib, re
+    goc = pathlib.Path(__file__).resolve().parent.parent / "engine-remotion" / "src" / "comic"
+    nc = (goc / "NenComic.tsx").read_text(encoding="utf-8")
+    kc = (goc / "KichComic.tsx").read_text(encoding="utf-8")
+    assert "objectPosition" in nc, "nền vẫn cắt giữa — thiếu `objectPosition`"
+    assert "benVat" in nc and "benVat=" in kc, "`benVat` chưa được truyền từ KichComic"
+    # phải phụ thuộc vào TỈ LỆ KHUNG, không áp cho cả khung ngang
+    assert re.search(r"h\s*>\s*w", nc), "không phân biệt khung dọc/ngang"
+
+
+def t_anh_that_du_lon_va_du_nhieu():
+    """Ảnh thật phải ĐỦ LỚN và có nguồn ĐỦ RỘNG.
+
+    Anh: *"ảnh thực tế quá ít … cần ảnh chất lượng"*. Hai số đo:
+      · CỠ — kho `anh_pd` có 33/142 ảnh bề ngang dưới 900px, nhỏ nhất 235px. `iiurlwidth`
+        không cứu được vì nó chỉ XIN một bản thu nhỏ; nguồn nhỏ hơn thì Wikimedia trả nguyên
+        bản. Phải hỏi `size` rồi LOẠI TỪ NGUỒN. SVG được miễn — Wikimedia kết xuất nó ở đúng
+        bề ngang mình xin, nên sàn theo ảnh gốc sẽ loại đúng thứ dễ nhận ra nhất là LOGO.
+      · SỐ LƯỢNG — `generator=images` chỉ trả ảnh dùng trong BÀI. Thêm nguồn Commons đi qua
+        ĐÚNG bộ lọc cũ: MetLife 1 -> 6 · Credit Suisse 3 -> 5 · Concorde 2 -> 6.
+        Commons đứng CUỐI vì nó mang rủi ro trùng tên («Hôtel Le Concorde Québec» là khách
+        sạn, không phải máy bay) — một ảnh sai đắt hơn một ảnh thiếu (§19.13)."""
+    import inspect, anh_tu_do as A, pilot_hai as PH
+    assert A._DU_LON >= 800, f"sàn cỡ quá thấp: {A._DU_LON}"
+    src = inspect.getsource(A.anh_cua)
+    assert "iiprop=url|size" in src, "không hỏi `size` thì không loại được ảnh nhỏ"
+    assert '_duoi != ".svg"' in src, "sàn cỡ đang áp cho cả SVG — sẽ loại oan LOGO"
+    assert "commons" in inspect.signature(A.anh_cua).parameters, "thiếu nguồn Commons"
+    # tầng Commons phải gọi ĐÚNG module: sau vòng lặp nguồn, `_M` trỏ vào `anh_nara`, và
+    # module ấy không có tham số `commons` -> TypeError bị `except` nuốt, thêm đúng 0 ảnh.
+    sp = inspect.getsource(PH.nap_anh_that)
+    assert "commons=True" in sp, "chưa nối tầng Commons"
+    assert "_M.anh_cua(chu_the, toi_da=toi_da - len(ra), commons=True)" not in sp, \
+        "tầng Commons gọi qua `_M` — sẽ ném TypeError và bị nuốt"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3862,6 +3912,8 @@ def main():
     check("khái niệm không bắt oan gốc từ ngắn", t_khai_niem_khong_bat_oan_goc_ngan)
     check("tiêu đề YouTube nói về tập, không trùng", t_tieu_de_youtube_khong_trung)
     check("không dùng chân dung người thật", t_khong_dung_chan_dung_nguoi_that)
+    check("nền khung dọc không cắt vào chỗ trống", t_nen_doc_khong_cat_vao_cho_trong)
+    check("ảnh thật đủ lớn và đủ nhiều", t_anh_that_du_lon_va_du_nhieu)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
