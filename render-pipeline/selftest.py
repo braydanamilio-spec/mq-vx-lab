@@ -301,6 +301,19 @@ def t_nhip_wiki_tu_noi_khi_bi_chan():
         C._cho_nhip()
         _, n3 = C._doc_so_tep(open(C._LUC_TEP))
         assert C.NHIP <= n3 < C.NHIP * 3, f"không rút dần về nhịp nền: {n3}"
+        # ── VÀ PHẢI RÚT THEO THỜI GIAN, KHÔNG CHỈ THEO SỐ LƯỢT GỌI ─────────────────────
+        # Đo sau vài giờ chạy thật: nhịp nằm đúng ở TRẦN 12,0 giây trong khi 40 dòng log gần
+        # nhất không có lượt 429 nào — bộ sàng nghỉ giữa các vòng nên không có lượt gọi nào
+        # để mà rút, và giá trị cũ nằm lại vĩnh viễn. Cùng họ §15.19: cơ chế phòng thủ kẹt ở
+        # mức cao nhất thôi bảo vệ và chỉ còn làm chậm (ở đây là cắt sản lượng 11 lần).
+        open(C._LUC_TEP, "w").write(f"{time.time() - 900} {C._NHIP_TRAN}")
+        C._cho_nhip()
+        _, n4 = C._doc_so_tep(open(C._LUC_TEP))
+        assert n4 < C._NHIP_TRAN / 3, f"im 15 phút mà nhịp vẫn {n4} (trần {C._NHIP_TRAN})"
+        # đang dùng liên tục thì KHÔNG được tự nới lỏng
+        open(C._LUC_TEP, "w").write(f"{time.time()} {C._NHIP_TRAN}")
+        _, n5 = C._doc_so_tep(open(C._LUC_TEP))
+        assert n5 >= C._NHIP_TRAN * 0.9, "nhịp bị rút ngay cả khi vừa gọi xong"
     finally:
         try:
             open(C._LUC_TEP, "w").write(cu if cu else f"0 {C.NHIP}")

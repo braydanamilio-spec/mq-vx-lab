@@ -114,6 +114,17 @@ def _cho_nhip() -> None:
             fcntl.flock(f, fcntl.LOCK_EX)
             truoc, nhip = _doc_so_tep(f)
             nhip = min(max(nhip, NHIP), _NHIP_TRAN)
+            # ── RÚT THEO THỜI GIAN, KHÔNG CHỈ THEO SỐ LƯỢT GỌI  (8/9/2026) ─────────────
+            # Bản đầu chỉ rút 3% mỗi lượt gọi TRÓT LỌT. Đo sau vài giờ chạy thật: nhịp nằm
+            # đúng ở TRẦN 12,0 giây trong khi 40 dòng log gần nhất KHÔNG có lượt 429 nào —
+            # tức hàng rào đã hết từ lâu mà mình vẫn tự trói. Vì bộ sàng nghỉ giữa các vòng,
+            # không có lượt gọi nào để mà rút, nên giá trị cũ nằm lại vĩnh viễn.
+            # Cùng họ §15.19: một cơ chế phòng thủ kẹt ở mức cao nhất thôi bảo vệ và chỉ còn
+            # làm chậm — ở đó là cổng đỏ vĩnh viễn, ở đây là nhịp 12 giây cắt sản lượng 11 lần.
+            # Thời gian trôi cũng là bằng chứng "đã hết bị chặn", nên nó phải được tính.
+            _im = max(0.0, time.time() - truoc)
+            if _im > 60:
+                nhip = max(NHIP, nhip * (0.5 ** (_im / 300.0)))
             cho = nhip - (time.time() - truoc)
             if 0 < cho <= nhip:
                 time.sleep(cho)
