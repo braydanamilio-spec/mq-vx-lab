@@ -209,7 +209,13 @@ def bai_viet(ten: str) -> str:
             break
         except Exception as e:
             cuoi = str(e)[:60]
-            time.sleep((5.0 if "429" in cuoi else 1.5) * (lan + 1))
+            # ── LÙI 6/12/24 KHI BỊ 429, KHÔNG PHẢI 5/10  (8/9/2026) ────────────────────
+            # §19.20 đã đo nhịp an toàn của Wikipedia và ghi rõ: gặp 429 thì lùi 6/12/24 giây
+            # *"chứ không phải 1,5/3/4,5 — 429 là hàng rào có chủ ý, không phải một gói tin
+            # rớt"*. Chỗ này vẫn còn 5/10, tức luật đã viết mà một nơi gọi chưa theo.
+            # Đo được hậu quả: bộ 142 mất trắng vì 5/6 chủ thể ứng viên đều ăn 429 trong cùng
+            # một cửa sổ ngắn — ba lần thử tiêu hết trong 15 giây rồi bỏ cuộc.
+            time.sleep((6.0 * (2 ** lan)) if "429" in cuoi else 1.5 * (lan + 1))
     if not v and cuoi:
         print(f"   ⚠ bai_viet «{ten[:34]}» hỏng sau 3 lần: {cuoi}")
         return ""                      # hỏng thì KHÔNG ghi đệm — đệm một chuỗi rỗng là khoá
