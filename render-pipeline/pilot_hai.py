@@ -1122,7 +1122,26 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
     if not viec:
         return anh_nens
     try:
-        ra = A.ve_nhieu(viec, "nentap", 0, doc=True, luong=6)
+        # ── CHIỀU ẢNH PHẢI THEO KHUNG SẼ DÙNG NÓ  (anh soi bản dài, 8/9/2026) ──────────
+        # Anh: *"clip 16:9 ko ổn, bị cắt ảnh khá nhiều, ko còn nhận ra gì cả"*. Đo đúng phép
+        # `objectFit: cover` mà engine dùng:
+        #     nền DỌC  768×1344 -> khung 1920×1080: phóng 2,50x · chỉ thấy **32% chiều cao**
+        #     nền NGANG 1344×768 -> khung 1920×1080: phóng 1,43x · thấy **98%**
+        # 32% chiều cao là một DẢI NGANG cắt ngang giữa cảnh — thường chỉ còn mảng tường hoặc
+        # mảng sàn, nên "không nhận ra gì" là mô tả đúng, không phải cảm giác.
+        #
+        # §18.13 đổi kho nền sang DỌC là ĐÚNG Ở THỜI ĐIỂM ẤY: đo được `comic_nen` chỉ có MỘT
+        # nơi đọc là short 9:16, và dọc cho gấp 3,1 lần điểm ảnh thật. Nhưng `bo_1_3` nay dựng
+        # CẢ long 16:9 LẪN short 9:16 từ CÙNG một bộ ảnh (§17.11) — tức đã có HAI nơi đọc với
+        # hai khung ngược nhau, đúng tình huống anh hỏi trước khi em đổi:
+        # *"ngang dùng cho long hay sao, long short phải đồng nhất?"*
+        #
+        # Vì sao chọn NGANG làm chiều dùng chung: mất 68% BỀ NGANG (ngang -> short) vẫn giữ
+        # trọn chiều cao, mà prompt vốn dặn chủ thể ở GIỮA nên phần mất là hai mép trống —
+        # §17.11 đã đo và ghi đúng điều này. Mất 68% CHIỀU CAO (dọc -> long) thì cắt ngang
+        # giữa cảnh, không cứu được bằng bố cục nào.
+        _ngang = bool(os.environ.get("NEN_NGANG") or CHUONG_KHONG_LAP)
+        ra = A.ve_nhieu(viec, "nentap", 0, doc=not _ngang, luong=6)
     except Exception as e:
         print(f"   ⚠ vẽ nền theo tập hỏng ({str(e)[:44]}) — giữ nền kho")
         return anh_nens

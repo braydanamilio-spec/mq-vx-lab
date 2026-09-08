@@ -273,6 +273,37 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_chieu_nen_theo_khung():
+    """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
+
+    Anh soi bản dài: *"clip 16:9 ko ổn, bị cắt ảnh khá nhiều, ko còn nhận ra gì cả"*. Đo đúng
+    phép `objectFit: cover` mà engine dùng:
+
+        nền DỌC  768×1344 -> khung 1920×1080 : phóng 2,50x · chỉ thấy **32% chiều cao**
+        nền NGANG 1344×768 -> khung 1920×1080 : phóng 1,43x · thấy **98%**
+
+    §18.13 đổi kho sang DỌC là đúng ở thời điểm ấy — lúc đó `comic_nen` chỉ có MỘT nơi đọc.
+    `bo_1_3` nay dựng cả long 16:9 lẫn short 9:16 từ CÙNG một bộ ảnh, tức HAI nơi đọc với hai
+    khung ngược nhau; một chiều duy nhất buộc phải sai với một trong hai, và chỗ sai phải rơi
+    vào chỗ CỨU ĐƯỢC. Mất 68% bề ngang vẫn giữ trọn chiều cao và prompt vốn đặt chủ thể ở
+    giữa (§17.11); mất 68% chiều cao thì cắt ngang giữa cảnh, không bố cục nào cứu."""
+    import inspect, re, ast, textwrap, pilot_hai as P
+    src = inspect.getsource(P._nen_theo_tap)
+    fn = ast.parse(textwrap.dedent(src)).body[0]
+    than = fn.body[1:] if (isinstance(fn.body[0], ast.Expr)
+                           and isinstance(fn.body[0].value, ast.Constant)) else fn.body
+    ma = re.sub(r"(?m)^\s*#.*$", "", "\n".join(ast.unparse(x) for x in than))
+    assert "doc=True" not in ma, "nền dùng chung vẫn ghi cứng chiều DỌC"
+    # và phép cover phải cho bản dài thấy gần trọn chiều cao
+    def cover(aw, ah, W, H):
+        s = max(W / aw, H / ah)
+        return min(1, (W / s) / aw), min(1, (H / s) / ah)
+    ngang_dai = cover(1344, 768, 1920, 1080)
+    doc_dai = cover(768, 1344, 1920, 1080)
+    assert ngang_dai[1] > 0.9, f"nền ngang vẫn cắt chiều cao bản dài: {ngang_dai}"
+    assert doc_dai[1] < 0.4, "phép đo sai — nền dọc lẽ ra phải cắt nặng ở bản dài"
+
+
 def t_hai_luong_ghi_so_job():
     """Hai đường dựng phải GHI SỔ JOB — mở lúc bắt đầu, chốt done/failed lúc kết thúc.
 
@@ -3077,6 +3108,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
     check("lặp gần: so gần bằng, không so bằng", t_lap_gan_so_gan_bang)
