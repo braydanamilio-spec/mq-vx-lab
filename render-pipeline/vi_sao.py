@@ -232,8 +232,35 @@ def sinh(ma: str, i: int):
     if not _ung:
         print(f"   ⚠ {ma}: không chủ thể nào trong 10 cặp đầu đủ chuyện — dùng bộ sinh cũ")
         return None
-    # Trong số ĐÃ qua cổng chuyện: nhiều câu nhân quả trước, đó mới là thứ quyết định tập hay.
-    _ung.sort(key=lambda x: -x[2])
+    # ── XẾP HẠNG: ĐỦ CHUYỆN TRƯỚC, RỒI ĐẾN DỄ HÌNH DUNG  (anh, 8/9/2026) ────────────────
+    # Anh: *"kịch bản phải nói về cái người dùng dễ nhớ dễ hình dung — một công ty lớn, một
+    # sự kiện tầm cỡ thế giới… nhìn là hình dung ra ngay"*. Hồ duyệt cây hạng mục nên nó ra
+    # `Alaska International Air` (143 lượt xem/90 ngày) thay vì `Facebook` (1.784.660).
+    #
+    # THỨ TỰ HAI TIÊU CHÍ LÀ CÓ CHỦ Ý, và §19.19 đã trả giá để biết: xếp theo độ phủ tư liệu
+    # trước thì Polaroid lên đầu hồ với 14 ảnh đẹp và **0 câu nhân quả**. Chuyện phải đứng
+    # trước; độ nhận biết chỉ là tiêu chí PHỤ giữa những chủ thể ĐÃ qua cổng chuyện.
+    #
+    # Gộp bằng cách nhân, không bằng cách thay: điểm = số câu nhân quả × log(lượt xem). Nhân
+    # thì một chủ thể vô danh nhưng cực giàu chuyện vẫn thắng một cái tên lớn mà rỗng chuyện.
+    # `luot_xem` trả -1 khi không hỏi được — coi như trung tính, không đẩy lên cũng không dìm.
+    import math
+
+    def _diem(x):
+        _ct, _kh, _nq = x
+        try:
+            v = C.luot_xem(_ct)
+        except Exception:
+            v = -1
+        return _nq * (math.log10(max(v, 10)) if v >= 0 else 2.0)
+
+    _ung.sort(key=lambda x: -_diem(x))
+    try:
+        _t = _ung[0]
+        print(f"   🏅 chọn «{_t[0][:34]}» · {_t[2]} câu nhân quả · "
+              f"{C.luot_xem(_t[0]):,} lượt xem/90 ngày")
+    except Exception:
+        pass
     for chu_the, khuon, _nq in _ung:
         try:
             _van = C.bai_viet(chu_the) or ""

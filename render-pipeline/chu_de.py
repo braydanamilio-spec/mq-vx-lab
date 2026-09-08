@@ -563,3 +563,60 @@ NEN_CUA_HINH_MAU = {
 
 def nhom_nen_cua(hm: str) -> tuple:
     return NEN_CUA_HINH_MAU.get(hm or "", ())
+
+
+# ── ĐỘ NHẬN BIẾT CỦA MỘT CHỦ THỂ, ĐO BẰNG LƯỢT XEM TRANG  (anh, 8/9/2026) ───────────────
+# Anh: *"kịch bản phải nói về cái người dùng dễ nhớ dễ hình dung — một sự kiện nào đó, một
+# công ty lớn, một vấn đề tầm cỡ thế giới… nhìn là hình dung ra ngay"*.
+#
+# Hồ đề tài đang duyệt cây hạng mục (*"Defunct airlines of the United States"*) nên nó ra
+# `Alaska International Air`, `Boston-Maine Airways` — không ai nhớ. Cần một thước ĐO ĐƯỢC
+# cho "dễ hình dung", và Wikimedia có sẵn: lượt xem trang.
+#
+#     Facebook 1.784.660 · Concorde 327.667 · Toyota 221.697 · FTX 49.491
+#     Boston-Maine Airways 1.277 · Alaska International Air 143
+#
+# Chênh **12.000 lần** giữa hai đầu — thước tách sạch, đặt ngưỡng được (§12.3: calibrate hai
+# đầu chỉ chứng minh tách được hai đầu, nên ngưỡng để MỀM và chỉ dùng để XẾP HẠNG, không dùng
+# để loại thẳng; hồ mỏng thì vẫn phải có tập để dựng).
+#
+# Đệm ra ĐĨA: lượt xem đổi rất chậm, mà mỗi lần hỏi là một lượt gọi mạng cho một chủ thể đã
+# biết (§18.8 — chi phí phải tỉ lệ với PHẦN MỚI, không với kích thước hồ).
+_SO_XEM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "so_luot_xem.json")
+
+
+def _doc_so_xem() -> dict:
+    try:
+        return json.load(io.open(_SO_XEM, encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def luot_xem(ten: str, ngay: int = 90) -> int:
+    """Lượt xem trang Wikipedia của `ten` trong `ngay` ngày qua. -1 nếu không hỏi được.
+
+    Trả -1 chứ không trả 0: "chưa hỏi được" và "không ai xem" là hai chuyện khác hẳn nhau, và
+    trộn chúng thì mọi phép xếp hạng nói dối (§15.2 — con số 0 cần mẫu số).
+    """
+    import datetime
+    so = _doc_so_xem()
+    if ten in so:
+        return int(so[ten])
+    try:
+        t = urllib.parse.quote(str(ten).replace(" ", "_"), safe="")
+        h = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y%m%d")
+        d = (datetime.date.today() - datetime.timedelta(days=ngay)).strftime("%Y%m%d")
+        u = ("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
+             f"en.wikipedia/all-access/user/{t}/daily/{d}/{h}")
+        _cho_nhip()
+        r = urllib.request.Request(u, headers=UA)
+        j = json.load(urllib.request.urlopen(r, timeout=25))
+        n = sum(int(x.get("views") or 0) for x in (j.get("items") or []))
+    except Exception:
+        return -1
+    so[ten] = n
+    try:
+        json.dump(so, io.open(_SO_XEM, "w", encoding="utf-8"))
+    except Exception:
+        pass
+    return n
