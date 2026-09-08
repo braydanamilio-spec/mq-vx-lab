@@ -85,6 +85,19 @@ def _tu_do(em: dict) -> bool:
 # VỀ PHÍA BỎ: thà mất một ảnh còn hơn đưa mặt một người thật lên kênh.
 _NGUOI = re.compile(r"\b(portrait|headshot|selfie|posing|actor|actress|singer|player|"
                     r"ceo|president|founder|speaking at|interview)\b", re.I)
+# ── DẤU CẮT CHÂN DUNG CỦA COMMONS  (8/9/2026) ──────────────────────────────────────────
+# Bộ 153 («SNC-Lavalin affair») lấy về `File:Justin Trudeau 2019 (3x4 cropped).jpg` và engine
+# dùng nó làm NỀN TOÀN KHUNG: mặt một chính khách đang sống phủ kín sau người dẫn vẽ. Anh
+# khung thẻ nhỏ là "dẫn chứng"; một chân dung full-bleed thì không còn là dẫn chứng.
+#
+# `_NGUOI` ở trên là một DANH SÁCH TỪ và tên tệp ấy không chứa từ nào trong đó — §13.20 lần
+# nữa. Còn cổng tên-chủ-thể (§19.13) tha vì ảnh NẰM ĐÚNG hạng mục «SNC-Lavalin affair»: ông
+# ấy là nhân vật trung tâm của vụ việc, nên hạng mục khớp thật.
+#
+# Quy luật sinh ra ngoại lệ nằm ở chỗ khác và nó hẹp, chính xác: Commons đặt tên bản cắt
+# chân dung bằng TỈ LỆ — `(3x4 cropped)` · `(4x3 cropped)` · `(1x1 cropped)`. Không ảnh
+# CẢNH nào mang dấu ấy, vì cắt theo tỉ lệ chỉ có nghĩa với một khuôn mặt.
+_CAT_CHAN_DUNG = re.compile(r"\(\s*\d\s*[x×]\s*\d[^)]{0,12}crop", re.I)
 # Rác kỹ thuật của Wikipedia: biểu tượng, cờ, mũi tên tăng giảm, bản đồ SVG trống.
 # `logo` ĐÃ BỊ BỎ khỏi danh sách này (7/9/2026). Anh: *"mấy hình ảnh logo … liên quan KODAK
 # … cho vào khi nói"* — và đo ra 5 logo Kodak Public domain đang bị chặn bởi chính chữ ấy.
@@ -130,7 +143,7 @@ def anh_cua(chu_the: str, toi_da: int = 8) -> list:
             url, _mark = _th, True
         elif _duoi not in (".jpg", ".jpeg", ".png"):
             continue                      # gif/ogg/pdf: không dán được
-        if _RAC.search(ten) or _NGUOI.search(ten):
+        if _RAC.search(ten) or _NGUOI.search(ten) or _CAT_CHAN_DUNG.search(ten):
             continue
         mo = str((em.get("ImageDescription") or {}).get("value", ""))
         if _NGUOI.search(mo):

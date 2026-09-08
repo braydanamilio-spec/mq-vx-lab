@@ -822,6 +822,53 @@ def t_tieu_de_youtube_khong_trung():
     assert len(set(ra)) == len(ra), f"chỉ {len(set(ra))}/{len(ra)} tiêu đề riêng: {ra}"
 
 
+def t_khong_dung_chan_dung_nguoi_that():
+    """Không lấy ảnh CHÂN DUNG người thật, và ảnh Wikidata phải mang tên chủ thể.
+
+    8/9 — bộ 153 («SNC-Lavalin affair») lấy `File:Justin Trudeau 2019 (3x4 cropped).jpg` rồi
+    engine dùng nó làm NỀN TOÀN KHUNG: mặt một chính khách đang sống phủ kín sau người dẫn vẽ.
+    Anh khung thẻ nhỏ là "dẫn chứng"; một chân dung full-bleed thì không còn là dẫn chứng.
+
+    Hai lỗ, hai nhánh:
+      · Commons — `_NGUOI` là DANH SÁCH TỪ và tên tệp ấy không chứa từ nào trong đó (§13.20).
+        Cổng tên-chủ-thể (§19.13) cũng tha, vì ảnh NẰM ĐÚNG hạng mục «SNC-Lavalin affair»:
+        ông ấy là nhân vật trung tâm của vụ việc nên hạng mục khớp thật. Quy luật sinh ra
+        ngoại lệ nằm ở dấu CẮT THEO TỈ LỆ mà Commons chỉ dùng cho khuôn mặt.
+      · Wikidata — `logo_va_anh` trả P154/P18 mà không kiểm tên, tức §19.13 mới áp cho một
+        trong hai nhánh (§6).
+
+    Truy được trong một phút là nhờ `so_anh_nguon.json` dựng sáng nay; không có sổ thì tên tệp
+    chỉ là một chuỗi băm và câu hỏi "tấm này ở đâu ra" không trả lời được."""
+    import re, anh_tu_do as A
+    CHAN = ["File:Justin Trudeau 2019 (3x4 cropped).jpg",
+            "File:Bill Gates 2018 (4x3 cropped).jpg",
+            "File:Someone (1x1 cropped).png"]
+    QUA = ["File:Eastman Kodak HQ 1900.jpg", "File:SNC-Lavalin logo.svg",
+           "File:Schalterhalle SKA 1856.png", "File:Concorde G-BOAC (3 view).jpg",
+           "File:Cropped image of a factory floor.jpg"]
+    for t in CHAN:
+        assert A._CAT_CHAN_DUNG.search(t), f"không chặn chân dung: {t}"
+    for t in QUA:
+        assert not A._CAT_CHAN_DUNG.search(t), f"chặn OAN ảnh cảnh: {t}"
+
+    # nhánh Wikidata: tên tệp phải mang tên chủ thể
+    BO = ("the", "and", "affair", "scandal", "case", "group", "company", "corporation",
+          "incorporated", "limited", "holdings", "inc", "ltd")
+
+    def khop(ct, tep):
+        tu = {w for w in re.findall(r"[a-z]{3,}", ct.lower()) if w not in BO}
+        return (not tu) or any(w in tep.lower() for w in tu)
+
+    assert not khop("SNC-Lavalin affair", "File:Justin Trudeau 2019 (3x4 cropped).jpg"), \
+        "nhánh Wikidata vẫn nhận ảnh không mang tên chủ thể"
+    assert khop("SNC-Lavalin affair", "File:SNC-Lavalin logo.svg"), "bỏ OAN logo đúng"
+    assert khop("Credit Suisse", "File:Credit Suisse Logo 2022.svg"), "bỏ OAN logo đúng"
+    # và luật ấy phải CÓ MẶT trong mã, không chỉ đúng trong bài kiểm
+    import pathlib
+    src = pathlib.Path(A.__file__).with_name("logo_wd.py").read_text(encoding="utf-8")
+    assert "_khop_ten" in src, "logo_wd chưa nối cổng tên chủ thể"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3796,6 +3843,7 @@ def main():
     check("đồ vật nền không đặt hàng chữ", t_do_vat_khong_dat_hang_chu)
     check("khái niệm không bắt oan gốc từ ngắn", t_khai_niem_khong_bat_oan_goc_ngan)
     check("tiêu đề YouTube nói về tập, không trùng", t_tieu_de_youtube_khong_trung)
+    check("không dùng chân dung người thật", t_khong_dung_chan_dung_nguoi_that)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

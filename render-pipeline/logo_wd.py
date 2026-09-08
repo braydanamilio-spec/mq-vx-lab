@@ -151,9 +151,32 @@ def logo_va_anh(chu_the: str) -> list:
         lg, anh = tep_logo(chu_the)
     except Exception:
         return []
+    # ── TÊN TỆP PHẢI MANG TÊN CHỦ THỂ  (8/9/2026) ───────────────────────────────────────
+    # Bộ 153 («SNC-Lavalin affair») lấy về `File:Justin Trudeau 2019 (3x4 cropped).jpg` và
+    # engine dùng nó làm NỀN TOÀN KHUNG: ảnh chụp mặt một chính khách đang sống, phủ kín
+    # sau người dẫn vẽ. Anh khung thẻ nhỏ là "dẫn chứng"; một chân dung full-bleed thì không.
+    #
+    # Wikidata trả nó ĐÚNG luật của nó — mục về vụ việc khai P18 là ảnh người liên quan. Sai
+    # là ở phía mình: §19.13 đã rút đúng luật *"ảnh phải mang tên THỰC THỂ"* nhưng chỉ áp cho
+    # đường Wikimedia Commons, còn đường Wikidata này thì chưa (§6 — vá một nhánh, để nguyên
+    # nhánh song song). Sổ `so_anh_nguon.json` dựng sáng nay là thứ cho phép truy ra trong
+    # một phút: không có nó thì tên tệp chỉ là một chuỗi băm.
+    _tu = {w for w in re.findall(r"[a-z]{3,}", (chu_the or "").lower())
+           if w not in ("the", "and", "affair", "scandal", "case", "group", "company",
+                        "corporation", "incorporated", "limited", "holdings", "inc", "ltd")}
+
+    def _khop_ten(tep_ten: str) -> bool:
+        if not _tu:
+            return True
+        t = (tep_ten or "").lower()
+        return any(w in t for w in _tu)
+
     ra = []
     for tep in (lg, anh):               # LOGO ĐỨNG TRƯỚC: nhận ra nhanh nhất
         if not tep:
+            continue
+        if not _khop_ten(tep):
+            print(f"   ⚠ bỏ «{str(tep)[:46]}» — tên tệp không mang tên «{chu_the[:28]}»")
             continue
         try:
             url, _gp = anh_tu_tep(tep)
