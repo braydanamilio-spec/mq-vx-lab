@@ -222,10 +222,30 @@ def loc_the_so(so_lieu: list, cau: list) -> tuple:
                 pass
         return False
 
+    def _loi(c) -> str:
+        """Lời thoại của một lượt, nhận CẢ HAI hình dạng đang tồn tại trong dây chuyền.
+
+        `mot_tap` giữ `cau` là list TUPLE `(lời, ai, cảm xúc)`; props đã ghi thì giữ `luot` là
+        list DICT có khoá `nar`. Bản đầu chỉ nhận dict — cổng gọi bằng dict nên XANH, còn lời
+        gọi thật truyền tuple và nổ `AttributeError` ngay lượt dựng đầu tiên.
+        §13.15: bài kiểm phải gọi bằng đúng đường mà mã thật gọi."""
+        if isinstance(c, (tuple, list)):
+            return str(c[0] if c else "")
+        if isinstance(c, dict):
+            return str(c.get("nar") or "")
+        # ── KHÔNG CÓ ĐƯỜNG DỰ PHÒNG "STR(BẤT KỲ THỨ GÌ)"  (thử ngược 8/9/2026) ─────────
+        # Bản đầu kết bằng `return str(c or "")`. Nó làm phép thử ngược MÙ: gỡ hẳn nhánh
+        # tuple ra thì tuple rơi xuống đây, thành `"('It collapsed in 1720.', 0, 'trung_tinh')"`
+        # — chuỗi ấy VẪN chứa `1720` nên cổng thấy mọi thứ bình thường.
+        # Tệ hơn: nó khiến con số nằm ở trường CẢM XÚC hay chỉ số người nói cũng tính là
+        # "đã được đọc lên". Một đường dự phòng đoán bừa trả lời sai mà không báo — thà nổ
+        # (§15.2: "không biết" và "đã tìm, không có" phải là hai câu khác nhau).
+        raise TypeError(f"loc_the_so: không biết đọc lời thoại từ {type(c).__name__}")
+
     bo_lech = 0
     for t, x in enumerate(so_lieu):
         if x and x.get("k") == "so" and t < len(cau):
-            if not _duoc_noi(x.get("so"), str(cau[t].get("nar") or "")):
+            if not _duoc_noi(x.get("so"), _loi(cau[t])):
                 so_lieu[t] = None
                 bo_lech += 1
     da, bo_lap = set(), 0
@@ -641,7 +661,24 @@ SAN_LUOT = 4
 TRAN_LAT = 7        # trần nhịp mỗi short ≈ 37 giây, xem `_lat_short`
 
 def doi_thoai(loi: list, vai: list, man: list = None) -> list:
+    # ── HỒ GROQ RỖNG KHÔNG ĐƯỢC LÀM ĐỨNG CẢ NHÀ MÁY  (đo 8/9/2026) ─────────────────────
+    # 15/15 lượt render từ 6/9 tới 8/9 đều ĐỎ, cả 18 luồng cùng một dòng `⚠ Groq: 0 khoá` ->
+    # `❌ không dựng được lời thoại` -> bỏ cả bộ. Và đo trên Drive: 115/125 kho có video mới
+    # nhất là **4/9** — nhà máy đứng bốn ngày.
+    #
+    # Gốc trực tiếp là `GROQ_KEYS` chưa được nối vào workflow (đã vá). Nhưng gốc SÂU hơn là
+    # chỗ này KHÔNG CÓ TẦNG DỰ PHÒNG: một secret thiếu làm chết đúng 18/18 luồng. §7 đã dựng
+    # bốn tầng cho NỀN chỉ để chuyện ấy không xảy ra với hình; lời thoại thì chưa có tầng nào.
+    #
+    # `phim_canh._goi_cf` viết bằng `@cf/openai/gpt-oss-120b`, chạy bằng CHÍNH `CF_KEYS` —
+    # thứ chắc chắn có, vì cả đường vẽ ảnh sống nhờ nó. Nó đã phục vụ bảng phân cảnh của bộ
+    # v10 từ 6/9, tức đường đã chạy thật, không phải mã mới (§13.1).
+    #
+    # Chỉ dùng khi hồ Groq RỖNG — không phải mỗi khi Groq trả lời kém. Groq vẫn là đường
+    # chính; đây là phanh tay, và một tập viết bằng model yếu hơn vẫn hơn hẳn không có tập.
     keys = C._khoa_groq()
+    if not keys:
+        print("   ↩ hồ Groq RỖNG — viết thoại bằng Cloudflare gpt-oss-120b (đường dự phòng)")
     man = man or [""] * len(loi)
     dong = [f"{i}. {t}" + (f"   [ON SCREEN: {m}]" if m else "")
             for i, (t, m) in enumerate(zip(loi, man))]
@@ -650,7 +687,10 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
          f"NARRATION ({len(loi)} lines):\n" + "\n".join(dong))
     thieu: list = []
     for vong in range(3):
-        t = C._goi(LENH_MOT_GIONG if MOT_GIONG else LENH_THOAI,
+        _lenh = LENH_MOT_GIONG if MOT_GIONG else LENH_THOAI
+        _goi = ((lambda sp, up: C._goi(sp, up, keys)) if keys
+                else (lambda sp, up: C._goi_cf(sp, up)))
+        t = _goi(_lenh,
                    u if vong == 0 else u + (
             "\n\nYour previous answer DROPPED these figures: " + ", ".join(thieu) +
             ". Each one is on a card the viewer will see. Rewrite so every one of them is "

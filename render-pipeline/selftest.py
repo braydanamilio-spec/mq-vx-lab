@@ -4142,6 +4142,7 @@ def main():
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
     check("kho đệm chọn chủ thể phải nằm TRONG GIT (CI mới có)", t_dem_chu_de_phai_trong_git)
     check("thẻ số trên màn phải ĐƯỢC ĐỌC LÊN, và không trùng", t_the_so_phai_duoc_doc_len)
+    check("hồ Groq rỗng KHÔNG được làm chết đường dựng thoại", t_thoai_co_tang_du_phong)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
@@ -10191,9 +10192,13 @@ def t_the_so_phai_duoc_doc_len():
     """
     import pilot_hai as PH
 
-    def chay(the, loi):
+    def chay(the, loi, dang="dict"):
         sl = [{"k": "so", "so": x} for x in the]
-        PH.loc_the_so(sl, [{"nar": n} for n in loi])
+        # HAI hình dạng thật của `cau`: tuple trong `mot_tap`, dict trong props đã ghi.
+        # Bản đầu của cổng chỉ thử dict, nên nó XANH trong khi lời gọi thật truyền tuple và
+        # nổ `AttributeError` ngay lượt dựng (§13.15 — gọi bằng đúng đường mã thật gọi).
+        PH.loc_the_so(sl, [{"nar": n} for n in loi] if dang == "dict"
+                          else [(n, 0, "trung_tinh") for n in loi])
         return [x["so"] if x else None for x in sl]
 
     # BẮT: số không được đọc lên  ·  số trùng
@@ -10212,6 +10217,11 @@ def t_the_so_phai_duoc_doc_len():
     assert chay(["1720", "1717"], ["Fell in 1720.", "Founded 1717."]) == ["1720", "1717"], \
         "hai số KHÁC nhau bị coi là trùng"
 
+    # dạng TUPLE — đúng thứ `mot_tap` truyền vào
+    assert chay(["1599"], ["It collapsed in 1720."], "tuple") == [None]
+    assert chay(["1720"], ["It collapsed in 1720."], "tuple") == ["1720"]
+    assert chay(["3,200"], ["three thousand two hundred degrees"], "tuple") == ["3,200"]
+
     # bộ lọc phải chạy TRƯỚC lúc ghi props — đo trên NGUỒN thật, vì `_ma_py` gộp thân mọi hàm
     # nên vị trí trong chuỗi của nó không nói gì về thứ tự chạy (bản đầu của cổng dính đúng đó)
     src = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -10219,6 +10229,36 @@ def t_the_so_phai_duoc_doc_len():
     i_loc, i_ghi = src.find("loc_the_so(so_lieu, cau)"), src.find('"soLieu": so_lieu')
     assert i_loc > 0 and i_ghi > 0, "không tìm thấy mốc lọc/ghi trong pilot_hai.py"
     assert i_loc < i_ghi, "lọc thẻ chạy SAU khi props đã ghi — không có tác dụng gì"
+
+
+def t_thoai_co_tang_du_phong():
+    """Hồ Groq rỗng phải rơi về Cloudflare, không được giết cả lượt dựng.
+
+    ── VÌ SAO  (đo 8/9/2026) ─────────────────────────────────────────────────────────────
+    15/15 lượt render từ 6/9 tới 8/9 đều ĐỎ, cả 18 luồng cùng một dòng `⚠ Groq: 0 khoá` ->
+    `❌ không dựng được lời thoại` -> bỏ cả bộ. Đối chiếu Drive: 115/125 kho có video mới nhất
+    là **4/9**. Nhà máy đứng bốn ngày vì MỘT secret chưa được nối.
+
+    Nối secret là vá triệu chứng. Gốc là đường dựng thoại không có tầng nào phía sau — trong
+    khi §7 đã dựng BỐN tầng cho nền chỉ để chuyện này không xảy ra với hình. `_goi_cf` chạy
+    bằng `CF_KEYS`, thứ chắc chắn có, và đã phục vụ bảng phân cảnh bộ v10 từ 6/9.
+
+    Cổng đo bằng AST: nhánh `if not keys` phải tồn tại, và lời gọi phải RẼ theo `keys` chứ
+    không gọi thẳng `C._goi`. Quét trên mã đã bỏ chú thích — chú thích ở đây trích lại chính
+    lỗi cũ nên rất dễ tự lừa (§17.15).
+    """
+    ma = _ma_py("pilot_hai")
+    assert "_goi_cf" in ma, "đường dựng thoại không có tầng dự phòng Cloudflare"
+    i = ma.find("def doi_thoai")
+    assert i > 0, "không tìm thấy doi_thoai"
+    than = ma[i:i + 4000]
+    assert "if not keys" in than, "không có nhánh 'hồ Groq rỗng'"
+    assert "C._goi_cf" in than, "nhánh dự phòng không gọi Cloudflare"
+    # và nó phải là một phép RẼ, không phải gọi cả hai
+    assert "if keys" in than, "lời gọi không rẽ theo hồ khoá — sẽ gọi Groq với hồ rỗng"
+
+    import phim_canh as PC
+    assert callable(getattr(PC, "_goi_cf", None)), "phim_canh._goi_cf biến mất"
 
 
 if __name__ == "__main__":
