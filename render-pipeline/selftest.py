@@ -730,6 +730,49 @@ def t_do_vat_khong_dat_hang_chu():
         "cổng bắt oan vật thay thế"
 
 
+def t_khai_niem_khong_bat_oan_goc_ngan():
+    """Bảng khái niệm -> cảnh không được khớp NHẦM vì gốc từ ngắn cộng `\\w*`.
+
+    8/9 — anh soi lưới bộ 152 («Credit Suisse») thấy một khung là CẢNG CONTAINER. Truy ra
+    nhịp «You own it, sort of, in your **portfolio**.» khớp `\b(ship|vessel|port|…)\w*` —
+    `port` + `\w*` nuốt trọn «portfolio». Đây đúng §15.3, và nó là lần thứ tư cùng một bẫy.
+
+    Quét trên kho lời THẬT của các tập đã dựng (2.087 từ khác nhau) rồi đọc tay: **20 ca bắt
+    oan**, hai cái tệ nhất là từ rất hay gặp — `\bapp\w*` nuốt *appear · apply · approximately*
+    (ra cảnh phần mềm) và `\bsec\w*` nuốt *second · secret · securities* (ra cảnh cơ quan quản
+    lý). Nền vì thế nói một đằng còn lời nói một nẻo, đúng thứ anh phàn nàn nhiều nhất.
+
+    Cổng phải có ĐỦ HAI chiều (§13.11): siết gốc ngắn thì rất dễ siết luôn gốc dài — chính em
+    làm hụt `manufacturing` ở vòng sửa thứ hai và chỉ thấy vì danh sách chiều thuận."""
+    import re, pilot_hai as PH
+    OAN = ["portfolio", "appear", "appeared", "apply", "approximately", "second", "seconds",
+           "secret", "securities", "feel", "feels", "feet", "finally", "boarding", "memory",
+           "erased", "foundered", "stationed", "planted", "planting"]
+    DUNG = ["port", "shipping", "container", "app", "apps", "server", "online", "sec",
+            "commission", "watchdog", "fee", "fees", "ticket", "price", "final", "board",
+            "boardroom", "era", "memo", "bank", "banking", "teller", "fleet", "airline",
+            "flight", "aircraft", "rail", "station", "train", "founder", "shut", "closed",
+            "chairman", "executive", "bankruptcy", "insolvency", "factory", "manufacturing",
+            "manufacture", "plant", "assembly", "production"]
+
+    def khop(w):
+        for r, c in PH._KHAI_NIEM:
+            if re.search(r, w):
+                return c
+        return ""
+
+    oan = {w: khop(w)[:40] for w in OAN if khop(w)}
+    assert not oan, f"khái niệm bắt oan {len(oan)} từ: {oan}"
+    hut = [w for w in DUNG if not khop(w)]
+    assert not hut, f"siết quá tay, {len(hut)} từ ĐÚNG mất nhận diện: {hut}"
+
+    # và cảnh không được ĐẶT HÀNG chữ — cùng họ với cổng đồ vật, ở bảng bên cạnh
+    CAM = ("price board", "notice board", "menu board", "signage", "poster", "placard",
+           "banner", "headline", "nameplate")
+    xau = [c for _r, c in PH._KHAI_NIEM for k in CAM if k in c.lower()]
+    assert not xau, f"cảnh đặt hàng CHỮ: {xau[:3]}"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3702,6 +3745,7 @@ def main():
     check("sổ nguồn thẻ ảnh ghi ra đĩa", t_so_anh_nguon_ghi_ra_dia)
     check("đổi ngôi không đẻ ra cặp lặp", t_doi_ngoi_khong_de_ra_lap)
     check("đồ vật nền không đặt hàng chữ", t_do_vat_khong_dat_hang_chu)
+    check("khái niệm không bắt oan gốc từ ngắn", t_khai_niem_khong_bat_oan_goc_ngan)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
