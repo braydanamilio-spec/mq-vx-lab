@@ -276,18 +276,30 @@ def sinh(ma: str, i: int):
     # chỉ mất thông tin mà còn ĐẨY LÊN ĐẦU thứ mình không kiểm chứng được. Nay -1 trượt sàn;
     # nhánh hỏng mềm ngay dưới vẫn giữ nguyên nên hồ không bao giờ cạn vì chuyện này.
     # Và gọi MỘT lần rồi dùng lại — bản đầu gọi `luot_xem` hai lần cho mỗi ứng viên.
+    # ── SÀN LÀ ƯU TIÊN XẾP HẠNG, KHÔNG PHẢI PHÉP CẮT  (sửa lần hai, 8/9/2026) ──────────
+    # Bản đầu cắt cứng mọi chủ thể dưới 1.000 lượt. Đo ngay lượt sau: hồ chỉ còn một ứng viên
+    # qua sàn, mà nó có 8 câu nhân quả — dưới cổng chuyện — nên hệ BỎ cả bộ và không dựng gì.
+    # Tức em chữa "chọn chủ thể vô danh" bằng cách làm đứng hẳn dây chuyền: một cái sàn cứng
+    # đặt trước một cái cổng khác thì hai cái cùng chặn, và không cái nào biết cái kia.
+    #
+    # Nay xếp hạng hai tầng: qua sàn thì đứng TRƯỚC, và trong mỗi tầng vẫn xếp bằng công thức
+    # cũ. Chủ thể nổi tiếng luôn được chọn khi nó đủ chuyện; chỉ khi KHÔNG có cái nào vừa nổi
+    # vừa đủ chuyện thì mới rơi xuống tầng dưới — thay vì không dựng gì cả. `luot_xem` trả -1
+    # (không đo được) nằm tầng dưới, không được coi là nổi tiếng (§15.2).
     _SAN_NHAN_BIET = 1000
-    try:
-        _du = [x for x in _ung if (C.luot_xem(x[0]) or 0) >= _SAN_NHAN_BIET]
-    except Exception:
-        _du = []
-    if _du:
-        _bo = len(_ung) - len(_du)
-        if _bo:
-            print(f"   🚫 bỏ {_bo} chủ thể dưới {_SAN_NHAN_BIET:,} lượt xem/90 ngày "
-                  f"(gần như không ai tra, và cũng không có ảnh tự do)")
-        _ung = _du
-    _ung.sort(key=lambda x: -_diem(x))
+
+    def _tang(x):
+        try:
+            return 1 if (C.luot_xem(x[0]) or 0) >= _SAN_NHAN_BIET else 0
+        except Exception:
+            return 0
+
+    _qua = sum(_tang(x) for x in _ung)
+    if _qua and _qua < len(_ung):
+        print(f"   🔎 {_qua}/{len(_ung)} chủ thể đạt ≥{_SAN_NHAN_BIET:,} lượt xem/90 ngày "
+              f"— ưu tiên nhóm ấy, phần còn lại vẫn giữ làm dự phòng")
+    _ung.sort(key=lambda x: (-_tang(x), -_diem(x)))
+
     try:
         _t = _ung[0]
         # KHÔNG cắt tên ở đây: dòng này là dòng CHẨN ĐOÁN. Bản cũ cắt 34 ký tự và biến

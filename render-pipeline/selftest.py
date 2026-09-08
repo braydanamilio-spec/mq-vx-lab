@@ -1060,11 +1060,14 @@ def t_san_nhan_biet_va_hong_mem():
     i = src.index("_SAN_NHAN_BIET = ")
     san = int(src[i:].split("=")[1].split("\n")[0].strip())
     assert 500 <= san <= 5000, f"sàn {san} nằm ngoài khoảng đã đo"
-    # hỏng mềm: phải có nhánh trả lại danh sách đầy đủ khi lọc sạch
-    j = src.index("_SAN_NHAN_BIET = ")
-    khoi = src[j:j + 1200]
-    assert "if _du:" in khoi, "lọc sạch trơn sẽ làm cạn hồ — thiếu nhánh hỏng mềm"
-    assert "_ung = _du" in khoi, "kết quả lọc không được dùng"
+    # ── SÀN PHẢI LÀ ƯU TIÊN, KHÔNG PHẢI PHÉP CẮT ────────────────────────────────────
+    # Bản đầu cắt cứng mọi chủ thể dưới sàn. Đo lượt sau: hồ chỉ còn MỘT ứng viên qua sàn, mà
+    # nó có 8 câu nhân quả — dưới cổng chuyện — nên hệ bỏ cả bộ và KHÔNG DỰNG GÌ. Một cái sàn
+    # cứng đặt trước một cái cổng khác thì hai cái cùng chặn mà không cái nào biết cái kia.
+    assert "_ung = _du" not in src, "sàn vẫn CẮT CỨNG — sẽ làm đứng dây chuyền khi hồ mỏng"
+    assert "(-_tang(x), -_diem(x))" in src, "sàn phải là tầng xếp hạng, không phải bộ lọc"
+    # và "không đo được" (-1) không được coi là nổi tiếng (§15.2)
+    assert "10 ** 9" not in src, "-1 vẫn được ánh xạ thành nổi tiếng nhất"
 
 
 def t_chieu_nen_theo_khung():
