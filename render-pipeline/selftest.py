@@ -453,8 +453,17 @@ def t_prompt_nen_khong_ten_rieng():
     assert not thieu, f"hình mẫu chưa có bảng đồ vật: {thieu}"
     hoa = [w for v in P._VAT_HINH_MAU.values() for w in " ".join(v).split() if w[:1].isupper()]
     assert not hoa, f"bảng đồ vật có từ viết HOA (tên riêng): {hoa[:5]}"
-    it = [k for k, v in P._VAT_HINH_MAU.items() if len(v) < 6]
-    assert not it, f"hình mẫu có dưới 6 vật nên hai nhịp liền nhau sẽ trùng: {it}"
+    it = [k for k, v in P._VAT_HINH_MAU.items() if len(v) < 7]
+    assert not it, f"hình mẫu có dưới 7 vật: {it}"
+    # ── HAI VÒNG QUAY LẶP SAU `lcm`, KHÔNG SAU TÍCH (§13.13) ───────────────────────────
+    # Prompt nền xoay theo hai trục: khuôn hình (8) và đồ vật. Với 6 vật thì lcm(8,6) = 24,
+    # mà bản dài đi tới 32 nhịp — nhịp i và i+24 trùng CẢ HAI trục, và nếu chúng cùng khái
+    # niệm nữa thì ra CÙNG một prompt, tức đệm trả về CÙNG một tệp. Đó đúng là lỗi "nền
+    # trùng tệp" đang có ở 30/120 clip cũ. 7 vật cho lcm(8,7) = 56, vượt hẳn 32.
+    from math import lcm as _lcm
+    chu_ky = _lcm(len(P._KHUON_NEN), min(len(v) for v in P._VAT_HINH_MAU.values()))
+    assert chu_ky > 32, (f"hai vòng quay lặp sau {chu_ky} nhịp, mà bản dài tới 32 — "
+                         f"nhịp i và i+{chu_ky} sẽ ra cùng một prompt")
     # chạy CHÍNH phép lọc của mã thật trên câu đã gây lỗi
     m = re.search(r"_dt = \[w for w in re\.findall\((.*?)\)\n(.*?)\]\[:4\]", src, re.S)
     assert m, "không tìm thấy phép lọc danh từ trong _nen_theo_tap"
