@@ -2092,7 +2092,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     try:
         import phim_dang as PD
         co = PD.giao_hang(slug, out, ma, g["ten"], tieu, hook, hook_phu,
-                          dur, False, nhip)
+                          dur, False, nhip, CHU_THE_TAP)
         _t = "✅" if all(co.values()) else "❌"
         print(f"   {_t} giao hàng: " + " · ".join(f"{k}{'✓' if v else '✗'}"
                                                   for k, v in co.items()))

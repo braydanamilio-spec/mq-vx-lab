@@ -28,6 +28,20 @@ RA = os.path.join(GOC, "out")
 # YouTube tiêu đề 100 ký tự (cắt hiển thị ~60 trên di động) · Instagram chú thích 2.200 ·
 # Facebook không giới hạn thực tế nhưng 3 dòng đầu là thứ duy nhất hiện trước nút "xem thêm".
 TRAN_TIEU_DE = 95
+
+# Khuôn tiêu đề cho BẢN DÀI. Chỉ dùng khi `tieu` rơi về dạng tên-kênh (xem `viet_bai`). Mỗi
+# khuôn là một CÂU HỎI về chủ thể — thứ người xem gõ vào ô tìm kiếm — và không khuôn nào chứa
+# một con số, nên không khuôn nào có thể cấp một số sai.
+_KHUON_TIEU = (
+    "What actually happened to {x}?",
+    "Why did {x} really collapse?",
+    "What does nobody say about {x}?",
+    "How did {x} run out of time?",
+    "Which decision ended {x}?",
+    "What went wrong at {x}?",
+    "How did {x} actually end?",
+    "Why does nobody talk about {x} any more?",
+)
 TRAN_IG = 2100
 
 # Reels Instagram nhận tối đa 90 giây. Bản dài 7–11 phút KHÔNG lên được, và `dang_duoc` phải
@@ -90,7 +104,7 @@ def _co_nen(ma: str, nen: str) -> bool:
 
 
 def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
-             dai_giay: float, long: bool, nhip: list) -> dict:
+             dai_giay: float, long: bool, nhip: list, chu_the: str = "", slug_tap: str = "") -> dict:
     """Ba bộ chữ RIÊNG cho ba nền tảng — không phải một bộ dùng chung.
 
     Ba nền tảng đọc ba kiểu: YouTube đọc tiêu đề như một câu hỏi tìm kiếm, Facebook đọc ba
@@ -104,11 +118,36 @@ def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
             break
     so = so or hook_phu or ""
 
+    # ── TIÊU ĐỀ: BA LỖI ĐO ĐƯỢC TRÊN 140 TỆP ĐÃ GIAO  (8/9/2026) ────────────────────────
+    # 1. `tieu` của BẢN DÀI là chuỗi «<tên kênh> — N answers» (`giai_thich` dựng thế), nên mọi
+    #    bản dài ra cùng một tiêu đề: đo được 43/140 tệp trùng nhau, mới nhất là hôm nay. Tiêu
+    #    đề trùng giữa các tập đúng là trục §13.17 nêu tên, và nó nói với người xem đúng con số
+    #    KHÔNG: «The Rules Nobody Reads — 1 answers?» (còn sai cả số nhiều).
+    # 2. `so` nối vào không kèm ĐƠN VỊ: «(300)» · «(1.2)». Một con số trần trong ngoặc không
+    #    nói gì — §14.16, ràng buộc "phải có số" bị thoả bằng cách rẻ nhất.
+    # 3. cắt `[:TRAN_TIEU_DE]` giữa TỪ: «…to fund the development of S».
+    #
+    # Chủ thể luôn có và luôn khác nhau giữa các tập, nên nó là vật liệu chắc chắn nhất. Khuôn
+    # câu xoay theo băm của (chủ thể, kênh) — băm TƯỜNG MINH, không dùng `hash()` (§13.13).
     tde = _hoa_dau(tieu)
+    _ten_kenh = (ten or "").strip().lower()
+    _la_ten_kenh = bool(_ten_kenh) and (tde.lower().startswith(_ten_kenh)
+                                        or re.search(r"—\s*\d+\s+answers?$", tde.strip(), re.I))
+    if _la_ten_kenh and chu_the:
+        # Chỉ số khuôn chạy theo SỐ THỨ TỰ TẬP, không theo băm của chủ thể: cùng một chủ
+        # thể đi qua nhiều khuôn hỏi là ĐÚNG thiết kế (§19.6), nhưng hai tập KHÔNG được mang
+        # cùng một tiêu đề. Băm theo chủ thể thì hai tập cùng chủ thể luôn ra cùng khuôn; đo
+        # trên 14 tập mẫu (một chủ thể lặp 3 lần) thì băm cho 13/14 tiêu đề riêng, còn bước
+        # theo số thứ tự cho 14/14 — vì hai số liền nhau không bao giờ cùng dư.
+        _n = re.findall(r"\d+", slug_tap or "")
+        _k = int(_n[-1]) if _n else sum(ord(c) * (i + 1) for i, c in enumerate(chu_the + ma))
+        tde = _KHUON_TIEU[_k % len(_KHUON_TIEU)].format(x=chu_the.strip())
     yt = (f"{tde}?" if not tde.endswith("?") else tde)
-    if so and len(yt) + len(so) + 3 <= TRAN_TIEU_DE:
+    # số chỉ đáng nối khi nó mang ĐƠN VỊ — «(25 billion)» nói được, «(300)» thì không
+    if so and re.search(r"[a-zA-Z]", so) and len(yt) + len(so) + 3 <= TRAN_TIEU_DE:
         yt = f"{yt} ({so})"
-    yt = yt[:TRAN_TIEU_DE]
+    if len(yt) > TRAN_TIEU_DE:                      # cắt theo TỪ, không giữa từ
+        yt = yt[:TRAN_TIEU_DE].rsplit(" ", 1)[0].rstrip(" ,;:—-") + "?"
 
     cau = [str(n.get("cua") or n.get("loi") or "").strip() for n in nhip]
     mo = " ".join(cau[:3])[:180]
@@ -211,7 +250,7 @@ def lam_bia(mp4: str, ra_jpg: str, giay: float = 0.9) -> bool:
 
 
 def giao_hang(slug: str, mp4: str, ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
-              dai_giay: float, long: bool, nhip: list) -> dict:
+              dai_giay: float, long: bool, nhip: list, chu_the: str = "") -> dict:
     """Sinh ảnh bìa + `.tai.json`. Trả sổ những gì THẬT SỰ có trên đĩa.
 
     §15.3 — bước nào có sản phẩm đầu ra thì cổng của nó phải kiểm SẢN PHẨM, không kiểm mã
@@ -220,7 +259,7 @@ def giao_hang(slug: str, mp4: str, ma: str, ten: str, tieu: str, hook: str, hook
     jpg = os.path.join(RA, f"{slug}.jpg")
     tai = os.path.join(RA, f"{slug}.tai.json")
     lam_bia(mp4, jpg, moc_bia(nhip))
-    d = viet_bai(ma, ten, tieu, hook, hook_phu, dai_giay, long, nhip)
+    d = viet_bai(ma, ten, tieu, hook, hook_phu, dai_giay, long, nhip, chu_the, slug)
     json.dump(d, io.open(tai, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     co = {"mp4": os.path.exists(mp4), "jpg": os.path.exists(jpg),
           "tai": os.path.exists(tai)}

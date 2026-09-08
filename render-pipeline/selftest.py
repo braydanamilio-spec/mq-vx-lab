@@ -773,6 +773,55 @@ def t_khai_niem_khong_bat_oan_goc_ngan():
     assert not xau, f"cảnh đặt hàng CHỮ: {xau[:3]}"
 
 
+def t_tieu_de_youtube_khong_trung():
+    """Tiêu đề YouTube phải nói về TẬP, không phải tên kênh — và không được trùng nhau.
+
+    8/9 — đo 140 tệp `.tai.json` đã giao: **43 tệp mang tiêu đề trùng**, mới nhất là hôm nay,
+    và chuỗi trùng ấy là «The Rules Nobody Reads — 1 answers?». Ba lỗi chồng nhau ở một chỗ:
+
+      1. `tieu` của BẢN DÀI là «<tên kênh> — N answers» (`giai_thich` dựng thế), nên MỌI bản
+         dài ra cùng một tiêu đề — đúng trục §13.17 nêu tên, và nó nói với người xem con số 0.
+         (Còn sai cả số nhiều: "1 answers".)
+      2. `so` nối vào không kèm ĐƠN VỊ: «(300)» · «(1.2)» — §14.16, ràng buộc "phải có số"
+         được thoả bằng cách rẻ nhất mà mất hẳn tác dụng.
+      3. cắt `[:95]` giữa TỪ: «…to fund the development of S».
+
+    Chỉ số khuôn chạy theo SỐ THỨ TỰ TẬP chứ không theo băm chủ thể: một chủ thể đi qua nhiều
+    khuôn hỏi là ĐÚNG thiết kế (§19.6), nhưng hai tập không được mang cùng một tiêu đề. Đo
+    trên 14 tập mẫu có một chủ thể lặp ba lần — băm cho 13/14 riêng, bước theo số thứ tự cho
+    14/14, vì hai số liền nhau không bao giờ cùng dư."""
+    import re, phim_dang as PD
+    nhip = [{"loi": "A."}, {"loi": "B."}]
+
+    def tieu(slug, chu_the, tieu_goc, so=""):
+        d = PD.viet_bai("therules", "The Rules Nobody Reads", tieu_goc, so, so,
+                        56.0, True, nhip, chu_the, slug)
+        return d["youtube"]["title"]
+
+    # 1. dạng tên-kênh phải BIẾN MẤT
+    t = tieu("v11L_therules_0152", "Credit Suisse", "The Rules Nobody Reads — 1 answers", "300")
+    assert "Nobody Reads" not in t and "answers" not in t, f"vẫn ra tiêu đề tên kênh: {t}"
+    assert "Credit Suisse" in t, f"tiêu đề không nhắc chủ thể: {t}"
+    # 2. số TRẦN không được nối vào; số CÓ ĐƠN VỊ thì được
+    assert "(300)" not in t, f"nối số trần vào tiêu đề: {t}"
+    t2 = tieu("v11_therules_1520", "Credit Suisse", "The country that kept it", "25 billion")
+    assert "(25 billion)" in t2, f"số CÓ đơn vị lại bị bỏ: {t2}"
+    # 3. cắt theo TỪ, không giữa từ
+    dai = "Credit Suisse was founded in 1856 to fund the development of Switzerland railways and industry across the country"
+    t3 = tieu("v11_therules_1521", "Credit Suisse", dai)
+    assert len(t3) <= PD.TRAN_TIEU_DE, f"vượt trần: {len(t3)}"
+    assert dai.startswith(t3[:-1].rstrip("?").strip()), "cắt sai chỗ"
+    assert not re.search(r"\b[A-Za-z]$", t3[:-1]) or t3[:-1].split()[-1] in dai.split(), \
+        f"cắt GIỮA TỪ: {t3}"
+    # 4. 14 tập, một chủ thể lặp 3 lần -> 14 tiêu đề KHÁC NHAU
+    ct = ["Credit Suisse", "MetLife Building", "MarkAir", "MarkAir", "MarkAir",
+          "Air California", "Air California", "ATA", "ATA", "Concorde", "Kodak",
+          "Betamax", "Pan Am", "Air Berlin"]
+    ra = [tieu(f"v11L_therules_{140+i:04d}", c, "The Rules Nobody Reads — 1 answers")
+          for i, c in enumerate(ct)]
+    assert len(set(ra)) == len(ra), f"chỉ {len(set(ra))}/{len(ra)} tiêu đề riêng: {ra}"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3746,6 +3795,7 @@ def main():
     check("đổi ngôi không đẻ ra cặp lặp", t_doi_ngoi_khong_de_ra_lap)
     check("đồ vật nền không đặt hàng chữ", t_do_vat_khong_dat_hang_chu)
     check("khái niệm không bắt oan gốc từ ngắn", t_khai_niem_khong_bat_oan_goc_ngan)
+    check("tiêu đề YouTube nói về tập, không trùng", t_tieu_de_youtube_khong_trung)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
