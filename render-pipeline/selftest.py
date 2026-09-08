@@ -983,6 +983,59 @@ def t_loai_trang_van_ban_va_anh_trong():
     assert not van_ban("File:Schweizerische Kreditanstalt 1898.jpg", 0.18)
 
 
+def t_anh_that_vao_duoc_moi_dang_o():
+    """Ảnh thật phải đặt được BẤT KỂ ô đang giữ đường dẫn dạng nào, và short gắn nền THEO CÂU.
+
+    8/9 — anh gửi khung short «487 billion was transferred by 1MDB…» trên một hành lang kính
+    trống: *"tốn credit mà render ra mấy tấm ảnh ko liên quan này thì làm gì cho tốn"*.
+
+    Hai lỗi riêng, đo được riêng:
+
+    1. Cảnh ĐÚNG đã vẽ rồi — nhịp ấy khớp «a vault door standing open…» và bản dài dựng nó ở
+       nhịp 10 — nhưng short gắn nền bằng `NEN_SAN[i % len(NEN_SAN)]`, tức chia lấy dư theo
+       VỊ TRÍ. Short đảo thứ tự (hook lên đầu) và viết lại câu, nên vị trí trong short không
+       còn là vị trí trong bản dài. Nay ghép theo NGHĨA (Jaccard trên tập từ — §13.5: đo nội
+       dung, không đo khuôn câu).
+
+    2. Ảnh thật chỉ chiếm 11/163 nền (7%) trên 13 bản dài, trong khi bộ 154 có SÁU tấm mà chỉ
+       dùng ba. Lượt hai đưa phần dư vào những nhịp đằng nào cũng nhận nền chung — vừa dễ
+       nhận ra hơn vừa CẮT một lượt CF mỗi nhịp.
+
+    Và bản đầu của lượt hai dò ô trống theo TIỀN TỐ đường dẫn (`phim_nen/`, `nentap_`), mà
+    lúc hàm chạy thì nền tập CHƯA vẽ — ô đang giữ đường dẫn kho nền với tiền tố khác. Đo bộ
+    155: bản dài 0/11 ảnh thật trong khi short được 2/7, tức điều kiện chỉ TÌNH CỜ đúng ở
+    một nhánh. Em viết điều kiện theo giá trị ĐOÁN thay vì giá trị thật (§13.15)."""
+    import pilot_hai as PH
+    cu = PH.CHU_THE_TAP
+    try:
+        PH.CHU_THE_TAP = "1MDB"
+        duong = ["anh_pd/x1.jpg", "anh_pd/x2.jpg"]
+        cau = [f"cau {i} khong lien quan gi" for i in range(11)]
+        for o in ("comic_nen/x.webp", "", "phim_nen/nentap_a.jpg"):
+            ra = PH._chen_anh_that([o] * 11, duong, cau)
+            n = sum(1 for x in ra if str(x).startswith("anh_pd/"))
+            assert n == 2, f"ô dạng «{o}» chỉ đặt được {n}/2 ảnh thật"
+            vt = [i for i, x in enumerate(ra) if str(x).startswith("anh_pd/")]
+            assert all(b - a >= 2 for a, b in zip(vt, vt[1:])), f"hai ảnh thật liền nhau: {vt}"
+            assert 0 not in vt and len(ra) - 1 not in vt, f"đặt vào hook/chốt: {vt}"
+    finally:
+        PH.CHU_THE_TAP = cu
+
+    # short gắn nền THEO CÂU, không theo vị trí
+    cu_n, cu_l = list(PH.NEN_SAN), list(PH.LOI_SAN)
+    try:
+        PH.NEN_SAN = ["n0.jpg", "n1.jpg", "n2.jpg"]
+        PH.LOI_SAN = ["The museum where it ended up in 2018.",
+                      "You own it, sort of, in your own mind.",
+                      "487 billion was transferred into two separate accounts."]
+        ra = PH._nen_theo_loi(["487 billion was transferred by it into two separate accounts.",
+                               "The museum where it ended up in 2018."])
+        assert ra[0] == "n2.jpg", f"câu 487 tỉ vẫn nhận nền sai: {ra}"
+        assert ra[1] == "n0.jpg", f"câu bảo tàng nhận nền sai: {ra}"
+    finally:
+        PH.NEN_SAN, PH.LOI_SAN = cu_n, cu_l
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3961,6 +4014,7 @@ def main():
     check("nền khung dọc không cắt vào chỗ trống", t_nen_doc_khong_cat_vao_cho_trong)
     check("ảnh thật đủ lớn và đủ nhiều", t_anh_that_du_lon_va_du_nhieu)
     check("loại trang văn bản và ảnh đồng màu", t_loai_trang_van_ban_va_anh_trong)
+    check("ảnh thật vào được mọi dạng ô · short gắn nền theo câu", t_anh_that_vao_duoc_moi_dang_o)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

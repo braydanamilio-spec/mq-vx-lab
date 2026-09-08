@@ -1369,9 +1369,14 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
     # để tập không đọc ra như một album ảnh.
     _du = [d for d in duong if d not in ra]
     if _du:
+        # Ô THAY ĐƯỢC = ô chưa giữ một ảnh thật. KHÔNG dò theo TIỀN TỐ đường dẫn: bản đầu
+        # của em dò `phim_nen/` và `nentap_`, mà lúc hàm này chạy thì `_nen_theo_tap` CHƯA
+        # vẽ — ô đang giữ đường dẫn KHO NỀN với tiền tố khác. Kết quả đo trên bộ 155: bản dài
+        # 0/11 ảnh thật trong khi short được 2/7, tức điều kiện chỉ tình cờ đúng ở nhánh
+        # short. Em viết điều kiện theo giá trị ĐOÁN thay vì giá trị thật (§13.15).
+        _co_that = set(duong)
         _trong = [k for k in range(1, max(1, len(ra) - 1))
-                  if k < len(ra) and (not ra[k] or str(ra[k]).startswith("phim_nen/")
-                                      or str(ra[k]).startswith("nentap_"))]
+                  if k < len(ra) and ra[k] not in _co_that]
         _dat = []
         for k in _trong:
             if _dat and k - _dat[-1] < 2:      # đừng đặt hai ảnh thật liền nhau
