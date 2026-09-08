@@ -1020,13 +1020,34 @@ _KHUON_NEN = (
 # Giữ nguyên hai mệnh lệnh THẬT SỰ chống lỗi: sàn chiếm phần ba dưới (chống người lơ lửng) và
 # máy ngang tầm mắt. Bỏ hai mệnh lệnh còn lại, thay bằng một dải trống ĐÚNG BÊN người đứng.
 def san_nen_ben(ben: str) -> str:
-    _b = "left" if str(ben).lower().startswith("tr") else "right"
-    _k = "right" if _b == "left" else "left"
-    return ("wide shot, camera at standing eye level, the ground plane fills the entire "
+    """Chừa dải trống ĐÚNG chỗ người dẫn đứng — ba trường hợp, không phải hai.
+
+    ── LỖI EM VỪA TỰ TẠO RA, VÀ NÓ TRÚNG MỘT PHẦN BA SỐ KÊNH  (8/9/2026) ───────────────
+    Bản đầu của hàm này viết `"left" if ben.startswith("tr") else "right"` — tức mọi giá trị
+    không phải `trai` đều thành `phai`. Nhưng `GU_DUNG` có BA giá trị, chia đều:
+        trai 6 kênh · phai 6 kênh · **giua 6 kênh**
+    Sáu kênh `giua` (có `therules`) vì thế được dặn chừa dải BÊN PHẢI trong khi người dẫn
+    đứng GIỮA, và đồ đạc bị dồn vào hai phần ba TRÁI — người đè đúng lên chỗ có đồ. Soi lưới
+    bộ 146 thấy khung 3 hỏng bố cục chính là ca ấy.
+
+    Đúng họ §13.9 ở dạng nhị phân: viết `A if X else B` cho một trường có BA giá trị là im
+    lặng gộp hai giá trị làm một. Cách nhận ra rẻ nhất: đếm số giá trị thật của trường trước
+    khi viết nhánh.
+    """
+    _b = str(ben).lower()
+    _san = ("wide shot, camera at standing eye level, the ground plane fills the entire "
             "bottom third of the frame as one continuous unbroken surface running from the "
-            "left edge to the right edge, "
-            f"the {_b} third of the frame is open walkable floor, "
-            f"the objects of the scene stand together in the {_k} two thirds")
+            "left edge to the right edge, ")
+    if _b.startswith("tr"):
+        return _san + ("the left third of the frame is open walkable floor, "
+                       "the objects of the scene stand together in the right two thirds")
+    if _b.startswith("ph"):
+        return _san + ("the right third of the frame is open walkable floor, "
+                       "the objects of the scene stand together in the left two thirds")
+    # GIỮA: người đứng chính giữa nên dải trống phải ở giữa, và đồ tụ về HAI bên — đây đúng
+    # là luật cũ, và với sáu kênh này nó vẫn là luật đúng.
+    return _san + ("the centre of the frame is empty walkable floor, "
+                   "the objects of the scene stand together at the left and right edges")
 
 
 def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -> list:

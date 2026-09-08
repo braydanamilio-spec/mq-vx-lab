@@ -288,15 +288,28 @@ def t_luat_bo_cuc_nen_tap():
     suất miễn cho CẢ TỆP, trong khi tệp nay có HAI đường prompt với HAI luật khác nhau. Cổng ở
     mức TỆP không diễn đạt được điều đó (§15.19 — cổng không thể đỏ thì không phải cổng)."""
     import pilot_hai as P
-    for ben, mo, dong in (("trai", "left", "right"), ("phai", "right", "left")):
+    # ── PHẢI PHỦ ĐỦ BA VỊ TRÍ, KHÔNG PHẢI HAI ─────────────────────────────────────────
+    # Bản đầu của `san_nen_ben` viết `"left" if ben.startswith("tr") else "right"`, mà
+    # `GU_DUNG` có BA giá trị chia đều: trai 6 · phai 6 · **giua 6**. Sáu kênh `giua` (có
+    # `therules`) bị dặn chừa dải BÊN PHẢI trong khi người đứng GIỮA — người đè đúng lên chỗ
+    # có đồ, và khung 3 của bộ 146 hỏng bố cục chính là ca ấy. Viết `A if X else B` cho một
+    # trường ba giá trị là im lặng gộp hai giá trị làm một (§13.9).
+    _viTri = {v[0] for v in P.GU_DUNG.values()}
+    assert _viTri <= {"trai", "phai", "giua"}, f"GU_DUNG có vị trí lạ: {_viTri}"
+    for ben in sorted(_viTri):
         t = P.san_nen_ben(ben)
         assert "bottom third" in t, "mất mệnh lệnh SÀN — người sẽ lơ lửng (§7)"
         assert "standing eye level" in t, "mất mệnh lệnh máy ngang tầm mắt"
-        assert f"the {mo} third of the frame is open" in t, f"{ben}: không chừa chỗ cho người"
-        assert f"stand together in the {dong} two thirds" in t, f"{ben}: đồ không tụ một phía"
-        # và KHÔNG được quay lại hai câu đã bỏ
-        assert "centre of the frame is empty" not in t, "luật cũ 'giữa trống' quay lại"
-        assert "pushed far to the left and right" not in t, "luật cũ 'dồn hai mép' quay lại"
+        assert "walkable floor" in t, f"{ben}: không chừa chỗ cho người"
+        assert "stand together" in t, f"{ben}: đồ không tụ lại"
+    # ba vị trí phải cho BA câu khác nhau — nếu hai cái trùng là đã gộp nhầm
+    _ba = {b: P.san_nen_ben(b) for b in ("trai", "phai", "giua")}
+    assert len(set(_ba.values())) == 3, f"hai vị trí ra cùng một luật: {list(_ba)}"
+    assert "left third of the frame is open" in _ba["trai"]
+    assert "right third of the frame is open" in _ba["phai"]
+    assert "centre of the frame is empty" in _ba["giua"], "giua phải chừa GIỮA"
+    for b in ("trai", "phai"):
+        assert "centre of the frame is empty" not in _ba[b], f"{b}: luật 'giữa trống' quay lại"
     # phong cách không được RA LỆNH làm mọi bề mặt trơn (đó là đặt hàng sự trống rỗng)
     assert "blank and unmarked" not in P.GU_NEN, "GU_NEN còn ra lệnh làm bề mặt trơn"
     # phần nói VẼ GÌ phải chiếm chỗ đáng kể, không bị luật nhấn chìm
