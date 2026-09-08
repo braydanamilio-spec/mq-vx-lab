@@ -1036,6 +1036,37 @@ def t_anh_that_vao_duoc_moi_dang_o():
         PH.NEN_SAN, PH.LOI_SAN = cu_n, cu_l
 
 
+def t_san_nhan_biet_va_hong_mem():
+    """Chủ thể quá vô danh phải bị LOẠI — nhưng lọc sạch trơn thì phải trả lại hết.
+
+    8/9 — anh: *"ảnh thực tế vẫn quá ít"* · *"phải render cái gì người dùng nhìn cái nhận ra
+    ngay chứ ko thì khác gì dùng kho nền sẵn đâu"*. Cả hai về cùng một gốc là CHỌN CHỦ THỂ.
+
+    Đo 28 chủ thể đã dùng: 6/28 dưới 1.000 lượt xem/90 ngày — «Charter One Airlines» 53 lượt,
+    «Alaska International Air» 143, «Boston-Maine Airways» 189. Dưới 1.000 là ~11 lượt/ngày,
+    gần như không ai tra. Và đúng những chủ thể ấy không có ảnh tự do: Charter One cho 1 tấm
+    trong khi Kodak cho 18, MetLife 7.
+
+    Chỗ hỏng là PHÉP NHÂN `số câu × log10(lượt xem)`: `log10` nén chênh lệch 6.000 lần xuống
+    3,2 lần, còn số câu biến thiên 8 lần — nên một hãng bay vô danh giàu chuyện luôn thắng
+    một cái tên ai cũng biết. Chú thích cũ ghi rõ đó là chủ ý; đo xong thì chủ ý ấy sai với
+    thứ anh cần.
+
+    Sàn chứ không phải hệ số. Và HỎNG MỀM là ràng buộc ngang hàng: "không chủ thể nào đủ nổi
+    tiếng" không được phép biến thành "không dựng được tập nào" (§13.3)."""
+    import inspect, vi_sao as V
+    src = inspect.getsource(V)
+    assert "_SAN_NHAN_BIET" in src, "chưa có sàn nhận biết"
+    i = src.index("_SAN_NHAN_BIET = ")
+    san = int(src[i:].split("=")[1].split("\n")[0].strip())
+    assert 500 <= san <= 5000, f"sàn {san} nằm ngoài khoảng đã đo"
+    # hỏng mềm: phải có nhánh trả lại danh sách đầy đủ khi lọc sạch
+    j = src.index("_SAN_NHAN_BIET = ")
+    khoi = src[j:j + 1200]
+    assert "if _du:" in khoi, "lọc sạch trơn sẽ làm cạn hồ — thiếu nhánh hỏng mềm"
+    assert "_ung = _du" in khoi, "kết quả lọc không được dùng"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -4015,6 +4046,7 @@ def main():
     check("ảnh thật đủ lớn và đủ nhiều", t_anh_that_du_lon_va_du_nhieu)
     check("loại trang văn bản và ảnh đồng màu", t_loai_trang_van_ban_va_anh_trong)
     check("ảnh thật vào được mọi dạng ô · short gắn nền theo câu", t_anh_that_vao_duoc_moi_dang_o)
+    check("sàn nhận biết chủ thể · hỏng mềm", t_san_nhan_biet_va_hong_mem)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

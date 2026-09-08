@@ -254,6 +254,35 @@ def sinh(ma: str, i: int):
             v = -1
         return _nq * (math.log10(max(v, 10)) if v >= 0 else 2.0)
 
+    # ── SÀN NHẬN BIẾT: NHÂN THÌ SỐ CÂU DÌM CHẾT ĐỘ NHẬN BIẾT  (anh, 8/9/2026) ──────────
+    # Anh: *"ảnh thực tế vẫn quá ít"* · *"phải render cái gì người dùng nhìn cái nhận ra
+    # ngay"*. Truy ra cả hai về cùng một gốc: CHỌN CHỦ THỂ.
+    #
+    # Đo 28 chủ thể đã dùng: **6/28 có dưới 1.000 lượt xem/90 ngày** — «Charter One Airlines»
+    # 53 lượt, «Alaska International Air» 143, «Boston-Maine Airways» 189. Dưới 1.000 lượt là
+    # ~11 lượt/ngày, tức gần như không ai tra. Và đúng những chủ thể ấy KHÔNG CÓ ảnh tự do:
+    # Charter One cho 1 tấm, trong khi Kodak cho 18 và MetLife 7.
+    #
+    # Phép nhân là chỗ hỏng: `log10` nén chênh lệch 6.000 lần (53 vs 327.667) xuống còn 3,2
+    # lần, còn số câu nhân quả biến thiên tới 8 lần — nên một hãng bay vô danh giàu chuyện
+    # luôn thắng một cái tên ai cũng biết. Chú thích ngay trên còn ghi đó là chủ ý; đo xong
+    # thì thấy chủ ý ấy sai với thứ anh cần.
+    #
+    # Sàn chứ không phải hệ số: dưới ngưỡng thì LOẠI, trên ngưỡng thì vẫn xếp bằng công thức
+    # cũ. Và HỎNG MỀM — lọc sạch trơn thì trả lại danh sách đầy đủ, vì "không chủ thể nào đủ
+    # nổi tiếng" không được phép biến thành "không dựng được tập nào" (§13.3).
+    _SAN_NHAN_BIET = 1000
+    try:
+        _du = [x for x in _ung if (C.luot_xem(x[0]) if C.luot_xem(x[0]) >= 0 else 10 ** 9)
+               >= _SAN_NHAN_BIET]
+    except Exception:
+        _du = []
+    if _du:
+        _bo = len(_ung) - len(_du)
+        if _bo:
+            print(f"   🚫 bỏ {_bo} chủ thể dưới {_SAN_NHAN_BIET:,} lượt xem/90 ngày "
+                  f"(gần như không ai tra, và cũng không có ảnh tự do)")
+        _ung = _du
     _ung.sort(key=lambda x: -_diem(x))
     try:
         _t = _ung[0]
