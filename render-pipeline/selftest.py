@@ -964,6 +964,12 @@ def t_loai_trang_van_ban_va_anh_trong():
         "phải GHÉP hai tín hiệu — mỗi cái một mình đều đã đo là không tách được"
     tv = inspect.getsource(A.tai_ve)
     assert 'anh.get("mark")' in tv, "thẻ logo chưa được miễn — sẽ loại oan chính logo"
+    # ── NHÁNH CACHE PHẢI ĐI QUA CÙNG CỔNG ────────────────────────────────────────────
+    # Bản vá đầu chỉ cắm cổng vào nhánh TẢI MỚI; nhánh cache trả về trước đó, nên mọi ảnh
+    # hỏng ĐÃ nằm trong kho vẫn được phục vụ mãi mãi (§6). Cùng hình dạng với lỗi đệm
+    # Wikipedia cùng ngày: đường ĐỌC lệch đường GHI thì bản vá chỉ chữa một nửa.
+    assert tv.count("_anh_dung_duoc(") >= 2, \
+        "nhánh cache chưa đi qua cổng — ảnh hỏng đã tải về sẽ dùng lại mãi"
 
     # thử ngược trên chính 8 mẫu đã đọc tay (không cần tệp: chỉ kiểm luật tiêu đề)
     def van_ban(ten, dinh):

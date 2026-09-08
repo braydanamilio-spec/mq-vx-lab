@@ -334,6 +334,13 @@ def tai_ve(anh: dict) -> str:
         duoi = os.path.splitext(urllib.parse.urlparse(anh["url"]).path)[1].lower() or ".jpg"
         d = os.path.join(KHO, k + duoi)
         if os.path.exists(d) and os.path.getsize(d) > 4096:
+            # ── NHÁNH CACHE PHẢI ĐI QUA CÙNG CỔNG  (8/9/2026) ──────────────────────────
+            # Bản vá trước chỉ cắm `_anh_dung_duoc` vào nhánh TẢI MỚI. Nhánh này trả về
+            # trước đó, nên mọi ảnh hỏng ĐÃ nằm trong kho — trang thông cáo DOJ, chữ ký đen
+            # — vẫn được phục vụ mãi mãi. Đúng §6, và đúng hình dạng của lỗi đệm Wikipedia
+            # sáng nay: đường ĐỌC và đường GHI lệch nhau thì bản vá chỉ chữa một nửa.
+            if not anh.get("mark") and not _anh_dung_duoc(d, anh.get("ten", "")):
+                return ""
             return _the_logo(d) if anh.get("mark") else d
         r = urllib.request.Request(anh["url"], headers=UA)
         b = urllib.request.urlopen(r, timeout=45).read()
