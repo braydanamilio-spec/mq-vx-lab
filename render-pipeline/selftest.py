@@ -813,6 +813,24 @@ def t_tieu_de_youtube_khong_trung():
     assert dai.startswith(t3[:-1].rstrip("?").strip()), "cắt sai chỗ"
     assert not re.search(r"\b[A-Za-z]$", t3[:-1]) or t3[:-1].split()[-1] in dai.split(), \
         f"cắt GIỮA TỪ: {t3}"
+    # 5. LƯỚI AN TOÀN: không truyền chủ thể thì phải suy được từ chính lời thoại.
+    #    Chữ hoa đầu câu là ngữ pháp (§13.9) nên phải bỏ — nhưng bỏ thẳng thì mất chữ đầu của
+    #    một tên riêng thật («Suisse» thay vì «Credit Suisse»). Luật đúng: chỉ bỏ khi chính
+    #    chữ ấy còn xuất hiện VIẾT THƯỜNG ở chỗ khác. Đo 6 tập đã biết đáp án: 4/6 -> 6/6.
+    _n = [{"loi": "Credit Suisse Group AG was a Swiss investment bank."},
+          {"loi": "The bank was barely hit during the 2008 crisis."},
+          {"loi": "Credit Suisse was founded in 1856."}]
+    assert "Credit Suisse" in PD._chu_the_tu_nhip(_n), \
+        f"lưới an toàn suy sai chủ thể: {PD._chu_the_tu_nhip(_n)}"
+    d5 = PD.viet_bai("therules", "The Rules Nobody Reads", "The Rules Nobody Reads — 1 answers",
+                     "", "", 56.0, True, _n, "", "v11L_therules_0152")
+    assert "Credit Suisse" in d5["youtube"]["title"], d5["youtube"]["title"]
+    # 6. THẺ phải nói về chủ thể, không phải tên kênh hay chữ của khuôn
+    _t = [x for x in d5["youtube"]["tags"] if x not in ("therulesnobodyreads", "therules", "explained")]
+    assert "suisse" in _t, f"thẻ không mang chủ thể: {_t}"
+    for x in ("rules", "nobody", "reads", "answers", "actually", "happened"):
+        assert x not in _t, f"thẻ vẫn mang chữ của tên kênh/khuôn «{x}»: {_t}"
+
     # 4. 14 tập, một chủ thể lặp 3 lần -> 14 tiêu đề KHÁC NHAU
     ct = ["Credit Suisse", "MetLife Building", "MarkAir", "MarkAir", "MarkAir",
           "Air California", "Air California", "ATA", "ATA", "Concorde", "Kodak",

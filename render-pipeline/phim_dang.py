@@ -68,6 +68,14 @@ def _the(ma: str, tieu: str, ten: str) -> list:
     # mang bản sắc" đã trả giá ba lần ở `bang_van.py`).
     bo |= {"vehicle", "surface", "thing", "things", "stuff", "part", "parts", "kind",
            "type", "amount", "number", "level", "size", "area", "unit", "value", "piece"}
+    # ── VÀ CHỮ CỦA CHÍNH KHUÔN TIÊU ĐỀ  (8/9/2026) ──────────────────────────────────────
+    # Thẻ nay rút từ tiêu đề đã sửa, mà tiêu đề bản dài dựng từ `_KHUON_TIEU`. Tám khuôn ấy
+    # dùng chung một bộ chữ (`actually` · `happened` · `collapse` · `nobody`…), nên chúng sẽ
+    # là thẻ của MỌI tập — đúng thứ §13.4 dạy phải cắt trước khi đo: phần giống nhau vì tay
+    # nghề chung thì không mang bản sắc. Chỉ chủ thể mới đáng làm thẻ.
+    bo |= {"actually", "happened", "really", "collapse", "collapsed", "nobody", "anymore",
+           "decision", "ended", "wrong", "talk", "talks", "more", "does", "did", "run",
+           "which", "about", "went", "time", "say"}
     rieng = [w for w in dict.fromkeys(goc) if w not in bo][:8]
     return [ten.lower().replace(" ", ""), ma, "explained"] + rieng
 
@@ -103,6 +111,38 @@ def _co_nen(ma: str, nen: str) -> bool:
     return bool(h[nen]) if h else (nen == "youtube")
 
 
+def _chu_the_tu_nhip(nhip: list) -> str:
+    """Suy CHỦ THỂ từ lời thoại — lưới an toàn khi đường gọi không truyền `chu_the`.
+
+    Chữ hoa ĐẦU CÂU là ngữ pháp, không phải tên riêng (§13.9), nên phải bỏ trước khi đếm.
+    Nhưng bỏ thẳng thì mất luôn chữ đầu của một tên riêng thật: bản đầu cho «Suisse» thay vì
+    «Credit Suisse», vì «Credit» đứng đầu một câu. Luật đúng hẹp hơn và không cần danh sách
+    ngoại lệ nào: **chỉ bỏ khi chính chữ ấy còn xuất hiện VIẾT THƯỜNG ở chỗ khác** — một tên
+    riêng thật thì không bao giờ viết thường. Đo trên 6 tập đã biết đáp án: 4/6 -> 6/6."""
+    txt = " ".join(str(n.get("nar") or n.get("loi") or n.get("cua") or "") for n in (nhip or []))
+    if not txt.strip():
+        return ""
+    thuong = set(re.findall(r"\b[a-z]{2,}\b", txt))
+    bo = {m.group(1) for m in re.finditer(r"(?:^|(?<=[.!?])\s+)([A-Z][a-z]+)", txt)
+          if m.group(1).lower() in thuong}
+    dem: dict = {}
+    for g in re.findall(r"\b[A-Z][A-Za-z&.\-]+(?:\s+[A-Z][A-Za-z&.\-]+){0,2}", txt):
+        w = g.split()
+        while w and w[0] in bo:
+            w = w[1:]
+        if not w:
+            continue
+        k = " ".join(w)
+        if len(k) >= 3:
+            dem[k] = dem.get(k, 0) + 1
+    if not dem:
+        return ""
+    top = sorted(dem.items(), key=lambda x: -x[1])[:10]
+    m = top[0][1]
+    uu = [g for g, n in top if n >= m * 0.6]
+    return max(uu, key=lambda g: (len(g.split()), dem[g]))
+
+
 def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
              dai_giay: float, long: bool, nhip: list, chu_the: str = "", slug_tap: str = "") -> dict:
     """Ba bộ chữ RIÊNG cho ba nền tảng — không phải một bộ dùng chung.
@@ -133,6 +173,7 @@ def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
     _ten_kenh = (ten or "").strip().lower()
     _la_ten_kenh = bool(_ten_kenh) and (tde.lower().startswith(_ten_kenh)
                                         or re.search(r"—\s*\d+\s+answers?$", tde.strip(), re.I))
+    chu_the = (chu_the or "").strip() or _chu_the_tu_nhip(nhip)
     if _la_ten_kenh and chu_the:
         # Chỉ số khuôn chạy theo SỐ THỨ TỰ TẬP, không theo băm của chủ thể: cùng một chủ
         # thể đi qua nhiều khuôn hỏi là ĐÚNG thiết kế (§19.6), nhưng hai tập KHÔNG được mang
@@ -171,7 +212,10 @@ def viet_bai(ma: str, ten: str, tieu: str, hook: str, hook_phu: str,
     # Đúng §15.5 — *đọc client cũ trước khi viết client mới*; chú thích trong nó là những lần
     # đã trả giá. Giữ cả tên tiếng Việt lẫn tên hợp đồng: tên Việt để đọc, tên Anh để chạy.
     nen = ["youtube", "facebook"] + (["instagram"] if dai_giay <= IG_MAX_GIAY else [])
-    the = _the(ma, tieu, ten)
+    # Thẻ rút từ TIÊU ĐỀ ĐÃ SỬA, không từ `tieu` gốc. Bản trước dùng `tieu`, mà `tieu` của
+    # bản dài là tên kênh — nên thẻ ra «rules · nobody · reads · answers»: bốn chữ của chính
+    # tên kênh, không chữ nào nói về nội dung. Cùng một gốc với lỗi tiêu đề, ở nhánh song song.
+    the = _the(ma, yt, ten)
     return {
         "ma": ma, "kenh": ma, "ten": ten, "dai": round(dai_giay, 1),
         "loai": "long" if long else "short", "long": bool(long),
