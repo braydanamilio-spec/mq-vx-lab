@@ -920,6 +920,59 @@ GU_DUNG = {
 
 DA_GHIM = False          # `bo_1_3` đã chọn chủ thể cho cả bộ — `mot_tap` không chọn lại
 NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
+LOI_SAN: list = []       # LỜI của bản dài, cùng thứ tự với `NEN_SAN` — xem `_nen_theo_loi`
+
+
+def _nen_theo_loi(cau_short: list) -> list:
+    """Gắn nền của bản dài vào short THEO CÂU, không theo vị trí.
+
+    ── ANH SOI ĐÚNG KHUNG NÀY  (8/9/2026) ──────────────────────────────────────────────
+    Anh: *"tốn credit mà render ra mấy tấm ảnh ko liên quan này thì làm gì cho tốn"*, kèm
+    khung short nói «487 billion was transferred by 1MDB into two separate accounts» trên
+    một hành lang kính trống.
+
+    Và cảnh ĐÚNG đã được vẽ ra rồi: nhịp ấy khớp khái niệm «a vault door standing open with
+    empty numbered deposit boxes inside», bản dài dựng nó ở nhịp 10. Tiền đã tiêu, ảnh đúng
+    đã nằm trong kho — chỉ là short gắn nhầm câu:
+
+        anh_nens = [NEN_SAN[i % len(NEN_SAN)] ...]
+
+    Một phép chia lấy dư theo VỊ TRÍ. Short lấy nhịp từ bản dài rồi ĐẢO thứ tự (hook lên
+    đầu) và VIẾT LẠI câu, nên vị trí trong short không còn là vị trí trong bản dài. Kết quả:
+    câu về 487 tỉ nhận cảnh của câu «You own it, sort of, in your own mind».
+
+    Nên ghép theo NGHĨA của câu, không theo chỗ ngồi: mỗi câu short tìm câu bản dài chồng
+    nhiều từ nhất. Câu short được viết lại vẫn giữ phần lớn danh từ, nên phép chồng từ đủ
+    chắc; không câu nào đủ giống (hook/chốt do short tự thêm) thì mới rơi về vị trí."""
+    import re as _re
+    if not NEN_SAN:
+        return []
+    _bo = {"the", "a", "an", "of", "to", "in", "on", "and", "or", "is", "was", "were", "it",
+           "its", "for", "with", "that", "this", "by", "as", "at", "from", "be", "been",
+           "you", "your", "they", "their", "we", "our", "he", "she", "his", "her", "not"}
+
+    def _tu(t):
+        return {w for w in _re.findall(r"[a-z0-9]+", str(t or "").lower())
+                if len(w) > 2 and w not in _bo}
+
+    _dai = [_tu(x) for x in (LOI_SAN or [])]
+    ra, da = [], set()
+    for i, c in enumerate(cau_short):
+        a = _tu(c)
+        tot, diem = -1, 0.0
+        for j, b in enumerate(_dai):
+            if not a or not b:
+                continue
+            # Jaccard: đo NỘI DUNG chứ không đo khuôn câu (§13.5)
+            d = len(a & b) / len(a | b)
+            if d > diem and (j not in da or d > 0.75):
+                tot, diem = j, d
+        if tot >= 0 and diem >= 0.34:
+            da.add(tot)
+            ra.append(NEN_SAN[tot % len(NEN_SAN)])
+        else:
+            ra.append(NEN_SAN[i % len(NEN_SAN)])
+    return ra
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
 
 # ── SỔ NÀY PHẢI SỐNG LÂU HƠN TIẾN TRÌNH  (8/9/2026) ─────────────────────────────────────
@@ -1299,6 +1352,33 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
         xong_i.add(i); xong_d.add(d); n += 1
     print(f"   🔗 ảnh khớp NGHĨA: {n}/{len(ra)} nhịp "
           f"({len(ra) - n} nhịp còn lại sẽ vẽ nền riêng)")
+    # ── LƯỢT HAI: ẢNH THẬT CÒN DƯ ĐI VÀO NHỊP SẼ NHẬN NỀN CHUNG CHUNG  (anh, 8/9/2026) ──
+    # Anh: *"tốn credit mà render ra mấy tấm ảnh ko liên quan này thì làm gì cho tốn"* ·
+    # *"phải render cái gì người dùng nhìn cái nhận ra ngay chứ ko thì khác gì dùng kho nền
+    # sẵn đâu"* · *"ảnh thật vẫn quá ít"*. Đo trên 13 bản dài gần nhất: **11/163 nền là ảnh
+    # thật — 7%**, 152 nền còn lại là ảnh CF vẽ. Bộ 154 có SÁU ảnh thật trong tay mà chỉ
+    # dùng ba.
+    #
+    # Lượt một ở trên đúng và phải giữ: ảnh vào đúng nhịp NÓI VỀ nó là chất lượng cao nhất.
+    # Nhưng nó vứt phần dư, trong khi những nhịp không khớp khái niệm nào đằng nào cũng sắp
+    # nhận một CĂN PHÒNG CHUNG do CF vẽ. Ở đúng những nhịp ấy, một tấm ảnh thật của chính chủ
+    # thể luôn dễ nhận ra hơn — và nó còn CẮT một lượt gọi CF.
+    #
+    # Nên đây không phải đánh đổi: vừa dễ nhận ra hơn, vừa rẻ hơn. Ưu tiên nhịp GIỮA bài
+    # (bỏ hook và câu chốt, hai chỗ đã có bố cục riêng), và không đặt hai ảnh thật liền nhau
+    # để tập không đọc ra như một album ảnh.
+    _du = [d for d in duong if d not in ra]
+    if _du:
+        _trong = [k for k in range(1, max(1, len(ra) - 1))
+                  if k < len(ra) and (not ra[k] or str(ra[k]).startswith("phim_nen/")
+                                      or str(ra[k]).startswith("nentap_"))]
+        _dat = []
+        for k in _trong:
+            if _dat and k - _dat[-1] < 2:      # đừng đặt hai ảnh thật liền nhau
+                continue
+            _dat.append(k)
+        for k, d in zip(_dat, _du):
+            ra[k] = d
     return ra
 
 
@@ -2007,8 +2087,11 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # short rơi hẳn về kho nền chung, tức mất đúng thứ bộ 1:3 sinh ra để làm. Đo lượt
         # đầu: long vẽ 14 nhịp theo chủ thể, ba short vẽ 0 và dùng phòng ăn với phòng gym.
         if NEN_SAN:
-            anh_nens = [NEN_SAN[i % len(NEN_SAN)] for i in range(len(cau))]
-            print(f"   ♻️ dùng lại {len(NEN_SAN)} nền của bản dài (short không gọi CF)")
+            anh_nens = _nen_theo_loi(cau) or [NEN_SAN[i % len(NEN_SAN)] for i in range(len(cau))]
+            _khop = sum(1 for i, x in enumerate(anh_nens)
+                        if x != NEN_SAN[i % len(NEN_SAN)])
+            print(f"   ♻️ dùng lại {len(NEN_SAN)} nền của bản dài (short không gọi CF)"
+                  f" · {_khop}/{len(anh_nens)} nhịp ghép lại THEO CÂU")
         anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
         anh_nens = _nen_theo_tap(anh_nens, cau, CHU_THE_TAP, bo_qua=set(ANH_THAT))
     else:
@@ -2817,7 +2900,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
     là nơi biết mình đang dựng một bộ — §15.3: đưa quyết định về nơi biết thứ khó truyền đi
     hơn, rồi TRUYỀN KẾT QUẢ.
     """
-    global NEN_SAN
+    global NEN_SAN, LOI_SAN
     import giai_thich as _G1
     try:
         import vi_sao as _VS
@@ -2880,10 +2963,17 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
     # Bộ ảnh của bản dài, đọc từ chính tệp props nó vừa ghi.
     _pj = os.path.join(GOC, "out", f"v11L_{ma}_{idx:04d}.json")
     try:
-        NEN_SAN = [x for x in (json.load(io.open(_pj, encoding="utf-8")).get("anhNens") or []) if x]
+        _pd = json.load(io.open(_pj, encoding="utf-8"))
+        # Giữ NỀN và LỜI CÙNG MỘT THỨ TỰ, và không lọc rỗng riêng một bên — lọc lệch thì hai
+        # danh sách trượt chỉ số so với nhau, tức tái tạo đúng cái lỗi vừa sửa ở một chỗ khác.
+        _cap = [(a, (l.get("nar") or ""))
+                for a, l in zip(_pd.get("anhNens") or [], _pd.get("luot") or []) if a]
+        NEN_SAN = [a for a, _ in _cap]
+        LOI_SAN = [l for _, l in _cap]
         print(f"   ♻️ bản dài để lại {len(NEN_SAN)} nền cho ba short")
     except Exception as e:
         NEN_SAN = []
+        LOI_SAN = []
         print(f"   ⚠ không đọc được nền bản dài ({str(e)[:40]}) — short dùng kho chung")
 
     # Short = CHƯƠNG của chính bản dài: cùng chủ thể, cùng ảnh, chỉ khác đoạn nhịp.
@@ -2916,6 +3006,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
                 n += 1
     finally:
         NEN_SAN = []
+        LOI_SAN = []
         DA_GHIM = False
         if _cu is None:
             os.environ.pop("KHONG_NEN_TAP", None)
