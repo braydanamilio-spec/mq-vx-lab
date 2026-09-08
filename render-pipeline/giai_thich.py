@@ -6841,23 +6841,51 @@ def _tranh_lap_gan(nhip: list, ma: str = "") -> list:
                     break
     ho = _ho_cau()
     lan_cuoi = {}
+    # ── SO CHUỖI BẰNG NHAU KHI THỨ CẦN ĐO LÀ GẦN BẰNG NHAU  (8/9/2026) ─────────────────
+    # `_tranh_lap_gan` CÓ chạy trên đường bản dài (`kich_ban` gọi nó), và bài thử tổng hợp
+    # cho thấy nó bắt được cặp lặp. Nhưng bộ 138 và 139 vẫn giao đi hai lượt đọc y hệt ở
+    # nhịp 0 và 3 — nên chỗ trượt là PHÉP SO: hai câu chỉ khác nhau một dấu chấm cuối, hoặc
+    # một chữ hoa đầu câu, là hai chuỗi KHÁC NHAU với `==` và là MỘT CÂU với lỗ tai.
+    # Đúng §18.11: hỏi "thứ người xem cảm được là BẰNG NHAU hay GẦN NHAU?" trước khi viết
+    # phép so — nếu là gần nhau thì `==` sẽ luôn xanh, và nó xanh ngay ở ca tệ nhất.
+    def _khoa(t: str) -> str:
+        return re.sub(r"[^a-z0-9 ]", "", str(t or "").lower()).strip()
+
+    bo_di: set = set()
     for j, n in enumerate(nhip):
-        l = str(n.get("loi") or "").strip()
+        l = _khoa(n.get("loi"))
         if not l:
             continue
         if j - lan_cuoi.get(l, -999) >= GAN_NHAT:
             lan_cuoi[l] = j
             continue
         thay = ""
-        for c in ho.get(l, []):
-            if c != l and j - lan_cuoi.get(c, -999) >= GAN_NHAT:
+        for c in ho.get(str(n.get("loi") or "").strip(), []):
+            if _khoa(c) != l and j - lan_cuoi.get(_khoa(c), -999) >= GAN_NHAT:
                 thay = c
                 break
         if thay:
             n["loi"] = thay
-            lan_cuoi[thay] = j
+            lan_cuoi[_khoa(thay)] = j
         else:
-            lan_cuoi[l] = j
+            # ── KHÔNG CÓ HỌ BIẾN THỂ THÌ BỎ HẲN NHỊP, ĐỪNG GIỮ  (8/9/2026) ─────────────
+            # Bản đầu giữ nguyên và để cổng báo — đúng khi câu lặp là một câu NỐI có thể
+            # đổi chữ. Nhưng đo bộ 138 và 139: nhịp 0 (hook) và nhịp 3 ĐỀU đọc TIÊU ĐỀ TẬP,
+            # nguyên văn, cách nhau ba nhịp. Tiêu đề không có họ biến thể nên nhánh này
+            # giữ nó lại, và người xem nghe cùng một câu hai lần trong mười giây đầu —
+            # đúng chỗ họ quyết định lướt hay ở lại. 2/2 bản dài gần nhất dính, tức cấu
+            # trúc chứ không ngẫu nhiên (§15.15 đã ghi đúng cặp "hook đọc tiêu đề, thẻ
+            # chương 1 đọc lại").
+            #
+            # Bỏ một nhịp LẶP NGUYÊN VĂN không phải đoán bừa — nó không thêm gì cả. Khác
+            # hẳn việc thay bằng một câu khác nghĩa, thứ §15.16 từ chối làm và vẫn từ chối.
+            # Chỉ bỏ khi còn đủ nhịp để tập không cụt.
+            if len(nhip) - len(bo_di) > 6:
+                bo_di.add(j)
+            else:
+                lan_cuoi[l] = j
+    if bo_di:
+        nhip = [x for k, x in enumerate(nhip) if k not in bo_di]
     return _dong_bo_the(nhip)
 
 

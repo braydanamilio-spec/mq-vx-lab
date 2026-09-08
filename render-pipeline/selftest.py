@@ -273,6 +273,39 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_lap_gan_so_gan_bang():
+    """Câu lặp chỉ khác một DẤU CHẤM vẫn là câu lặp với lỗ tai.
+
+    Bộ 138 và 139 đều giao đi hai lượt đọc y hệt ở nhịp 0 và 3 (đều là TIÊU ĐỀ TẬP), dù
+    `_tranh_lap_gan` CÓ chạy trên đường bản dài. Chỗ trượt là phép so: hai câu khác nhau một
+    dấu chấm cuối là hai chuỗi khác nhau với `==` và là MỘT CÂU với người nghe (§18.11).
+    Và khi câu lặp không có họ biến thể (tiêu đề thì không có), giữ nguyên là để người xem
+    nghe hai lần trong mười giây đầu — nay bỏ hẳn nhịp thừa, miễn là tập còn đủ dài."""
+    import giai_thich as G
+
+    def n(l):
+        return {"khuon": "canh", "loi": l, "noi": "", "bt": "nguoi"}
+
+    def khoa(t):
+        return "".join(c for c in str(t).lower() if c.isalnum() or c == " ").strip()
+
+    for ten, ds in (
+        ("dấu chấm", [n("The last place still running it"), n("b"), n("c"),
+                      n("The last place still running it."), n("d"), n("e"), n("f"), n("g")]),
+        ("chữ hoa", [n("the patent that outlived it"), n("b"), n("c"),
+                     n("The patent that outlived it"), n("d"), n("e"), n("f"), n("g")]),
+    ):
+        r = G._tranh_lap_gan([dict(x) for x in ds], "therules")
+        k = [khoa(x.get("loi")) for x in r]
+        assert len(k) == len(set(k)), f"{ten}: còn cặp lặp sau khi dọn: {k}"
+    # KHÔNG được đụng vào tập không lặp
+    sach = [n(f"cau khac nhau so {i}") for i in range(8)]
+    assert len(G._tranh_lap_gan([dict(x) for x in sach], "therules")) == 8, "bỏ nhầm nhịp"
+    # tập NGẮN thì thà lặp còn hơn cụt
+    ngan = [n("X"), n("b"), n("c"), n("X"), n("d")]
+    assert len(G._tranh_lap_gan([dict(x) for x in ngan], "therules")) == 5, "làm cụt tập ngắn"
+
+
 def t_canh_theo_khai_niem():
     """Nền phải kể ĐÚNG CHUYỆN ĐANG NÓI, và không được mang chữ vào khung.
 
@@ -2951,6 +2984,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("lặp gần: so gần bằng, không so bằng", t_lap_gan_so_gan_bang)
     check("nền kể đúng chuyện đang nói", t_canh_theo_khai_niem)
     check("nhịp Wikipedia tự nới khi bị chặn", t_nhip_wiki_tu_noi_khi_bi_chan)
     check("scale PHIM v10 cho cỡ nguyên", t_scale_phim_ra_so_nguyen)
