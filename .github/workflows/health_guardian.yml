@@ -52,43 +52,50 @@ jobs:
           # đúng họ lỗi đã tốn cả ngày hôm qua. Nên phải là PAT, và phải KIỂM LẠI sau khi bấm.
           GH_TOKEN: ${{ secrets.AUTOPUBLISHER_TOKEN }}
         run: |
-          WF="render_giai_thich_18.yml"
-          # ── TÔN TRỌNG CÔNG TẮC TẮT  (4/9/2026) ──────────────────────────────────────────
-          # Anh tắt `render_giai_thich_18.yml` để dừng render trong lúc sửa template, rồi phát
-          # hiện guardian VẪN bấm nó mỗi giờ. Đó là một CỬA THỨ HAI mở workflow mà người tắt
-          # không hề biết — và hôm nay nó chỉ vô hại nhờ may: `gh workflow run` trên workflow
-          # đã tắt thì hỏng. Nếu GitHub đổi hành vi ấy, hoặc nếu ai bật lại workflow rồi tắt
-          # cron bằng cách khác, guardian sẽ âm thầm khởi động lại cả dây chuyền.
+          # ── TỰ TÌM LUỒNG RENDER ĐANG BẬT, ĐỪNG GHI CỨNG MỘT CÁI TÊN  (8/9/2026) ────────
+          # Anh bảo bật browser kiểm. Dashboard hiện 0 và guardian xác nhận "không video nào
+          # xong trong 12h" — đúng, nhưng gốc thì nằm ở ĐÂY, không ở dashboard.
           #
-          # Luật: một hệ tự động được phép TỰ CHỮA, nhưng không được phép ĐI NGƯỢC một quyết
-          # định con người vừa ra. Trạng thái `disabled_manually` chính là quyết định ấy, và
-          # nó hỏi được bằng một lệnh API. Hỏi trước khi bấm thì "tắt workflow" trở thành công
-          # tắc DUY NHẤT và đáng tin — thay vì một trong hai cửa.
+          # Bước này ghi cứng `WF="render_giai_thich_18.yml"`, mà luồng ấy đã TẮT có chủ đích
+          # từ lâu. Nên mỗi giờ guardian đọc trạng thái, thấy `disabled_manually`, và bỏ qua —
+          # đúng luật §17.13. Trong khi HAI luồng đang chạy thật (`render_comic_18.yml` và
+          # `render_phim_18.yml`) thì KHÔNG AI canh. Cron của repo này nổ trễ và thất thường
+          # (§10.2, đo được: khai 08:20 mà nổ 14:18), nên đúng lúc cần cái canh gác nhất thì
+          # nó đang canh một cánh cửa đã khoá.
+          #
+          # Đo hậu quả: 07:40 · 08:20 · 08:40 · 09:20 đều trôi qua, không lượt render nào, và
+          # lượt gần nhất là 10,5 giờ trước. §15.25 — cơ chế ĐÚNG gắn vào chỗ SAI; §13.2 —
+          # cổng phải TỰ TÌM phạm vi của nó, đừng cầm danh sách chép tay.
+          DS=$(gh api "repos/${{ github.repository }}/actions/workflows?per_page=100" \
+                 --jq '.workflows[] | select(.state=="active") | select(.path|test("workflows/render_.*\\.yml$")) | .path' \
+               2>/dev/null | sed 's#.*/##' || echo "")
+          if [ -z "$DS" ]; then
+            echo "   ⏸ không có luồng render nào đang BẬT — không bấm thay."
+            exit 0
+          fi
+          echo "   🔎 luồng render đang bật: $(echo $DS | tr '\n' ' ')"
+          LOI=0
+          for WF in $DS; do
+          # ── HỎI LẠI TRẠNG THÁI TỪNG LUỒNG, DÙ KHÂU TÌM ĐÃ LỌC `active`  ────────────────
+          # Phép tìm ở trên đã `select(.state=="active")`, nên về lý thì thừa. Giữ vì đây là
+          # thứ bảo vệ CÔNG TẮC TẮT của người vận hành (§17.13): anh tắt một luồng để dừng
+          # render, và một hệ tự động không được phép đi ngược quyết định ấy. Một lớp phòng
+          # thủ nữa tốn đúng một lệnh API mỗi giờ, và nó sống sót cả khi ai đó sửa khâu tìm.
           TT=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF" --jq '.state' 2>/dev/null || echo "unknown")
           if [ "$TT" != "active" ]; then
             echo "   ⏸ $WF đang '$TT' — người vận hành đã tắt có chủ đích. KHÔNG bấm thay."
-            echo "   (bật lại bằng: gh workflow enable $WF)"
-            exit 0
+            continue
           fi
           # ── CỬA SỔ 20h -> 5h  (3/9/2026) ────────────────────────────────────────────────
-          # Anh: *"sao ko có render nào chạy mà để nguyên, bấm thủ công cho nó chạy."*
-          #
-          # Cơ chế bấm-thay CÓ chạy, nhưng nó hỏi sai câu: *"20 giờ qua có lượt dựng nào chưa?"*
-          # Con số 20h là di sản của thời sản xuất **một lượt mỗi ngày**. Từ 2/9 mỗi luồng lặp
-          # 4,75 giờ và cổng chống trùng cũng hạ xuống 5h — nên Guardian luôn thấy "54 job dựng
-          # thật trong 20h", kết luận "không cần bấm", trong khi hệ đã đứng im nhiều giờ.
-          #
-          # Hằng số sống lâu hơn ngữ cảnh sinh ra nó (§13.6): tôi hạ nhịp sản xuất hôm qua mà
-          # quên soát lại cái canh gác nuôi bằng nhịp ấy.
-          #
-          # Nay 5h, khớp đúng cổng chống trùng: hết 5h không có lượt dựng nào thì bấm.
+          # Cơ chế bấm-thay CÓ chạy, nhưng nó từng hỏi sai câu: *"20 giờ qua có lượt dựng nào
+          # chưa?"* Con số 20h là di sản của thời sản xuất một lượt mỗi ngày. Nay 5h, khớp
+          # đúng cổng chống trùng (§13.6 — hằng số sống lâu hơn ngữ cảnh sinh ra nó).
           MOC=$(python3 -c "import datetime;print((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(hours=5)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-          # ĐANG CHẠY thì đừng bấm: nhóm `concurrency` sẽ huỷ lượt mới hoặc bắt nó xếp hàng, và
-          # cả hai đều tệ hơn là để lượt đang chạy làm nốt.
+          # ĐANG CHẠY thì đừng bấm: nhóm `concurrency` sẽ huỷ lượt mới hoặc bắt nó xếp hàng.
           DANG=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?status=in_progress&per_page=1" --jq '.total_count' 2>/dev/null || echo 0)
           if [ "${DANG:-0}" != "0" ]; then
-            echo "   ▶ đang có lượt render chạy — không bấm thêm"
-            exit 0
+            echo "   ▶ $WF đang có lượt chạy — không bấm thêm"
+            continue
           fi
           IDS=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=20" \
                   --jq ".workflow_runs[] | select(.created_at > \"$MOC\") | .id" || echo "")
@@ -98,26 +105,28 @@ jobs:
                   --jq '[.jobs[] | select(.name|startswith("dung")) | select(.conclusion != null and .conclusion != "skipped")] | length' || echo 0)
             THAT=$((THAT + n))
           done
-          echo "   5h qua: $THAT job dựng THẬT (không tính job bị cổng bỏ qua)"
+          echo "   $WF · 5h qua: $THAT job dựng THẬT (không tính job bị cổng bỏ qua)"
           if [ "$THAT" -gt 0 ]; then
-            echo "   ✅ render đã chạy trong cửa sổ — không cần bấm thay"
-          else
-            echo "   ⏰ 5h không có lượt dựng nào — bấm thay cho cron"
-            TRUOC=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
-            gh workflow run "$WF" --repo "${{ github.repository }}" || echo "   ❌ lệnh bấm hỏng"
-            sleep 25
-            SAU=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
-            # BẤM XONG PHẢI ĐẾM LẠI. `gh workflow run` trả 204 kể cả khi lượt không hề sinh ra
-            # (token sai loại là đúng cảnh ấy). Không đếm lại thì ta có một cái canh gác luôn báo
-            # đã canh, và hỏng y hệt kiểu cron im lặng mà nó sinh ra để chữa.
-            if [ "$SAU" -gt "$TRUOC" ]; then
-              echo "   ✅ đã sinh lượt render mới ($TRUOC -> $SAU)"
-            else
-              echo "   ❌ BẤM XONG KHÔNG CÓ LƯỢT NÀO SINH RA ($TRUOC -> $SAU)."
-              echo "      Nhiều khả năng AUTOPUBLISHER_TOKEN thiếu quyền workflow trên repo này."
-              exit 1
-            fi
+            echo "   ✅ $WF đã chạy trong cửa sổ — không cần bấm thay"
+            continue
           fi
+          echo "   ⏰ $WF: 5h không có lượt dựng nào — bấm thay cho cron"
+          TRUOC=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
+          gh workflow run "$WF" --repo "${{ github.repository }}" || echo "   ❌ lệnh bấm hỏng"
+          sleep 25
+          SAU=$(gh api "repos/${{ github.repository }}/actions/workflows/$WF/runs?per_page=1" --jq '.total_count' || echo 0)
+          # BẤM XONG PHẢI ĐẾM LẠI. `gh workflow run` trả 204 kể cả khi lượt không hề sinh ra
+          # (token sai loại là đúng cảnh ấy). Không đếm lại thì ta có một cái canh gác luôn báo
+          # đã canh, và hỏng y hệt kiểu cron im lặng mà nó sinh ra để chữa.
+          if [ "$SAU" -gt "$TRUOC" ]; then
+            echo "   ✅ $WF: đã sinh lượt render mới ($TRUOC -> $SAU)"
+          else
+            echo "   ❌ $WF: BẤM XONG KHÔNG CÓ LƯỢT NÀO SINH RA ($TRUOC -> $SAU)."
+            echo "      Nhiều khả năng AUTOPUBLISHER_TOKEN thiếu quyền workflow trên repo này."
+            LOI=1
+          fi
+          done
+          [ "$LOI" -eq 0 ] || exit 1
 
       - name: Health check + tự chữa
         env:
