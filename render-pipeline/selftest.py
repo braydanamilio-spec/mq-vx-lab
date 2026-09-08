@@ -620,6 +620,51 @@ def t_dem_wiki_that_su_chay():
         C._DEM, C._goi = cu_dem, cu_goi
 
 
+def t_so_anh_nguon_ghi_ra_dia():
+    """Sổ «thẻ ảnh lấy từ đâu» phải GHI RA ĐĨA và phải GỘP, không ghi đè.
+
+    8/9 — anh hỏi thẻ ảnh có khớp cái đang nói không. Em đi đo và phải trả lời "chưa đo được":
+    tên tệp thẻ là BĂM nội dung, còn `TEN_ANH` (đường ảnh -> tiêu đề nguồn) chỉ sống trong bộ
+    nhớ một lượt dựng. Dữ liệu ấy nằm trong tay đúng lúc tải về rồi bị vứt — §15.12 ở dạng
+    nặng hơn "ghi ra mà không ai đọc". Sổ cũng là XUẤT XỨ: mỗi tấm lấy từ trang Commons nào.
+
+    Gộp chứ không ghi đè là ràng buộc thật: nhiều lượt dựng chạy song song trên cùng máy, và
+    §18.3 đã trả giá cho đúng chuyện này (`lay_key_cuc_bo` ghi đè làm hồ khoá tụt 94 -> 77)."""
+    import ast, pathlib, json, tempfile, os, io as _io
+    import pilot_hai as PH
+
+    # 1. lời gọi phải nằm trong ĐƯỜNG TẢI thật, không phải chỉ khai ra rồi để đấy
+    src = pathlib.Path(PH.__file__).read_text(encoding="utf-8")
+    cay = ast.parse(src)
+    goi = [n for n in ast.walk(cay)
+           if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "_ghi_so_anh"]
+    assert goi, "`_ghi_so_anh` khai ra mà KHÔNG chỗ nào gọi (§15.12)"
+
+    # 2. gộp, không ghi đè — thử ngược bằng một sổ đã có sẵn mục khác
+    cu_so, cu_ten = PH.SO_ANH, dict(PH.TEN_ANH)
+    d = tempfile.mkdtemp(prefix="_so_anh_")
+    try:
+        PH.SO_ANH = os.path.join(d, "so.json")
+        _io.open(PH.SO_ANH, "w", encoding="utf-8").write(
+            json.dumps({"anh_pd/cu.jpg": "Tam Cu"}, ensure_ascii=False))
+        PH.TEN_ANH.clear(); PH.TEN_ANH["anh_pd/moi.jpg"] = "Tam Moi"
+        PH._ghi_so_anh()
+        ra = json.load(_io.open(PH.SO_ANH, encoding="utf-8"))
+        assert ra.get("anh_pd/cu.jpg") == "Tam Cu", "sổ GHI ĐÈ mục cũ (§18.3)"
+        assert ra.get("anh_pd/moi.jpg") == "Tam Moi", "sổ không nhận mục mới"
+        # tiêu đề rỗng thì đừng ghi — một mục rỗng khoá cứng đúng tấm ấy (§15.2)
+        PH.TEN_ANH.clear(); PH.TEN_ANH["anh_pd/rong.jpg"] = ""
+        PH._ghi_so_anh()
+        ra = json.load(_io.open(PH.SO_ANH, encoding="utf-8"))
+        assert "anh_pd/rong.jpg" not in ra, "sổ ghi cả mục tiêu đề RỖNG"
+        # hỏng thì KHÔNG được chặn lượt dựng
+        PH.SO_ANH = os.path.join(d, "khong", "co", "so.json")
+        PH._ghi_so_anh()
+    finally:
+        PH.SO_ANH = cu_so
+        PH.TEN_ANH.clear(); PH.TEN_ANH.update(cu_ten)
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3589,6 +3634,7 @@ def main():
     check("hằng khẩu hình đúng thang bảng VISEME", t_khau_hinh_dung_thang)
     check("không dùng module chưa import", t_dung_module_chua_import)
     check("đệm bài Wikipedia thật sự chạy", t_dem_wiki_that_su_chay)
+    check("sổ nguồn thẻ ảnh ghi ra đĩa", t_so_anh_nguon_ghi_ra_dia)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)

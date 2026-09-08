@@ -921,6 +921,28 @@ GU_DUNG = {
 DA_GHIM = False          # `bo_1_3` đã chọn chủ thể cho cả bộ — `mot_tap` không chọn lại
 NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
+
+# ── SỔ NÀY PHẢI SỐNG LÂU HƠN TIẾN TRÌNH  (8/9/2026) ─────────────────────────────────────
+# `TEN_ANH` giữ đúng thứ cần để trả lời câu anh hỏi — *"thẻ ảnh có khớp cái đang nói không,
+# hay râu ông nọ cắm cằm bà kia"* — nhưng nó chỉ sống trong bộ nhớ một lượt dựng. Tên tệp là
+# BĂM nội dung, nên sau khi tiến trình tắt thì `anh_pd/1b1fe821….jpg` không còn tra được về
+# đâu cả: em đi đo độ khớp thẻ/mệnh đề và phải kết luận "CHƯA ĐO ĐƯỢC", trong khi dữ liệu ấy
+# đã nằm trong tay ở đúng lúc tải về (§15.12: ghi ra mà không ai đọc — ở đây còn tệ hơn, ghi
+# vào bộ nhớ rồi vứt). Sổ này cũng là XUẤT XỨ: biết mỗi tấm lấy từ trang Commons nào.
+SO_ANH = os.path.join(GOC, "so_anh_nguon.json")
+
+
+def _ghi_so_anh() -> None:
+    """Gộp `TEN_ANH` vào sổ trên đĩa. Gộp chứ không ghi đè — nhiều lượt dựng chạy song song."""
+    try:
+        cu = {}
+        if os.path.exists(SO_ANH):
+            cu = json.load(io.open(SO_ANH, encoding="utf-8")) or {}
+        cu.update({k: v for k, v in TEN_ANH.items() if v})
+        io.open(SO_ANH, "w", encoding="utf-8").write(
+            json.dumps(cu, ensure_ascii=False, indent=1))
+    except Exception as e:
+        print(f"   ⓘ không ghi được sổ ảnh ({type(e).__name__}) — không chặn lượt dựng")
 LOGO_TAP = ""            # ảnh thật của chủ thể (logo/trụ sở) — thẻ nhỏ ở khúc mở
 BEN_DUNG = "trai"        # người dẫn đứng bên nào — nền chừa dải trống ĐÚNG bên ấy
 CHU_THE_TAP = ""         # chủ thể của tập — bộ vẽ nền theo tập dùng, xem `nen_theo_tap`
@@ -1375,6 +1397,7 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
                 _sh.copyfile(d, dich)
             ra.append("anh_pd/" + ten)
             TEN_ANH["anh_pd/" + ten] = a.get("ten", "")
+            _ghi_so_anh()
             if len(ra) >= toi_da:
                 break
     # ── HỎI LẠI BẰNG TÊN THỰC THỂ KHI TÊN SỰ KIỆN KHÔNG RA GÌ ────────────────────────
