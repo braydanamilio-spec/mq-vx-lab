@@ -265,7 +265,8 @@ def co_chuyen(gocs: list, san: int = 8, them: int = 6, sau: int = 2) -> list:
         # "0 câu nhân quả" VĨNH VIỄN — tức một lượt mạng xấu loại vĩnh viễn 40 chủ thể tốt.
         # Lần thứ ba trong ngày cùng một họ: đệm một phép đo HỎNG như thể nó là kết quả.
         if len(van) < 400:
-            print(f"   ⚠ «{ct[:36]}»: bài viết đọc về {len(van)} ký tự — KHÔNG ghi sổ")
+            _vs = f" ({C.LY_DO_CUOI[0]})" if not van and C.LY_DO_CUOI[0] else ""
+            print(f"   ⚠ «{ct[:36]}»: bài viết đọc về {len(van)} ký tự{_vs} — KHÔNG ghi sổ")
             continue
         n = len(C.cau_nhan_qua(van))
         da[ct] = n

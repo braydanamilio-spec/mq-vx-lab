@@ -196,6 +196,7 @@ def _goi(url: str, timeout: int = 25) -> dict:
 
 
 _DEM = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_dem_wiki")
+LY_DO_CUOI = [""]        # vì sao lượt đọc gần nhất trả rỗng — xem chú thích trong `bai_viet`
 
 
 def bai_viet(ten: str) -> str:
@@ -240,11 +241,22 @@ def bai_viet(ten: str) -> str:
     # hồ đề tài) đều nhận một số 0 KHÔNG CÓ MẪU SỐ (§15.2). Đo đêm 8/9: `bai_viet` trả 0 ký
     # tự cho ba chủ thể trong khi lệnh gọi THÔ tới đúng URL ấy trả 39.420 ký tự vài giây sau
     # — tức lỗi chập chờn, không phải bài không tồn tại. Một lần thử là chưa đủ.
+    # ── RỖNG PHẢI KHAI VÌ SAO  (8/9/2026) ───────────────────────────────────────────────
+    # Log vòng quét ra 11.802 dòng «đọc về 0 ký tự» và **0 dòng "hỏng sau 3 lần"** — tức mọi
+    # lượt rỗng đều là HTTP 200, không phải lỗi mạng. Nhưng cùng những tên ấy đọc lại ở tiến
+    # trình khác ra 272–4.632 ký tự, nên "0" đang gộp ít nhất ba chuyện khác hẳn nhau: trang
+    # không tồn tại · trang có mà không có `extract` · đọc hỏng. Ba chuyện ấy dẫn tới ba hành
+    # động khác nhau, mà chúng in ra CÙNG một dòng chữ (§15.2: số 0 phải có mẫu số).
+    # Ghi lý do vào `LY_DO_CUOI` để chỗ gọi in ra, thay vì đoán như em vừa đoán cả buổi.
     v, cuoi = "", ""
     for lan in range(3):
         try:
             p = list((_goi(u).get("query") or {}).get("pages", {}).values())
             v = (p[0].get("extract") or "") if p else ""
+            if not v:
+                LY_DO_CUOI[0] = ("trang KHÔNG tồn tại" if (p and "missing" in p[0])
+                                 else "trang có nhưng KHÔNG có extract" if p
+                                 else "API trả 200 mà không có pages")
             break
         except Exception as e:
             cuoi = str(e)[:60]
@@ -256,6 +268,7 @@ def bai_viet(ten: str) -> str:
             # một cửa sổ ngắn — ba lần thử tiêu hết trong 15 giây rồi bỏ cuộc.
             time.sleep((6.0 * (2 ** lan)) if "429" in cuoi else 1.5 * (lan + 1))
     if not v and cuoi:
+        LY_DO_CUOI[0] = f"đọc hỏng: {cuoi}"
         print(f"   ⚠ bai_viet «{ten[:34]}» hỏng sau 3 lần: {cuoi}")
         return ""                      # hỏng thì KHÔNG ghi đệm — đệm một chuỗi rỗng là khoá
     if v:                              # cứng cái hỏng lại mãi mãi
