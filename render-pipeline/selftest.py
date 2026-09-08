@@ -273,6 +273,43 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_du_luot_noi_voi_nguoi_xem():
+    """Máy phải tự đủ 2 lượt "you", và chỉ bằng cách ĐỔI NGÔI câu nối — không thêm khẳng định.
+
+    QC bắt 2/3 bản dài gần nhất chỉ có MỘT lượt nói với người xem, dù luật 4 của lệnh dặn nói
+    rõ *"at least twice"*. Và lượt duy nhất của bộ 140 là một CÂU NỐI do máy chèn — mô hình
+    viết đúng số không câu như thế. §19.2: video giải thích không nói với ai là một bài giảng.
+
+    Máy làm được mà không phạm §19.7 vì câu nói với người xem KHÔNG mang dữ kiện; nó chỉ đổi
+    ngôi một câu đã có. Chốt canh cả chiều ngược: đã đủ thì không đụng, và không có câu nối
+    nào để đổi thì GIỮ NGUYÊN cho cổng báo, không bịa thêm một câu."""
+    import re, giai_thich as G
+    co = re.compile(r"\b(you|your)\b", re.I)
+
+    def n(l):
+        return {"khuon": "canh", "loi": l, "noi": "", "bt": "nguoi"}
+
+    thieu = [n("We are going to answer it properly."), n("Fact one."),
+             n("Let us do this properly."), n("Fact two.")]
+    r = G._du_nguoi_xem([dict(x) for x in thieu])
+    assert sum(1 for x in r if co.search(x["loi"])) >= 2, f"chưa đủ 2 lượt: {[x['loi'] for x in r]}"
+    assert len(r) == len(thieu), "đã THÊM nhịp thay vì đổi ngôi"
+    du = [n("You own it."), n("It matters for your money."), n("We are going to answer it properly.")]
+    r2 = G._du_nguoi_xem([dict(x) for x in du])
+    assert r2[2]["loi"] == du[2]["loi"], "đã đủ mà vẫn đổi"
+    tro = [n("Fact one."), n("Fact two."), n("Fact three.")]
+    r3 = G._du_nguoi_xem([dict(x) for x in tro])
+    assert [x["loi"] for x in r3] == [x["loi"] for x in tro], "bịa thêm câu khi không có câu nối"
+    # và nó phải ĐƯỢC GỌI trong `kich_ban`, không chỉ tồn tại (§13.1 · §15.12)
+    import ast, io as _io
+    cay = ast.parse(_io.open(G.__file__, encoding="utf-8").read())
+    kb = next(f for f in ast.walk(cay)
+              if isinstance(f, ast.FunctionDef) and f.name == "kich_ban")
+    goi = {c.func.id for c in ast.walk(kb)
+           if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
+    assert "_du_nguoi_xem" in goi, "viết ra rồi không ai gọi"
+
+
 def t_lap_gan_so_gan_bang():
     """Câu lặp chỉ khác một DẤU CHẤM vẫn là câu lặp với lỗ tai.
 
@@ -330,8 +367,14 @@ def t_canh_theo_khai_niem():
         assert len(canh.split()) >= 6, f"cảnh quá chung chung: {canh!r}"
     # độ phủ: đo trên câu NỘI DUNG thật của các bản dài đã dựng, nếu có
     import glob, json, io as _io
-    _DAN = re.compile(r"\b(let us|let's|you own|you have seen|remember|nobody repeats|"
-                      r"came back|work it out|the shape of it|so you understand)\b", re.I)
+    # Bộ lọc CÂU DẪN phải nhận ra cả biến thể — đọc tay 10 câu trượt thì 5 câu là câu dẫn
+    # mà bộ lọc cũ không nhận (*"nobody EVER repeats"* · *"the last place on Earth still
+    # running…"* là TIÊU ĐỀ · *"we measured it"*). Đếm chúng vào mẫu là tự hạ điểm mình bằng
+    # những câu vốn không có gì cụ thể để vẽ (§17.5).
+    _DAN = re.compile(r"\b(let us|let's|you own|you have seen|remember|nobody\s+\w*\s*repeats|"
+                      r"came back|work it out|the shape of it|so you understand|"
+                      r"we measured|answer that question|the last place on earth|"
+                      r"that part of|tell someone tomorrow)\b", re.I)
     cau = []
     for f in sorted(glob.glob("out/v11L_*_0*.json"))[-6:]:
         try:
@@ -2984,6 +3027,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
     check("lặp gần: so gần bằng, không so bằng", t_lap_gan_so_gan_bang)
     check("nền kể đúng chuyện đang nói", t_canh_theo_khai_niem)
     check("nhịp Wikipedia tự nới khi bị chặn", t_nhip_wiki_tu_noi_khi_bi_chan)

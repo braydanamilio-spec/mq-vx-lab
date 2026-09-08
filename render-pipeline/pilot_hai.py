@@ -2306,7 +2306,8 @@ _VAT_HINH_MAU = {
 # resting on a stack of bound case files" thì nhìn phát biết đang nói chuyện kiện tụng. Mô
 # hình khuếch tán vẽ vật thể và tình huống giỏi hơn hẳn vẽ một danh từ nơi chốn.
 _KHAI_NIEM = (
-    (r"\b(court|lawsuit|sued?|suing|litigat|judge|verdict|trial|settlement)\w*",
+    (r"\b(court|lawsuit|sued?|suing|litigat|judge|verdict|trial|settlement|"
+     r"proceedings?|recovery|restitution|asset\s+recovery)\w*",
      "a wooden gavel resting on a tall stack of bound case files"),
     (r"\b(bankrupt|insolven|liquidat|chapter\s*11|receivership|wound\s+up)\w*",
      "a cleared office with cardboard archive boxes stacked by an empty desk"),
@@ -2332,7 +2333,8 @@ _KHAI_NIEM = (
      "a stopped assembly line with half-built units still clamped in place"),
     (r"\b(recall|defect|faulty|malfunction|safety|inspect)\w*",
      "a workbench with a dismantled part laid out beside measuring tools"),
-    (r"\b(airline|flight|aircraft|airport|fleet|boeing|airbus|terminal)\w*",
+    (r"\b(airline|flight|aircraft|airport|fleet|boeing|airbus|terminal|"
+     r"leased?|ordered|seats?|flew|jets?|planes?)\w*",
      "an empty boarding gate with a closed shutter and idle jet bridge"),
     (r"\b(ship|vessel|port|harbour|harbor|cargo|freight|container)\w*",
      "stacked shipping containers beside a still gantry crane at dusk"),
@@ -2382,6 +2384,10 @@ _KHAI_NIEM = (
      "a counter window with a bell, a date stamp and a wire tray of forms"),
     (r"\b(founded|origin|began|early\s+years|decades?|history|era)\w*",
      "a wooden drawer of index cards pulled open under a desk lamp"),
+    (r"\b(research|report|analyst|publish|rating|coverage|review)\w*",
+     "a bound report open flat beside a pencil and a stack of loose pages"),
+    (r"\b(exit|withdrew|withdraw|pulled\s+out|sold\s+its|stake|divest|left\s+the)\w*",
+     "a coat missing from a rack of empty hangers by a door"),
 )
 
 # ── CÂU DẪN KHÔNG CÓ GÌ CỤ THỂ ĐỂ VẼ — NHƯNG VẪN PHẢI TRÔNG KHÁC NHAU  (8/9/2026) ──────

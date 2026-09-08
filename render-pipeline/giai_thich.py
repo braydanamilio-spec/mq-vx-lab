@@ -6804,6 +6804,49 @@ def _ngat_the(cau: str) -> str:
     return " ".join(tu[:k]) + "|" + " ".join(tu[k:])
 
 
+# ── LUẬT "NÓI VỚI NGƯỜI XEM" BỊ MÔ HÌNH BỎ QUA — MÁY TỰ LO  (8/9/2026) ──────────────────
+# Luật 4 của lệnh dặn nói rõ *"Say 'you' or 'your' at least twice"*, và QC bắt được **2/3 bản
+# dài gần nhất chỉ có MỘT lượt**. Tệ hơn: lượt duy nhất ấy của bộ 140 là *"We will answer that
+# question properly for you."* — một CÂU NỐI do máy chèn, không phải câu nói với người xem.
+# Tức mô hình viết ĐÚNG SỐ KHÔNG câu như thế.
+#
+# §19.2 đo được vì sao luật này quan trọng: một video giải thích không nói với ai là một BÀI
+# GIẢNG, và 6/18 tập từng không nhắc tới người xem lần nào.
+#
+# Vì sao MÁY làm được mà không phạm luật "AI/máy không bao giờ cấp một con số" (§19.7): câu
+# nói với người xem KHÔNG MANG DỮ KIỆN. Nó chỉ đổi ngôi của một câu nối đã có sẵn — cùng cơ
+# chế mà `doi_thoai` đã dùng để chèn câu hỏi khi hai lượt số dính nhau. Không đốt một vòng
+# gọi AI cho thứ máy sửa được (§13.12 · nấc `don()` của §13.23).
+#
+# Chỉ đổi NGÔI, không thêm mệnh đề mới: thêm mệnh đề là thêm một khẳng định chưa ai duyệt.
+_NGOI_HAI = {
+    "We are going to answer it properly.": "We are going to answer it properly, so you can see it.",
+    "Let us do this properly.":            "Let us do this properly, so you can follow it.",
+    "Let us do this properly, so you understand the timeline.":
+        "Let us do this properly, so you understand the timeline.",
+    "Time to do the arithmetic.":          "Time to do the arithmetic, so you can judge it.",
+    "So let us actually work it out.":     "So let us actually work it out together, you and me.",
+}
+
+
+def _du_nguoi_xem(nhip: list, can: int = 2) -> list:
+    """Đảm bảo ít nhất `can` lượt có "you/your" — bằng cách ĐỔI NGÔI câu nối, không thêm câu."""
+    import re as _re
+    _co = _re.compile(r"\b(you|your|you're|you've)\b", _re.I)
+    dem = sum(1 for n in nhip if _co.search(str(n.get("loi") or "")))
+    if dem >= can:
+        return nhip
+    for n in nhip:
+        if dem >= can:
+            break
+        l = str(n.get("loi") or "").strip()
+        moi = _NGOI_HAI.get(l)
+        if moi and not _co.search(l):
+            n["loi"] = moi
+            dem += 1
+    return nhip
+
+
 def _tranh_lap_gan(nhip: list, ma: str = "") -> list:
     """Không đọc lại CÙNG MỘT CÂU trong vòng `GAN_NHAT` nhịp.  (3/9/2026)
 
@@ -9122,6 +9165,7 @@ def kich_ban(ma: str, idx: int, long: bool = False, so_chuong: int = 10):
     nhip = _rai_chart(ma, nhip, idx)
     # Khử lặp gần — chạy SAU mọi lượt rải và sau khối hook, vì nó đọc thứ tự cuối cùng.
     nhip = _tranh_lap_gan(nhip, ma)
+    nhip = _du_nguoi_xem(nhip)
     # Xen kẽ ảnh CF với cảnh vẽ bằng code — cũng phải chạy SAU mọi lượt chèn, vì nó đếm
     # nhịp `canh` theo THỨ TỰ CUỐI CÙNG. Xem khối `NOI_KENH` để biết vì sao và tỉ lệ bao nhiêu.
     # ĐẠO CỤ TRƯỚC, RẢI CẢNH CODE SAU. `_rai_canh_ve` bỏ `ve` của những nhịp nó nhận, nên
