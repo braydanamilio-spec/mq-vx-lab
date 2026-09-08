@@ -259,6 +259,73 @@ def _the_logo(d: str) -> str:
         return d
 
 
+def _anh_dung_duoc(d: str, ten: str = "") -> bool:
+    """Ảnh vừa tải có dùng làm NỀN được không. Ghép nền trắng nếu trong suốt.
+
+    ── HAI ẢNH HỎNG DO CHÍNH NGUỒN COMMONS EM VỪA THÊM  (8/9/2026) ────────────────────────
+    Soi short 1541 («1MDB») sau khi nối Commons, hai khung hỏng và cả hai đo được ngay:
+
+        «Signature of Najib Razak.svg»  -> sáng TB 0,0 · mật độ nét 0,0  (khung ĐEN đặc)
+        «…Department of Justice press release» -> mật độ nét 11,2 (nền vẽ chỉ 3,4–7,6)
+
+    Cái đầu KHÔNG phải lỗi lọc mà là lỗi GHÉP: ảnh trong suốt dán lên khung cho ra nền đen.
+    Ghép lên trắng chữa nó, và chữa luôn cho MỌI logo trong suốt — tức nó là một bản sửa
+    dương, không phải một cái cấm.
+
+    Cái thứ hai là một TRANG VĂN BẢN. Phóng nó lên nền 1080×1920 thì người xem thấy một bức
+    tường chữ mờ không đọc nổi — đúng thứ §12.7 đo được là chỗ hỏng nặng nhất, chỉ khác là
+    chữ THẬT chứ không phải chữ bịa.
+
+    Ngưỡng lấy từ chính số đo, không gõ bừa: nền vẽ nằm ở 3,4–7,6 nên sàn 1,2 chỉ loại ảnh
+    gần như đồng màu, còn trần 10,5 chỉ loại thứ dày hơn mọi nền vẽ đang dùng."""
+    try:
+        from PIL import Image
+    except Exception:
+        return True                       # không đo được thì đừng chặn (§13.3, hỏng mềm)
+    try:
+        im = Image.open(d)
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGBA")
+            nen = Image.new("RGBA", im.size, (255, 255, 255, 255))
+            im = Image.alpha_composite(nen, im).convert("RGB")
+            im.save(d, "PNG" if d.lower().endswith(".png") else "JPEG", quality=92)
+        # ── THƯỚC ĐÚNG LÀ ĐỘ DỒN CỦA HISTOGRAM, KHÔNG PHẢI MẬT ĐỘ NÉT ──────────────────
+        # Bản đầu của em chặn theo mật độ nét và BẮT OAN ngay: ảnh chụp thật toà nhà Credit
+        # Suisse 1898 có nét 13,1 còn trang thông cáo DOJ có 13,2 — hai thứ KHÔNG tách được
+        # bằng nét, vì ảnh chụp chi tiết vốn dày nét. Em calibrate nhầm nhóm tham chiếu: lấy
+        # NỀN VẼ (3,4–7,6) làm mốc cho ẢNH CHỤP (§12.3 — phải soi ở khoảng giữa).
+        #
+        # Thứ tách được là ĐỘ DỒN: tỉ lệ điểm ảnh rơi vào MỘT bậc sáng trong 16 bậc.
+        #     trang văn bản 0,60 · chữ ký đồng màu 1,00 · ba ảnh chụp thật 0,17–0,18
+        # Một trang giấy là một mảng nền phẳng cộng vài nét mảnh, nên nó dồn; một bức ảnh thì
+        # trải. Ngưỡng 0,40 nằm giữa hai cụm với biên rất rộng cả hai phía.
+        g = im.convert("L").resize((200, 200))
+        px = list(g.getdata())
+        bin16 = [0] * 16
+        for v in px:
+            bin16[min(15, v // 16)] += 1
+        dinh = max(bin16) / len(px)
+        # ── MỘT TÍN HIỆU KHÔNG ĐỦ, PHẢI GHÉP HAI  ────────────────────────────────────────
+        # Đo trên 8 mẫu đã đọc tay, "độ dồn" MỘT MÌNH không tách được: trang thông cáo DOJ
+        # 0,60 nằm DƯỚI ảnh chụp Concorde 0,67 (mảng trời chiếm một bậc). Đo ở hai phần ba
+        # dưới cũng không tách (0,47 vs 0,53). Nên nó chưa đủ chín để làm cổng một mình
+        # (§13.22) — và cổng bắt oan ở đây sẽ loại đúng thứ anh xin thêm.
+        #
+        # Tín hiệu thứ hai tách sạch: Commons đặt tên trang văn bản bằng CHÍNH CÂU ĐẦU của
+        # nó, nên tiêu đề dài 8–10 chữ, còn ảnh chụp có tiêu đề 3–7 chữ. Ghép hai điều kiện
+        # thì cả 8 mẫu đều đúng, và mỗi điều kiện đều có biên riêng.
+        _chu = len([w for w in str(ten or "").replace("File:", "").split() if w])
+        if dinh >= 0.95:
+            print(f"   ⚠ bỏ ảnh gần như ĐỒNG MÀU ({dinh:.2f})")
+            return False
+        if _chu >= 8 and dinh >= 0.40:
+            print(f"   ⚠ bỏ TRANG VĂN BẢN (tiêu đề {_chu} chữ · dồn {dinh:.2f})")
+            return False
+        return True
+    except Exception:
+        return True
+
+
 def tai_ve(anh: dict) -> str:
     """Tải một ảnh về kho cục bộ. Trả đường dẫn, hoặc "" khi hỏng — KHÔNG ném lên trên."""
     try:
@@ -273,6 +340,13 @@ def tai_ve(anh: dict) -> str:
         if len(b) < 4096:                 # ảnh quá nhỏ gần như luôn là biểu tượng
             return ""
         io.open(d, "wb").write(b)
+        # THẺ LOGO ĐƯỢC MIỄN: `_the_logo` cố ý dựng một tấm thẻ nền trắng phẳng, nên phép đo
+        # "độ dồn" sẽ loại đúng thứ anh muốn nhất (§13.8). Cổng này chỉ nói về ảnh dùng làm
+        # NỀN — phẳng là hỏng ở nền, và là ĐÚNG ở một tấm thẻ.
+        if not anh.get("mark") and not _anh_dung_duoc(d, anh.get("ten", "")):
+            try: os.remove(d)
+            except Exception: pass
+            return ""
         return _the_logo(d) if anh.get("mark") else d
     except Exception:
         return ""

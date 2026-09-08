@@ -937,6 +937,46 @@ def t_anh_that_du_lon_va_du_nhieu():
         "tầng Commons gọi qua `_M` — sẽ ném TypeError và bị nuốt"
 
 
+def t_loai_trang_van_ban_va_anh_trong():
+    """Ảnh làm NỀN không được là trang văn bản hay mảng đồng màu.
+
+    8/9 — nguồn Commons em vừa thêm mang vào hai ảnh hỏng, soi short 1541 («1MDB») thấy ngay:
+      · «Signature of Najib Razak.svg» -> khung ĐEN đặc (ảnh trong suốt bị dán thành đen)
+      · «…Department of Justice press release» -> một bức tường CHỮ THẬT không đọc nổi
+
+    Cái đầu chữa ở phép GHÉP, không phải phép lọc: ghép ảnh trong suốt lên nền TRẮNG. Đó là
+    bản sửa dương — nó chữa luôn cho mọi logo trong suốt.
+
+    Cái thứ hai đắt hơn về phương pháp. Bản đầu em chặn theo MẬT ĐỘ NÉT và bắt oan ngay: ảnh
+    chụp toà nhà Credit Suisse 1898 có nét 13,1 còn trang DOJ có 13,2 — không tách được, vì
+    em lấy NỀN VẼ (3,4–7,6) làm mốc cho ẢNH CHỤP (§12.3). Đổi sang "độ dồn histogram" thì
+    vẫn không đủ: trang DOJ 0,60 nằm DƯỚI ảnh Concorde 0,67 vì mảng trời chiếm một bậc; đo ở
+    hai phần ba dưới cũng không tách (0,47 vs 0,53).
+
+    Nên GHÉP HAI tín hiệu, mỗi cái có biên riêng: Commons đặt tên trang văn bản bằng chính
+    CÂU ĐẦU của nó (8–10 chữ) còn ảnh chụp có tiêu đề 3–7 chữ. Ghép "tiêu đề ≥8 chữ VÀ ảnh
+    phẳng ≥0,40" thì 8/8 mẫu đã đọc tay đều đúng. Và THẺ LOGO được miễn hoàn toàn — nó cố ý
+    phẳng, phẳng là ĐÚNG ở một tấm thẻ và chỉ hỏng ở một tấm nền (§13.8)."""
+    import inspect, anh_tu_do as A
+    src = inspect.getsource(A._anh_dung_duoc)
+    assert "alpha_composite" in src, "ảnh trong suốt vẫn bị dán thành nền đen"
+    assert "_chu >= 8" in src and "dinh >= 0.40" in src, \
+        "phải GHÉP hai tín hiệu — mỗi cái một mình đều đã đo là không tách được"
+    tv = inspect.getsource(A.tai_ve)
+    assert 'anh.get("mark")' in tv, "thẻ logo chưa được miễn — sẽ loại oan chính logo"
+
+    # thử ngược trên chính 8 mẫu đã đọc tay (không cần tệp: chỉ kiểm luật tiêu đề)
+    def van_ban(ten, dinh):
+        n = len([w for w in ten.replace("File:", "").split() if w])
+        return dinh >= 0.95 or (n >= 8 and dinh >= 0.40)
+    assert van_ban("File:The United States Department of Justice has reached a settlement", 0.60)
+    assert van_ban("File:We are again extremely pleased to continue transferring assets", 0.71)
+    assert van_ban("File:Signature of Najib Razak.svg", 1.00)
+    assert not van_ban("File:Pan Am Building and Grand Central 03.jpg", 0.47)
+    assert not van_ban("British Airways Concorde Jet", 0.67)
+    assert not van_ban("File:Schweizerische Kreditanstalt 1898.jpg", 0.18)
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3914,6 +3954,7 @@ def main():
     check("không dùng chân dung người thật", t_khong_dung_chan_dung_nguoi_that)
     check("nền khung dọc không cắt vào chỗ trống", t_nen_doc_khong_cat_vao_cho_trong)
     check("ảnh thật đủ lớn và đủ nhiều", t_anh_that_du_lon_va_du_nhieu)
+    check("loại trang văn bản và ảnh đồng màu", t_loai_trang_van_ban_va_anh_trong)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
