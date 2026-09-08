@@ -4144,6 +4144,7 @@ def main():
     check("thẻ số trên màn phải ĐƯỢC ĐỌC LÊN, và không trùng", t_the_so_phai_duoc_doc_len)
     check("hồ Groq rỗng KHÔNG được làm chết đường dựng thoại", t_thoai_co_tang_du_phong)
     check("thẻ NĂM hiện ngay, không đếm lên số không có thật", t_nam_khong_dem_len)
+    check("LOGO không được dùng làm ảnh nền", t_logo_khong_lam_nen)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
@@ -10289,6 +10290,31 @@ def t_nam_khong_dem_len():
     # phải xét CẢ đơn vị: `2000 tons` là một lượng thật, không phải năm
     assert "lop.don" in ma[ma.find("_lNam"):ma.find("_lNam") + 320], \
         "phép nhận dạng năm không xét đơn vị — sẽ chặn đếm lên cho một lượng thật"
+
+
+def t_logo_khong_lam_nen():
+    """Logo/biểu tượng chỉ làm THẺ LOGO, không làm ảnh nền.
+
+    ── VÌ SAO  (anh gửi khung bộ 171, 8/9/2026) ──────────────────────────────────────────
+    Anh chỉ một khung có "bức tranh trừu tượng đỏ/xanh" làm nền. Tra sổ xuất xứ:
+    `File:Fine air logo.png` — chữ logo phóng full-bleed thành mảng màu vô nghĩa. Cùng tấm ấy
+    ở thẻ logo góc trên thì đọc ra ngay là logo. Một tấm, hai vai; vai "nền" nó không làm được.
+
+    Nhận bằng XUẤT XỨ, không bằng pixel — và đây là một hướng đã bị BÁC bằng số đo: thước
+    `top5` tách sạch hai đầu (logo 0,82–0,89 · ảnh chụp 0,13–0,46), nhưng soi khoảng giữa thì
+    máy bay trên nền trời trơn cũng cho 0,71. Ngưỡng nào cũng cắt oan ảnh thật (§12.3).
+    """
+    import pilot_hai as PH
+    PH.TEN_ANH.update({"_t_logo.png": "File:Acme Corp logo.png",
+                       "_t_anh.jpg": "View of Acme Flight 101 crash debris line.jpg",
+                       "_t_bieu.svg": "File:Aviation icon.png"})
+    ra = PH._chen_anh_that([None, None, None], ["_t_logo.png", "_t_anh.jpg", "_t_bieu.svg"])
+    assert "_t_logo.png" not in ra, "logo vẫn được dùng làm nền"
+    assert "_t_bieu.svg" not in ra, "biểu tượng vẫn được dùng làm nền"
+    assert "_t_anh.jpg" in ra, "ảnh chụp thật bị loại oan cùng logo"
+    # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
+    ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
+    assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
 
 
 if __name__ == "__main__":

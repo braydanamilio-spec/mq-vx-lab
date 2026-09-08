@@ -490,6 +490,24 @@ const Panel: React.FC<{
           nhóm SVG, không phải phần tử độc lập. Bản đầu của em bọc bằng `<div>` và trình duyệt
           vẽ ra một thẻ số bé xíu ở góc cùng một dòng chữ li ti. Không lỗi nào báo, chỉ là hình
           sai chỗ và sai cỡ — lỗi GHÉP của em, không phải của khuôn. */}
+      {/* ── VÌ SAO LỚP VECTOR VẪN VẼ TRÀN PANEL  (thử và BÁC, 8/9/2026) ──────────────────
+          Anh gửi khung có trục `1997 — 2 — 2002`, mốc giữa khuất sau đầu nhân vật. Em bó lớp
+          vector vào dải trống trên đỉnh đầu — cùng cách `SoPanel` đã dùng — rồi dựng lại và
+          NHÌN: trục teo thành một vạch mảnh với nhãn li ti, bị bong bóng nuốt gần hết. Tệ hơn
+          hẳn trạng thái cũ, nên đã gỡ.
+
+          Đo ra lý do, và nó là một ràng buộc THẬT chứ không phải một con số cần chỉnh: trong
+          khung 16:9, đáy bong bóng nằm ở 0,27–0,40·h còn đỉnh đầu cũng ở ~0,30–0,40·h — dải
+          ngang trống gần như BẰNG KHÔNG ở mọi nhịp có trục. Không có chỗ để bó vào.
+
+          Nên đây không phải lỗi vá được ở tầng engine. Ba lối ra, và cả ba là quyết định về
+          BỐ CỤC chứ không phải một bản vá:
+            · nhịp có trục thì lời thoại phải NGẮN (ràng buộc ở khâu viết, giống §12.11 —
+              muốn cảnh 2 giây thì câu phải 5–8 chữ)
+            · hoặc nhân vật nhỏ lại ở riêng những nhịp ấy
+            · hoặc bỏ trục khỏi khung 16:9 và chỉ dùng nó ở khung dọc
+          Ghi ra đây thay vì vá vòng thứ tư (§13.22: "chưa giải được" là một kết luận hợp lệ,
+          và nó ngăn phiên sau đi làm lại đúng cái đã bị bác). */}
       {nenVe && !anhNen ? (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
              style={{ position: "absolute", inset: 0, zIndex: 2, opacity: 0.94 }}>

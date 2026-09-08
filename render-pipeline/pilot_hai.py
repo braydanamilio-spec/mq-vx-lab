@@ -1517,6 +1517,30 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
     """
     if not duong:
         return anh_nens
+    # ── LOGO KHÔNG PHẢI ẢNH NỀN  (anh soi bộ 171, 8/9/2026) ────────────────────────────
+    # Anh gửi khung có "một bức tranh trừu tượng đỏ/xanh" làm nền. Tra sổ xuất xứ thì đó là
+    # `File:Fine air logo.png` — chữ logo, phóng full-bleed thành mảng màu vô nghĩa. Khung
+    # khác là `File:Aviacionavion.png`, biểu tượng hàng không chung của Wikipedia.
+    #
+    # Logo vẫn CẦN, nhưng ở đúng chỗ của nó: thẻ nhỏ góc trên (`LOGO_TAP`), nơi cùng tấm ấy
+    # đọc ra ngay là logo. Cùng một tấm, hai vai — và vai "nền" là vai nó không làm được.
+    #
+    # Nhận bằng XUẤT XỨ, không bằng pixel. Em đã thử thước pixel trước: `top5` (tỉ lệ 5 ô màu
+    # phổ biến nhất) tách sạch hai đầu — logo 0,82–0,89 vs ảnh chụp 0,13–0,46 — nhưng soi
+    # khoảng GIỮA thì một chiếc máy bay trên nền trời trơn cũng cho 0,71, tức thước nhầm
+    # "nền phẳng" với "logo". Ngưỡng nào cũng cắt oan ảnh thật (§12.3: calibrate hai đầu cực
+    # chỉ chứng minh tách được hai đầu; cổng sống ở khoảng giữa).
+    # Tiêu đề nguồn thì nói thẳng, không phải suy: `... logo.png` là logo.
+    _DAU_LOGO = re.compile(r"\b(logo|icon|symbol|emblem|wordmark|coat of arms|seal|badge|"
+                           r"template|stub)\b", re.I)
+    _bo_logo = [d for d in duong
+                if _DAU_LOGO.search(str(TEN_ANH.get(d, "")).replace("File:", ""))]
+    if _bo_logo:
+        duong = [d for d in duong if d not in _bo_logo]
+        print(f"   🚫 {len(_bo_logo)} tấm là LOGO/biểu tượng — không làm nền "
+              f"(vẫn dùng cho thẻ logo)")
+        if not duong:
+            return anh_nens
     ra = list(anh_nens)
     if not cau:
         n, m = len(ra), len(duong)
