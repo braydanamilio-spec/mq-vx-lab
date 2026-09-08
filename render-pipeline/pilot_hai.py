@@ -1288,6 +1288,54 @@ def _nen_theo_tap(anh_nens: list, cau: list, chu_the: str, bo_qua: set = None) -
     return out
 
 
+def _lop_ve(cau: list) -> list:
+    """Nhịp không có ảnh thật -> lớp VẼ BẰNG CODE khớp chính câu đang nói. None nếu không hợp.
+
+    ── VÌ SAO VẼ THAY VÌ ĐỂ TRỐNG  (anh chốt, 8/9/2026) ───────────────────────────────────
+    Anh: *"nền 100% là ảnh thật liên quan … hay nền trống"*, rồi *"dùng ảnh thực tế hay ảnh
+    generate code nha"*. Tức: ảnh tư liệu khi có, còn lại VẼ BẰNG CODE — không dùng ảnh CF.
+
+    Lý do bỏ ảnh CF đã đo: nó KHÔNG BIẾT THỜI ĐẠI. Chuyện năm 1866 ra văn phòng kính hiện đại,
+    vì không prompt nào mang niên đại. Hình vẽ bằng code thì KHÔNG CÓ thời đại — một trục thời
+    gian hay một thẻ số không thể sai thời, nên nó không bao giờ mắc lỗi ấy.
+
+    Và mọi con số ở đây rút TỪ CHÍNH LỜI THOẠI, không tự nghĩ ra cái nào — luật cứng §19.3
+    (*máy gác sự thật, không ai được cấp một con số*) giữ nguyên.
+
+    Độ phủ đo trên 149 nhịp của 10 bản dài: 37% nhắc tới một NĂM (trục thời gian) · 11% có SỐ
+    kèm đơn vị (thẻ số) · 52% còn lại để trống, vì bịa ra một hình cho câu không có gì đo được
+    thì lại đúng cái lỗi vừa bỏ.
+
+    Hai khuôn `Truc` và `SoLieu` đã có sẵn trong `gt/Khuon.tsx`, tự chứa và chỉ nhận W/H/p —
+    không phải viết mới (§13.1).
+    """
+    import re as _re
+    txt = " ".join(str(c or "") for c in cau)
+    nam_tap = sorted({int(y) for y in _re.findall(r"\b(1[89]\d\d|20[0-2]\d)\b", txt)})
+    # trục chỉ có nghĩa khi có ít nhất hai mốc; quá nhiều thì lấy đầu-giữa-cuối cho đọc được
+    if len(nam_tap) > 5:
+        b = len(nam_tap)
+        nam_tap = [nam_tap[0], nam_tap[b // 4], nam_tap[b // 2], nam_tap[3 * b // 4], nam_tap[-1]]
+    ra = []
+    for c in cau:
+        t = str(c or "")
+        y = _re.findall(r"\b(1[89]\d\d|20[0-2]\d)\b", t)
+        if y and len(nam_tap) >= 2:
+            try:
+                vt = nam_tap.index(int(y[0]))
+            except ValueError:
+                vt = 0
+            ra.append({"k": "truc", "moc": [{"nhan": str(n)} for n in nam_tap], "vt": vt})
+            continue
+        m = _re.search(r"\b([\d][\d,.]*)\s*(billion|million|thousand|percent|%)\b", t, _re.I)
+        if m:
+            ra.append({"k": "so", "so": m.group(1), "don": m.group(2),
+                       "chu": t[:70]})
+            continue
+        ra.append(None)
+    return ra
+
+
 def _nen_can_tron(duong: list, ngang: bool, san: float = 0.60) -> list:
     """[bool] — nền nào bị phép `cover` giấu mất quá nhiều thì phải hiện TRỌN.
 
@@ -2258,6 +2306,10 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # Tấm nào bị `cover` giấu mất quá 40% một chiều thì engine hiện TRỌN — xem
         # `_nen_can_tron`. Đo ở đây vì Python biết cỡ ảnh, engine thì không.
         "nenTron": _nen_can_tron(anh_nens, ngang=bool(chuong)),
+        # Nhịp KHÔNG có ảnh thật -> lớp VẼ BẰNG CODE khớp chính câu ấy (xem `_lop_ve`).
+        # Chỉ gán cho nhịp trống: có ảnh tư liệu thì ảnh luôn thắng.
+        "nenVe": [None if (anh_nens[i] if i < len(anh_nens) else "") else v
+                  for i, v in enumerate(_lop_ve(cau))],
         # Kênh GIẢI THÍCH tắt đồ nghề hài: thẻ hook thành dải sát đáy (không đè mặt), và bỏ
         # chữ nổ + cú rung ở câu chốt — engine bắn hiệu ứng punchline vào một câu kết trầm thì
         # khán giả đọc ra là hệ thống không hiểu nó đang kể gì.

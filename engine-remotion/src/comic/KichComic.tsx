@@ -4,6 +4,9 @@ import { DienVienHai } from "../v4/DienVienHai";
 import { CAM_XUC, CAO_MIENG_MAX, KIEU_MAU, visemeTai, Kieu, TenCamXuc, TenCuChi, Tu } from "../v2/DienVien";
 import type { Luot } from "../v4/KichHai";
 import { NenPanel, NenGan, DaoCu, doDaoCu } from "./NenComic";
+// Khuôn VẼ BẰNG CODE dùng lại nguyên từ bộ giải thích — tự chứa, chỉ nhận W/H/p, không
+// kéo theo cây component nào (§13.1: cơ chế đã có sẵn, đừng viết cái thứ hai).
+import { Truc, SoLieu } from "../gt/Khuon";
 import { noiCuaTap, Noi, SAN } from "./NoiChon";
 import { SoPanel, LopComic } from "./SoComic";
 
@@ -248,14 +251,14 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 const Panel: React.FC<{
   L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
-  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string; nenTron?: boolean;
+  dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string; nenTron?: boolean; nenVe?: any;
   guViTri?: string; guKen?: string; guNen?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
   logo?: string;      // ẢNH THẬT của chủ thể (logo/trụ sở) — thẻ nhỏ, xem `TheLogo`
   haiHuoc?: boolean;
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, nenTron = false,
+}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, nenTron = false, nenVe = null,
         guViTri = "giua", guKen = "vao", guNen = "moc", noi, anhNen, soLieu, logo,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
@@ -472,6 +475,29 @@ const Panel: React.FC<{
                    video thì mỗi nhịp chỉ nhận một lát cắt vài phần trăm — mắt không thấy gì. */
                 ken={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0}
                 kenHat={thuTu + hat} kenKieu={guKen} guNen={guNen} />
+
+      {/* ── NHỊP KHÔNG CÓ ẢNH TƯ LIỆU: VẼ BẰNG CODE, KHỚP CHÍNH CÂU ĐANG NÓI  (8/9/2026) ──
+          Anh: *"nền 100% là ảnh thật liên quan … hay nền trống"*, rồi *"dùng ảnh thực tế hay
+          ảnh generate code nha"*. Tức ảnh tư liệu khi có, còn lại VẼ BẰNG CODE — bỏ hẳn ảnh CF.
+
+          Lý do bỏ ảnh CF đã đo: nó KHÔNG BIẾT THỜI ĐẠI. Chuyện năm 1866 ra văn phòng kính hiện
+          đại, vì không prompt nào mang niên đại. Một trục thời gian hay một thẻ số thì KHÔNG CÓ
+          thời đại, nên nó không thể sai thời.
+
+          Hai khuôn này lấy nguyên từ `gt/Khuon.tsx` — tự chứa, chỉ nhận W/H/p (§13.1). Mọi con
+          số trong đó rút TỪ CHÍNH LỜI THOẠI ở `pilot_hai._lop_ve`, không tự nghĩ ra cái nào. */}
+      {nenVe && !anhNen ? (
+        <div style={{ position: "absolute", inset: 0, zIndex: 2, opacity: 0.92 }}>
+          {nenVe.k === "truc" ? (
+            <Truc W={w} H={h} moc={nenVe.moc} vt={nenVe.vt} mau={mau}
+                  p={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0} />
+          ) : nenVe.k === "so" ? (
+            <SoLieu W={w} H={h} so={String(nenVe.so)} don={String(nenVe.don || "")}
+                    chu="" bt="" mau={mau}
+                    p={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0} />
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Đạo cụ đọc ra từ chính câu thoại của cảnh này — thoại nói "router" thì trong khung có
           cái router. Không gọi mô hình: câu thoại là văn bản, dò từ khoá là đủ. */}
@@ -825,6 +851,7 @@ export type PropsComic = {
   // đã duyệt không đụng gì.
   anhNens?: string[];
   nenTron?: boolean[];   // nền nào bị `cover` giấu quá nhiều -> hiện TRỌN
+  nenVe?: any[];         // nhịp không có ảnh thật -> lớp vẽ bằng code
   // ── ẢNH THẬT CỦA CHỦ THỂ, HIỆN Ở VÀI NHỊP ĐẦU  (anh, 8/9/2026) ──────────────────────
   // `logoTap` = đường dẫn ảnh (logo hoặc trụ sở, lấy từ Wikidata P154/P18, chỉ nhận PD/CC0).
   // `logoNhip` = những nhịp được phép hiện nó. Không hiện suốt tập: một thẻ đứng nguyên từ
@@ -865,7 +892,7 @@ export const KichComic: React.FC<PropsComic> = ({
   kieuTuyA = {}, kieuTuyB = {}, motNguoi, daoCuTap = "", tieuDe = "", handle = "", mau = "#F0483C",
   guViTri = "giua", guKen = "vao", guNen = "moc",
   mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
-  sang, anhNens, nenTron, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
+  sang, anhNens, nenTron, nenVe, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   anhChens,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
   bongDuoi = false, boKhung = 0, chuNo = "BOOM!",
@@ -920,6 +947,7 @@ export const KichComic: React.FC<PropsComic> = ({
            dangNoi={dangNoi} noi={noi}
            anhNen={(anhNens && anhNens[ix]) || anhNen}
            nenTron={!!(nenTron && nenTron[ix])}
+           nenVe={(nenVe && nenVe[ix]) || null}
            logo={(anhChens && anhChens[ix]) || undefined}
            soLieu={(soLieu && soLieu[ix]) || null} haiHuoc={haiHuoc}
            sang={(sangs && sangs[ix]) || sang}
