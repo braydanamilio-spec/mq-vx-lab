@@ -1556,8 +1556,16 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
             continue
         ra[i] = d
         xong_i.add(i); xong_d.add(d); n += 1
-    print(f"   🔗 ảnh khớp NGHĨA: {n}/{len(ra)} nhịp "
-          f"({len(ra) - n} nhịp còn lại sẽ vẽ nền riêng)")
+    # ── MẪU SỐ PHẢI LÀ SỐ ẢNH, KHÔNG PHẢI SỐ NHỊP  (8/9/2026) ─────────────────────────
+    # Dòng cũ in `1/12 nhịp` và CHÍNH EM đọc nó thành "bộ ghép hỏng", rồi đi tìm lỗi trong
+    # thuật toán ghép. Trần thật không phải 12: chủ thể «Fine Air» chỉ có **4 ảnh tự do**, nên
+    # nhiều nhất 4 nhịp có ảnh. `1/12` trộn hai đại lượng — tỉ lệ ghép trúng, và độ phủ ảnh —
+    # rồi cho ra một con số không đo cái nào.
+    # §15.2: một con số không có ĐÚNG mẫu số thì mọi kết luận dựng trên nó đều lệch, và ở đây
+    # nó lệch về phía đổ lỗi cho đoạn mã lành.
+    print(f"   🔗 ảnh khớp NGHĨA: {n}/{len(duong)} ảnh rơi đúng nhịp nói về nó "
+          f"· phủ {len(duong)}/{len(ra)} nhịp"
+          + (" — HỒ ẢNH MỎNG, không phải phép ghép kém" if len(duong) < len(ra) / 2 else ""))
     # ── LƯỢT HAI: ẢNH THẬT CÒN DƯ ĐI VÀO NHỊP SẼ NHẬN NỀN CHUNG CHUNG  (anh, 8/9/2026) ──
     # Anh: *"tốn credit mà render ra mấy tấm ảnh ko liên quan này thì làm gì cho tốn"* ·
     # *"phải render cái gì người dùng nhìn cái nhận ra ngay chứ ko thì khác gì dùng kho nền

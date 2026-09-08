@@ -117,7 +117,21 @@ export const SoPanel: React.FC<{
 
   if (lop.k === "so") {
     const t = tach(lop.so);
-    const q = kep(p / 0.5);
+    /* ── MỘT CÁI NĂM KHÔNG ĐƯỢC ĐẾM LÊN  (anh soi bộ 171, 8/9/2026) ────────────────────
+       Khung 32% của nhịp «By 2000 Fine Air made about $200 million revenue weekly» hiện
+       **1361** — em tưởng thẻ số lọt qua bộ lọc, truy props thì mọi thẻ đều được đọc lên
+       đúng. `1361` là một KHUNG GIỮA CHỪNG của hiệu ứng đếm lên đang chạy tới `2000`.
+
+       Đếm lên có nghĩa với một LƯỢNG: thấy `2,700` bò lên là cảm được độ lớn, đó chính là
+       việc nó sinh ra để làm. Với một cái NĂM thì không có độ lớn nào để cảm — và người xem
+       nhìn thấy một con số KHÔNG TỒN TẠI trong câu chuyện suốt nửa đầu mỗi nhịp. Tệ hơn cả
+       không có hiệu ứng, vì `1361` đọc ra như một dữ kiện.
+
+       Nhận ra bằng chính hình dạng, không bằng danh sách: bốn chữ số trong 1600–2099 và
+       KHÔNG có đơn vị đi kèm. Có đơn vị (`2000 tons`) thì lại là một lượng thật, vẫn đếm. */
+    const _lNam = !!t && !t.truoc && !t.duoi && !String(lop.don || "").trim()
+                  && Number.isInteger(t.n) && t.n >= 1600 && t.n <= 2099;
+    const q = _lNam ? 1 : kep(p / 0.5);
     const e = 1 - Math.pow(1 - q, 3);
     const hien = t ? t.truoc + soChu(t.n * e, t.le, t.phay) + t.duoi : lop.so;
     // Cú nảy vào khung, không trượt: con số là lời hứa của cả tập và phải tới trước khi

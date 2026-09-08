@@ -4143,6 +4143,7 @@ def main():
     check("kho đệm chọn chủ thể phải nằm TRONG GIT (CI mới có)", t_dem_chu_de_phai_trong_git)
     check("thẻ số trên màn phải ĐƯỢC ĐỌC LÊN, và không trùng", t_the_so_phai_duoc_doc_len)
     check("hồ Groq rỗng KHÔNG được làm chết đường dựng thoại", t_thoai_co_tang_du_phong)
+    check("thẻ NĂM hiện ngay, không đếm lên số không có thật", t_nam_khong_dem_len)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
@@ -10259,6 +10260,35 @@ def t_thoai_co_tang_du_phong():
 
     import phim_canh as PC
     assert callable(getattr(PC, "_goi_cf", None)), "phim_canh._goi_cf biến mất"
+
+
+def t_nam_khong_dem_len():
+    """Thẻ mang một cái NĂM phải hiện ngay, không chạy hiệu ứng đếm lên.
+
+    ── VÌ SAO  (anh soi bộ 171, 8/9/2026) ────────────────────────────────────────────────
+    Khung 32% của nhịp *"By 2000 Fine Air made about $200 million revenue weekly"* hiện
+    **1361**. Em tưởng thẻ số lọt bộ lọc mới, truy props thì mọi thẻ đều được đọc lên ĐÚNG —
+    `1361` là một khung giữa chừng của hiệu ứng đếm lên đang bò tới `2000`.
+
+    Đếm lên có nghĩa với một LƯỢNG: thấy `2,700` bò lên là cảm được độ lớn, đó là việc nó
+    sinh ra để làm. Với một cái NĂM thì không có độ lớn nào để cảm, và người xem đọc một con
+    số KHÔNG TỒN TẠI trong câu chuyện suốt nửa đầu mỗi nhịp — tệ hơn cả không có hiệu ứng,
+    vì `1361` trông y hệt một dữ kiện.
+
+    Nhận ra bằng HÌNH DẠNG, không bằng danh sách năm (§13.9): bốn chữ số 1600–2099 và không
+    có đơn vị. Có đơn vị (`2000 tons`) thì lại là một lượng thật và vẫn phải đếm.
+    """
+    import re as _re
+    goc = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                       "engine-remotion", "src", "comic")
+    src = io.open(os.path.join(goc, "SoComic.tsx"), encoding="utf-8").read()
+    ma = _re.sub(r"/\*[\s\S]*?\*/", "", src)          # §17.15
+    assert "_lNam" in ma, "SoComic không phân biệt thẻ NĂM với thẻ LƯỢNG"
+    assert "1600" in ma and "2099" in ma, "khoảng năm biến mất khỏi phép nhận dạng"
+    assert "_lNam ? 1 :" in ma, "nhận ra là năm nhưng vẫn chạy hiệu ứng đếm lên"
+    # phải xét CẢ đơn vị: `2000 tons` là một lượng thật, không phải năm
+    assert "lop.don" in ma[ma.find("_lNam"):ma.find("_lNam") + 320], \
+        "phép nhận dạng năm không xét đơn vị — sẽ chặn đếm lên cho một lượng thật"
 
 
 if __name__ == "__main__":
