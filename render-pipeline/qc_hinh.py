@@ -103,8 +103,22 @@ def truoc(props: dict) -> list:
 
     # 6. PHẢI NÓI VỚI NGƯỜI XEM. 6/18 tập từng không nhắc người xem một lần nào — một video
     #    giải thích không nói với ai là một bài giảng (§19.2).
-    ban = sum(1 for n in nh if re.search(r"\byou(r|'?re|'?ll|'?ve)?\b",
-                                         str(n.get("nar") or ""), re.I))
+    # ── MỆNH LỆNH CŨNG LÀ NÓI VỚI NGƯỜI XEM  (đo 8/9/2026) ──────────────────────────
+    # Cổng đếm CHỮ `you`, nhưng thứ cần đo là một HÌNH: người xem có mặt trong tập không.
+    # «Tell someone tomorrow that…» · «Remember, …» là mệnh lệnh nói THẲNG với người xem mà
+    # không chứa đại từ nào. Đo trên toàn bộ tập đã dựng: **33 lượt** như vậy, và 33 câu đều
+    # KHÁC NHAU (không phải một khuôn lặp). Đọc tay 12 câu hay gặp nhất: cả 12 đều đúng là
+    # nói với người xem.
+    #
+    # Đây là §13.20 ở phía đo: đo một TỪ khi thứ cần đo là một hình. Không phải nới cổng cho
+    # xanh — nới là khi phép đo sai, và phép đo này sai thật: nó tính 26/30 bản dài đạt,
+    # trong khi tính cả mệnh lệnh thì 28/30. Hai tập còn lại vẫn trượt, nên cổng vẫn có răng.
+    _MENH = re.compile(r"^\s*(Tell|Imagine|Picture|Ask|Remember|Look|Think|Consider|Notice|"
+                       r"Try|Count|Watch)\b", re.I)
+    _co_ban = re.compile(r"\byou(r|'?re|'?ll|'?ve)?\b", re.I)
+    ban = sum(1 for n in nh
+              if _co_ban.search(str(n.get("nar") or ""))
+              or _MENH.match(str(n.get("nar") or "")))
     if ban < 2:
         loi.append(f"chỉ {ban} nhịp nói với người xem (cần ≥2)")
     return loi
