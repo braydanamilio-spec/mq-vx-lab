@@ -40,10 +40,20 @@ def truoc(props: dict) -> list:
 
     # 1. MỌI NHỊP PHẢI CÓ NỀN. Nhịp thiếu nền rơi về nền vector và đọc ra là một khung khác
     #    hẳn — người xem thấy tập "nhảy chất" giữa chừng (§7, bốn tầng).
+    # ── NHỊP CÓ LỚP VẼ CODE CŨNG LÀ NHỊP CÓ HÌNH  (8/9/2026) ────────────────────────
+    # Anh chốt: nền chỉ được là ảnh tư liệu thật, còn lại vẽ bằng code hoặc để trống — vì ảnh
+    # CF không biết thời đại của câu chuyện (chuyện 1866 ra văn phòng kính hiện đại). Cổng này
+    # viết từ thời MỌI nhịp đều có ảnh, nên nó đọc một khung cố ý trống thành lỗi.
+    #
+    # Nhưng không nới thành "bỏ qua": trống nhiều quá thì tập vẫn nghèo. Nay đếm nhịp KHÔNG
+    # CÓ GÌ (không ảnh, không lớp vẽ) và chỉ báo khi quá NỬA tập — đó mới là ngưỡng mà người
+    # xem đọc ra là "video rỗng".
     an = props.get("anhNens") or []
-    thieu = sum(1 for i in range(len(nh)) if i >= len(an) or not an[i])
-    if thieu:
-        loi.append(f"{thieu}/{len(nh)} nhịp KHÔNG có nền")
+    ve = props.get("nenVe") or []
+    trong = [i for i in range(len(nh))
+             if (i >= len(an) or not an[i]) and (i >= len(ve) or not ve[i])]
+    if len(trong) > len(nh) * 0.5:
+        loi.append(f"{len(trong)}/{len(nh)} nhịp KHÔNG có gì (quá nửa tập)")
 
     # 2. NỀN KHÔNG ĐƯỢC LẶP LIỀN KỀ. Hai nhịp liền nhau cùng một tấm thì màn hình đứng yên
     #    suốt hai nhịp — đúng chỗ người xem lướt đi (§15.6).

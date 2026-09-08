@@ -967,9 +967,18 @@ def _nen_theo_loi(cau_short: list) -> list:
             d = len(a & b) / len(a | b)
             if d > diem and (j not in da or d > 0.75):
                 tot, diem = j, d
-        if tot >= 0 and diem >= 0.34:
+        # HAI NHỊP LIỀN NHAU KHÔNG ĐƯỢC CÙNG MỘT NỀN. Short 1640 có hai câu đầu đều mở bằng
+        # «You own it, sort of…» nên cả hai khớp cùng một nhịp bản dài và nhận cùng một tấm —
+        # màn hình đứng yên suốt hai nhịp, đúng chỗ người xem lướt đi (§15.6).
+        _chon = NEN_SAN[tot % len(NEN_SAN)] if tot >= 0 and diem >= 0.34 else None
+        if _chon is not None and ra and _chon == ra[-1]:
+            _khac = [j for j in range(len(_dai)) if j != tot and j not in da]
+            if _khac:
+                tot = max(_khac, key=lambda j: len(a & _dai[j]) / max(1, len(a | _dai[j])))
+                _chon = NEN_SAN[tot % len(NEN_SAN)]
+        if _chon is not None:
             da.add(tot)
-            ra.append(NEN_SAN[tot % len(NEN_SAN)])
+            ra.append(_chon)
         else:
             ra.append(NEN_SAN[i % len(NEN_SAN)])
     return ra
