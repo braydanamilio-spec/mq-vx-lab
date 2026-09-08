@@ -1224,6 +1224,46 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
 
 
 
+# ── HỎI ẢNH BẰNG TÊN THỰC THỂ, KHÔNG BẰNG TÊN SỰ KIỆN  (anh, 8/9/2026) ─────────────────
+# Anh: *"phải ép được ảnh vẽ vào cái gì người nhìn nhận ra được ngay — nói về facebook phải
+# có logo facebook hay trụ sở, không vẽ chung chung"*.
+#
+# Ràng buộc đã đo và KHÔNG vượt được bằng prompt: FLUX không vẽ nổi logo. §12.7 đo trên 8
+# mẫu — chuỗi ≤4 ký tự đúng 5/6, chuỗi dài **0/2**; §13.20 ghi chữ trong khung là chỗ mô hình
+# hỏng nặng nhất. Bảo nó "vẽ logo Facebook" là đặt hàng một mớ ký tự loằng ngoằng, đúng thứ
+# lưới bộ 131 đã hiện (`John Paul / Pauift / Ridle`).
+#
+# Nên thứ NHẬN RA ĐƯỢC phải là ẢNH THẬT. Đường ấy đã có từ §19.12 và đang cho 0–2 ảnh mỗi
+# tập. Đo thẳng thì ra lý do, và nó không nằm ở bộ tìm ảnh:
+#     «Facebook»            -> 8 ảnh
+#     «2021 Facebook leak»  -> 0 ảnh   <- chuỗi mà dây chuyền THẬT SỰ hỏi
+#     «Eastman Kodak»       -> 7 · «Concorde» -> 8
+# Hồ đề tài cấp TÊN SỰ KIỆN, còn Wikimedia xếp ảnh theo TÊN THỰC THỂ. Không hạng mục nào tên
+# "2021 Facebook leak", nên tập về Facebook không lấy nổi một tấm Facebook.
+#
+# Rút thực thể bằng QUY LUẬT, không bằng danh sách (§13.9): bỏ năm ở đầu, bỏ ngoặc ở đuôi, bỏ
+# các danh từ SỰ KIỆN. Phần còn lại viết hoa chính là thực thể đáng hỏi.
+_DANH_TU_SU_KIEN = (
+    "leak", "leaks", "scandal", "scandals", "recall", "recalls", "outbreak", "crisis",
+    "disaster", "controversy", "affair", "case", "cases", "collapse", "bankruptcy",
+    "lawsuit", "investigation", "inquiry", "incident", "shortage", "shutdown", "strike",
+)
+
+
+def thuc_the(chu_the: str) -> str:
+    """«2021 Facebook leak» -> «Facebook». Rỗng nếu không còn tên riêng nào."""
+    t = re.sub(r"\s*\([^)]*\)\s*$", " ", str(chu_the or ""))     # bỏ «(1931)» ở đuôi
+    t = re.sub(r"\b(1[6-9]\d{2}|20[0-4]\d)(\s*[–-]\s*(1[6-9]\d{2}|20[0-4]\d))?\b", " ", t)
+    tu = [w for w in t.split() if w.strip()]
+    giu = [w for w in tu if w.lower().strip(".,") not in _DANH_TU_SU_KIEN]
+    # Tên riêng = từ CÓ chữ hoa, không phải từ BẮT ĐẦU bằng chữ hoa: «1MDB» mở đầu bằng chữ
+    # số nên phép cũ vứt mất nó, mà đó chính là thực thể (§13.9 — nhận ra quy luật, đừng
+    # liệt kê ngoại lệ; ở đây quy luật là "có chữ hoa giữa từ" chứ không phải "chữ đầu hoa").
+    hoa = [w for w in giu if any(c.isupper() for c in w)]
+    ra = " ".join(hoa).strip(" -–,.")
+    return ra if len(ra) >= 3 and ra.lower() != str(chu_the or "").lower() else ""
+
+
 def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
     """Tải ảnh PD/CC0 của chủ thể rồi COPY vào `engine-remotion/public/anh_pd`.
 
@@ -1280,6 +1320,22 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
             TEN_ANH["anh_pd/" + ten] = a.get("ten", "")
             if len(ra) >= toi_da:
                 break
+    # ── HỎI LẠI BẰNG TÊN THỰC THỂ KHI TÊN SỰ KIỆN KHÔNG RA GÌ ────────────────────────
+    # Đo: «2021 Facebook leak» -> 0 ảnh, «Facebook» -> 8. Wikimedia xếp ảnh theo THỰC THỂ,
+    # hồ đề tài cấp tên SỰ KIỆN. Hỏi lần hai bằng thực thể là cách duy nhất lấy được thứ
+    # người xem NHẬN RA NGAY (logo, trụ sở) mà không bắt FLUX vẽ chữ (§12.7 · §13.20).
+    if len(ra) < 3:
+        _tt = thuc_the(chu_the)
+        if _tt:
+            try:
+                _them = nap_anh_that(_tt, toi_da=toi_da)
+            except Exception:
+                _them = []
+            for _x in (_them or []):
+                if _x not in ra:
+                    ra.append(_x)
+            if _them:
+                print(f"   🔁 hỏi lại bằng thực thể «{_tt}»: +{len(_them)} ảnh thật")
     return ra
 
 # ── LỆNH DẶN RIÊNG CHO MỘT GIỌNG  (anh đề xuất, 7/9/2026) ─────────────────────────────────

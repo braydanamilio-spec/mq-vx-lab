@@ -273,6 +273,34 @@ def t_b2_failover():
         os.environ.clear(); os.environ.update(saved)
 
 
+def t_hoi_anh_bang_thuc_the():
+    """Ảnh thật phải hỏi bằng TÊN THỰC THỂ, không bằng tên SỰ KIỆN.
+
+    Anh: *"phải ép được ảnh vẽ vào cái gì người nhìn nhận ra ngay — nói về facebook phải có
+    logo facebook hay trụ sở, không vẽ chung chung"*. FLUX không vẽ nổi logo (§12.7: chuỗi dài
+    đúng 0/2; §13.20: chữ trong khung là chỗ mô hình hỏng nặng nhất), nên thứ nhận ra được
+    phải là ẢNH THẬT.
+
+    Đường ấy có sẵn mà chỉ cho 0–2 ảnh mỗi tập, và đo ra lý do không nằm ở bộ tìm ảnh:
+        «Facebook» -> 8 ảnh · «2021 Facebook leak» -> 0 ảnh
+    Wikimedia xếp ảnh theo THỰC THỂ, hồ đề tài cấp tên SỰ KIỆN.
+
+    Chốt này chỉ thử hàm THUẦN (không gọi mạng) + xác nhận nhánh hỏi lại có mặt."""
+    import inspect, pilot_hai as P
+    assert P.thuc_the("2021 Facebook leak") == "Facebook"
+    assert P.thuc_the("2009-2011 Toyota vehicle recalls") == "Toyota"
+    assert P.thuc_the("Boston-Maine Airways (1931)") == "Boston-Maine Airways"
+    # «1MDB» mở đầu bằng chữ SỐ — quy luật phải là "có chữ hoa", không phải "chữ đầu hoa"
+    assert P.thuc_the("1MDB scandal") == "1MDB"
+    # tiêu đề vốn ĐÃ là thực thể thì không cần hỏi lại -> trả rỗng, tránh gọi mạng thừa
+    for t in ("Air Berlin", "Eastman Kodak", "Alaska International Air"):
+        assert P.thuc_the(t) == "", f"«{t}» lẽ ra không cần hỏi lại, nhận «{P.thuc_the(t)}»"
+    # không còn tên riêng nào thì cũng trả rỗng
+    assert P.thuc_the("2003 mutual fund scandal") == ""
+    src = inspect.getsource(P.nap_anh_that)
+    assert "thuc_the(chu_the)" in src, "nap_anh_that chưa nối nhánh hỏi lại bằng thực thể"
+
+
 def t_chieu_nen_theo_khung():
     """Nền dùng chung của một BỘ phải là chiều mà CẢ HAI khung chịu được.
 
@@ -3108,6 +3136,7 @@ def main():
     check("ảnh bìa lấy mốc nhịp đỉnh, không lấy khung cuối", t_bia_lay_nhip_dinh)
     check("mỗi kênh một BỘ GU bố cục riêng, không kênh nào trùng hoàn toàn", t_gu_bo_cuc_rieng)
     check("thang chấm kịch bản có chạy và ĐƯỢC GỌI trong workflow", t_cham_kich_ban)
+    check("hỏi ảnh thật bằng tên thực thể", t_hoi_anh_bang_thuc_the)
     check("chiều nền hợp cả hai khung của một bộ", t_chieu_nen_theo_khung)
     check("hai luồng dựng có ghi sổ job", t_hai_luong_ghi_so_job)
     check("đủ lượt nói với người xem", t_du_luot_noi_voi_nguoi_xem)
