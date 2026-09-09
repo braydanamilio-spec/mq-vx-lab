@@ -574,7 +574,13 @@ def sang_don_vi_my(van: str) -> str:
             except ValueError:
                 dv = nhieu
             return f"{ra} {dv}"
-        t = re.sub(r"([\d,]+(?:\.\d+)?)\s*(?:" + rx + r")", _nhan, t, flags=re.I)
+        # `[\s\-…]*` chứ không chỉ `\s*`: dạng tính từ ghép bằng gạch nối —
+        # "45-hectare lake" · "12-mile road" · "500-page report" — nối SỐ với ĐƠN VỊ
+        # bằng gạch chứ không phải dấu cách. Bộ 40 chủ thể lộ «Kyshtym disaster» còn
+        # "45-hectare"; phép đổi cũ đòi dấu cách nên bỏ sót, để chữ "hectare" lọt.
+        # Nhận cả ba dạng gạch nối Unicode (§18.11).
+        t = re.sub(r"([\d,]+(?:\.\d+)?)[\s\-\u2010\u2011\u2013]*(?:" + rx + r")",
+                   _nhan, t, flags=re.I)
     return t
 
 

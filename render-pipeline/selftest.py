@@ -4094,6 +4094,23 @@ def t_gan_gi_engine_phai_ve_duoc():
 
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
+    # ── CƯỠNG CHẾ "0 MẠNG"  (9/9/2026) ────────────────────────────────────────────────
+    # Tiêu đề hứa "0 mạng" nhưng ba cổng gọi `_chen_anh_that`, hàm này gọi `logo_wd.ten_khac`
+    # -> `_goi` -> Wikipedia. Suốt phiên nó chạy nhanh vì mạng tốt; hôm nay Wikipedia trả 429
+    # và bản vá `thuc_the_qid` (hỏi Wikipedia trước) thêm một lượt gọi + backoff, làm CẢ
+    # selftest treo 10 phút rồi bị timeout giết. Trên runner, selftest treo là CHẶN cả 18
+    # render — đúng thứ nó sinh ra để tránh, nay tự nó thành thủ phạm.
+    # Bịt ở GỐC: mọi lời gọi mạng của `logo_wd` ném ngay, và các đường đều có nhánh offline
+    # (`ten_khac` trả `[ten]`, `thuc_the_qid` trả None). Một lời hứa "0 mạng" phải được CƯỠNG
+    # CHẾ, không chỉ viết ra (§15.20: cổng kiểm hằng bằng chính hằng ấy thì luôn xanh — ở đây
+    # ngược lại, một bất biến chỉ khai bằng lời thì sớm muộn bị vi phạm mà không ai thấy).
+    try:
+        import logo_wd as _LWX
+        def _cam_mang(*a, **k):
+            raise RuntimeError("selftest 0 mạng: chặn lời gọi Wikipedia/Wikidata")
+        _LWX._goi = _cam_mang
+    except Exception:
+        pass
     check("shim Groq/CF: system_instruction + UA + JSON + vision", t_shim_signatures)
     check("groq WAF 1010 -> lỗi tạm per-minute", t_groq_waf_1010)
     check("key cạn quota -> đổi key, không giết luồng", t_het_key_thi_doi_key)
@@ -10812,6 +10829,11 @@ def t_don_vi_met_doi_sang_my_o_NGUON():
     ra2 = C.sang_don_vi_my("The site covers 3,900 hectares near the 25 km road.")
     assert "9,600 acres" in ra2 and "16 mile" in ra2, ra2
     assert "hectare" not in ra2 and " km" not in ra2, ra2
+
+    # dạng TÍNH TỪ ghép gạch nối: "45-hectare lake" — số nối đơn vị bằng gạch, không dấu
+    # cách. Bộ 40 chủ thể lộ «Kyshtym disaster» còn "45-hectare" vì phép đổi cũ đòi dấu cách.
+    r3 = C.sang_don_vi_my("a shallow 45-hectare lake and a 500-metre fence")
+    assert "hectare" not in r3 and "metre" not in r3 and "meter" not in r3, r3
 
     # nhiệt độ là phép AFFINE, không dùng chung khuôn nhân
     assert "2,200°F" in C.sang_don_vi_my("It reached 1,200 °C inside."), \
