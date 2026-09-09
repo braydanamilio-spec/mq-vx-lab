@@ -1152,8 +1152,22 @@ def t_anh_that_hien_tron_va_khong_lap_ca_bo():
     nc = (pathlib.Path(PH.__file__).resolve().parent.parent
           / "engine-remotion" / "src" / "comic" / "NenComic.tsx").read_text(encoding="utf-8")
     assert "_anhThat" in nc, "engine chưa phân biệt ảnh THẬT với nền vẽ"
-    assert 'objectFit: (_tron ? "contain" : "cover")' in nc, \
-        "ảnh thật bị cắt quá nhiều vẫn không được hiện trọn"
+    # 9/9 — LUẬT NÀY ĐÃ ĐỔI, VÀ CỔNG PHẢI ĐỔI THEO. Bản cũ ghim NGUYÊN VĂN
+    # `objectFit: (_tron ? "contain" : "cover")`, tức nó canh luật *"ảnh thật thì luôn hiện
+    # trọn"* — đúng cái luật anh bác chiều nay: hiện trọn ảnh 16:9 trong khung 9:16 cho dải
+    # ảnh chỉ cao 32% panel (*"phần ảnh thu càng ngày càng nhỏ lại thế"*).
+    # Ý ĐỊNH của cổng vẫn đúng và giữ nguyên: một ảnh thật không được cắt tới mức chỉ còn
+    # một cánh cửa. Cái đổi là CÁCH thoả nó — khung dọc nay dùng một DẢI cao `_DAI_ANH`
+    # thay vì `contain` cả panel, và `t_dai_anh_that_o_khung_doc_khong_bi_bop` canh dải ấy
+    # ở cả hai đầu. Ở đây chỉ còn canh phần không đổi: khung NGANG vẫn hiện trọn khi bị cắt
+    # quá nhiều.
+    # Ghi ra thay vì lặng lẽ sửa: một cổng ghim nguyên văn biểu thức sẽ đỏ ở MỌI lần đổi
+    # hợp lệ, và người đọc dòng đỏ ấy không có cách nào biết là luật đổi hay mã hỏng.
+    import re as _re2
+    assert _re2.search(r'objectFit:\s*\(?_tron\s*&&\s*!_doc\s*\?\s*[\'"]contain', nc), \
+        "ảnh thật bị cắt quá nhiều vẫn không được hiện trọn (khung ngang)"
+    assert "_DAI_ANH" in nc, \
+        "khung dọc không còn dải ảnh riêng — sẽ quay lại `contain` cả panel, dải 32%"
     # ── QUYẾT BẰNG CỜ ĐÃ ĐO, KHÔNG ĐOÁN THEO HƯỚNG KHUNG ────────────────────────────
     # Bản đầu quyết bằng `ảnh thật && khung dọc`. Đo lại thì chiều ngược lại hỏng y hệt: 4/13
     # ảnh thật trong bản DÀI mất quá 45% một chiều — một tấm dọc còn 31% chiều cao, một tấm
