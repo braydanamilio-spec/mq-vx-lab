@@ -4148,6 +4148,7 @@ def main():
     check("hồ Groq rỗng KHÔNG được làm chết đường dựng thoại", t_thoai_co_tang_du_phong)
     check("thẻ NĂM hiện ngay, không đếm lên số không có thật", t_nam_khong_dem_len)
     check("LOGO không được dùng làm ảnh nền", t_logo_khong_lam_nen)
+    check("ảnh nền phải MANG TÊN chủ thể (mọi tầng nguồn)", t_nen_phai_mang_ten_chu_the)
     check("mọi nguồn ảnh phải TRẢ 0 cho truy vấn vô nghĩa", t_nguon_anh_phai_tra_zero)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
@@ -10386,6 +10387,51 @@ def t_nguon_anh_phai_tra_zero():
     assert "_DU_LON" in src, "thiếu sàn kích thước"
     assert OV.anh_cua("", toi_da=5) == [], "chuỗi rỗng phải trả 0, không đi hỏi mạng"
     assert OV.anh_cua("ab", toi_da=5) == [], "tên quá ngắn phải trả 0"
+
+
+def t_nen_phai_mang_ten_chu_the():
+    """Ảnh nền phải mang TÊN CHỦ THỂ trong tiêu đề nguồn — áp cho MỌI tầng, khớp CỤM LIỀN.
+
+    ── VÌ SAO  (anh soi bộ 193, 9/9/2026) ────────────────────────────────────────────────
+    Bộ «Meat Hope» (công ty thịt Nhật) lấy nền là ảnh lưu trữ ALASKA:
+        "Preparing whale meat for the Point Hope Whaling Festival"
+        "Boiling whale meat during annual Whaling Festival"
+    NARA khớp "**Meat**" và "**Hope**" như hai TỪ RỜI — whale *meat* + Point *Hope*. Trên
+    khung đọc được cả dòng "CREDIT: NATIONAL PARK SERVICE". Đúng *"râu ông nọ cắm cằm bà kia"*.
+
+    §19.13 đã dạy luật khớp-cụm và nó CHỈ được áp cho tầng Commons; tầng bài-Wikipedia và
+    tầng NARA đi thẳng — vá một nhánh, để nguyên nhánh song song (§6). Nay chặn ở
+    `_chen_anh_that`, chỗ duy nhất mọi tầng đều đi qua trước khi thành nền.
+
+    ── VÀ ĐÂY LÀ LẦN THỨ HAI EM THỬ SHIP LUẬT NÀY ──────────────────────────────────────
+    Hôm qua em đã dựng nó rồi KHÔNG ship, vì phép đo của em loại nhầm tấm hiện trường ĐÚNG
+    chủ thể («View of Fine Air Flight 101 crash debris line»). Truy lại thì phép đo hỏng chứ
+    luật không hỏng: em lấy tên chủ thể từ `props["chuThe"]` — một khoá KHÔNG tồn tại.
+    Nên cổng này CHẠY hàm thật thay vì quét props, và giữ luôn ca Fine Air làm mốc chống
+    tái phạm (§13.10 · §13.15).
+    """
+    import pilot_hai as PH
+    PH.TEN_ANH.update({
+        "_t_w1.jpg": "Preparing whale meat for the Point Hope Whaling Festival",
+        "_t_w2.jpg": "Boiling whale meat during annual Whaling Festival",
+        "_t_ok.jpg": "Photograph of Meat Hope frozen meat packaging room",
+        "_t_fa.jpg": "View of Fine Air Flight 101 crash debris line",
+    })
+    PH.__dict__["CHU_THE_TAP"] = "Meat Hope"
+    ra = PH._chen_anh_that([None, None, None], ["_t_w1.jpg", "_t_w2.jpg", "_t_ok.jpg"])
+    assert "_t_w1.jpg" not in ra and "_t_w2.jpg" not in ra, \
+        "ảnh khớp TỪ RỜI (whale meat + Point Hope) vẫn được dùng làm nền"
+    assert "_t_ok.jpg" in ra, "ảnh mang đúng tên chủ thể bị loại oan"
+
+    # ca đã làm em BỎ SHIP luật này một lần — giữ làm mốc
+    PH.__dict__["CHU_THE_TAP"] = "Fine Air"
+    assert "_t_fa.jpg" in PH._chen_anh_that([None], ["_t_fa.jpg"]), \
+        "ảnh hiện trường ĐÚNG chủ thể bị loại — đây là ca phép đo cũ đã làm sai"
+
+    # lọc sạch trơn thì GIỮ nền đang có, không trả rỗng
+    PH.__dict__["CHU_THE_TAP"] = "Meat Hope"
+    assert PH._chen_anh_that(["cu.jpg"], ["_t_w1.jpg"]) == ["cu.jpg"], \
+        "lọc hết rồi trả rỗng — mất cả nền đang có"
 
 
 if __name__ == "__main__":

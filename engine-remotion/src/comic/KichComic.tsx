@@ -72,7 +72,7 @@ const NUA_RONG = 100;         // nửa bề ngang khi tay ghim ngực
    khuất hình ảnh số liệu, nền"*. Hạ 0,44 -> 0,36 ở khung DỌC. Phần nhìn thấy (đỉnh đầu ->
    mép cắt ngang hông) nay chiếm 36% chiều cao panel thay vì 44% — nhường 8 điểm phần trăm
    cho ảnh nền và khối số liệu, đúng thứ tập này đi bán. */
-const TI_LE_NGUOI = 0.36;
+const TI_LE_NGUOI = 0.31;   // 9/9 lần hai: 0,36 -> 0,31 theo yêu cầu «thấp nhỏ xuống chút nữa»
 
 const LE = 44;                // lề mực quanh khung
 const NET = 7;                // độ dày viền mực MẶC ĐỊNH (mỗi kênh ghi đè, xem `netMuc`)
@@ -361,7 +361,10 @@ const Panel: React.FC<{
        ở khung ngang chính trần NGANG quyết định cỡ). Anh soi khung bộ 171/183 và chỉ đúng
        chỗ này: 0,46 bề ngang cho một người dẫn là quá nhiều, nó đè lên cả ảnh nền lẫn khối
        số. Hạ về 0,34 — người dẫn lùi về vai NGƯỜI DẪN, không còn là chủ thể của khung. */
-    : Math.min((w * 0.34) / (NUA_RONG * 2.1),
+    /* 9/9 lần hai — anh: *"cho nhân vật thấp nhỏ xuống chút nữa tránh che khuất"*.
+       0,34 -> 0,28 bề ngang. Cùng lượt với việc đẩy người dẫn về góc trái (`guViTri`), nên
+       phần khung dành cho ảnh nền và khối số rộng thêm hẳn một phần tư. */
+    : Math.min((w * 0.28) / (NUA_RONG * 2.1),
                (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
   const k = doiNguoi ? kRong : kCan;
   // ĐỈNH ĐẦU NEO ĐÚNG MÉP CHỪA, không neo vào một phân số thứ hai. Bản cũ tính trần bằng

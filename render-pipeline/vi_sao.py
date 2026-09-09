@@ -46,8 +46,23 @@ KENH_HUA = {
     # Gốc chọn theo NGHỀ của chuyên gia cố định từng kênh, để chủ thể và người dẫn cùng một
     # thế giới: Attorney Brooks nói về hãng bay sập và luật liên bang, Dr Imani nói về nhà
     # máy điện và hoả hoạn. Người dẫn đúng nghề là nửa của việc "nhìn ra một người".
-    "therules":   ("vanished", ["Defunct airlines of the United States",
-                                "United States federal legislation", "Corporate scandals"]),
+    # ── 9/9: ĐỔI GỐC THEO ĐỘ PHỦ ẢNH, ĐO CHỨ KHÔNG ĐOÁN ────────────────────────────────
+    # Anh chốt phương án A (chỉ kể chủ thể có tư liệu) và muốn đề tài viral Mỹ. Đo sổ ảnh
+    # 1.010 chủ thể rồi đếm chủ thể giàu ảnh theo từng gốc:
+    #     Superfund sites                    26 giàu ảnh /   439   ← tốt nhất, 6%
+    #     Nuclear accidents and incidents     5 /   287
+    #     Fires in the United States          5 /   748
+    #     Defunct companies of the US         1 / 3.757          ← gốc cũ, gần như trắng
+    #     Defunct airlines of the US          0 /   757          ← gốc cũ của therules
+    # Lý do Superfund giàu ảnh không phải nó nổi tiếng mà là **EPA chụp và công bố**: tác
+    # phẩm của cơ quan liên bang Mỹ mặc nhiên thuộc phạm vi công cộng. Cùng lý do với Edwards
+    # AFB (20 ảnh), Hanford Site (16), Fernald (18) trong top sổ ảnh.
+    # Và nó đúng là đề tài viral ở Mỹ: ô nhiễm độc hại, doanh nghiệp gây hại, kiện tụng —
+    # khớp lời hứa `vanished` mà không cần đổi giọng kênh.
+    # Giữ `Corporate scandals` làm gốc thứ hai (cùng thế giới của Attorney Brooks), bỏ
+    # `Defunct airlines` vì đo được 0/757 chủ thể giàu ảnh.
+    "therules":   ("vanished", ["Superfund sites", "Corporate scandals",
+                                "Defunct companies of the United States"]),
     "realcost":   ("vanished", ["Defunct banks of the United States",
                                 "Corporate scandals", "Defunct companies of the United States"]),
     "whatif":     ("unsolved", ["Cancelled spacecraft", "Abandoned projects",
@@ -127,7 +142,9 @@ DA_CHON: dict = {}
 # CỐ Ý nghiêng về phía chặn, và đó là một quyết định, không phải một sự cẩu thả.
 _KHONG_HOP = re.compile(
     # gốc dài, chỉ dùng cho bạo lực -> mở hậu tố
-    r"\b(?:massacre\w*|genocid\w*|atrocit\w*|holocaust\w*|lynch\w*|"
+    # `lynch\w*` -> dạng THẬT: nó từng bắt «Merrill **Lynch**» trong bài Lehman Brothers, tức
+    # một HỌ NGƯỜI. §15.3 nguyên văn: gốc từ ngắn cộng `\w*` là cái bẫy, phải liệt kê dạng thật.
+    r"\b(?:massacre\w*|genocid\w*|atrocit\w*|holocaust\w*|lynching\w*|lynched|lynch\s+mob\w*|"
     r"murder\w*|homicid\w*|manslaughter|assassinat\w*|"
     r"terror\w*|hijack\w*|hostage\w*|kidnap\w*|"
     r"casualt\w*|fatalit\w*|massacr\w*|"
@@ -138,6 +155,12 @@ _KHONG_HOP = re.compile(
     # được ngôn ngữ).
     r"famine\w*|epidemic\w*|pandemic\w*|plague\w*|outbreak\w*|"
     r"illness\w*|disease\w*|infection\w*|hospitali[sz]\w*|"
+    # `contaminat*` · `toxic*` · `exposure to` ĐÃ BỎ (9/9/2026): ba chữ này có trong MỌI bài
+    # Superfund — vì Superfund LÀ chương trình dọn ô nhiễm — nên cổng chặn trọn một họ đề tài,
+    # đúng cái họ vừa được chọn vì giàu ảnh nhất (26 chủ thể ≥8 ảnh / 439).
+    # Ô nhiễm là chuyện doanh nghiệp và pháp lý, KỂ ĐƯỢC. Thứ không kể được là THƯƠNG VONG, và
+    # hai luật SỐ ở `hop_dinh_dang` canh đúng nó: bỏ ba chữ này ra, «Firestone and Ford» vẫn bị
+    # chặn vì *"killed 238 people"*. §13.8 — cổng bắt oan tệ hơn cổng không bắt.
     r"overdose\w*|contaminat\w*|toxic\w*|exposure\s+to\w*|"
     r"traffick\w*|slaver\w*|torture\w*|execution\w*|"
     # gốc MƠ HỒ -> liệt kê đúng dạng ("shoot" còn nghĩa quay phim, "bomb" còn nghĩa thất bại,
@@ -156,6 +179,11 @@ _TEN_CAM = re.compile(r"\b(?:attack\w*|disaster\w*|crash\w*|derailment\w*|"
                       r"sinking|shipwreck\w*|explosion\w*|fire\s+of\s+\d{4})\b", re.I)
 
 
+_KHONG_HOP_VAN = re.compile(
+    _KHONG_HOP.pattern.replace("contaminat\\w*|", "").replace("toxic\\w*|", "")
+                      .replace("exposure\\s+to\\w*|", ""), re.I)
+
+
 def hop_dinh_dang(chu_the: str, van: str = "") -> bool:
     """Chuyện này kể được bằng giọng một nhân vật hoạt hình vui vẻ không?
 
@@ -164,7 +192,15 @@ def hop_dinh_dang(chu_the: str, van: str = "") -> bool:
     """
     if _KHONG_HOP.search(chu_the or "") or _TEN_CAM.search(chu_the or ""):
         return False
-    if van and _KHONG_HOP.search(van[:1200]):
+    # ── TÊN XÉT CHẶT, THÂN BÀI XÉT NHẸ HƠN  (9/9/2026) ─────────────────────────────────
+    # Bỏ `contaminat*` khỏi cả hai chỗ thì «Contaminated blood scandal» lọt — vụ máu nhiễm
+    # bệnh, hàng nghìn người chết. Cổng selftest bắt đúng, và nó đúng.
+    # Nhưng giữ ở cả hai chỗ thì mọi bài Superfund bị chặn, vì thân bài nào cũng có chữ ấy.
+    # Phân biệt nằm ở CHỖ chữ xuất hiện: tên bài gọi thẳng "Contaminated blood" nghĩa là câu
+    # chuyện LÀ về nhiễm độc người; thân bài nhắc "contamination" chỉ là bối cảnh của một bãi
+    # thải. Nên TÊN xét bằng danh sách đầy đủ, THÂN BÀI xét bằng danh sách đã bỏ ba chữ môi
+    # trường — và hai luật SỐ phía dưới vẫn canh thương vong thật ở thân bài.
+    if van and _KHONG_HOP_VAN.search(van[:1200]):
         return False
     # Con số thương vong ở phần mở đầu: "killed 47", "459 died", "death toll of 6,000".
     if van and re.search(r"\b(kill(?:ed|ing)|died|dead|perished)\b[^.]{0,40}\d",
@@ -339,6 +375,27 @@ def sinh(ma: str, i: int):
     # 8 chứ không phải 10: một tập dài 12 nhịp, 8 ảnh phủ 2/3 số nhịp, phần còn lại để nền
     # TRỐNG — anh đã chốt *"nền 100% ảnh thật liên quan… hay nền trống"* và *"ko ưu tiên dựng
     # ảnh cf mới"*, nên chỗ thiếu là chỗ trống, không phải chỗ để AI vẽ bù.
+    # ── XẾP TRƯỚC BẰNG SỔ ẢNH ĐÃ ĐO  (anh chốt phương án A, 9/9/2026) ────────────────
+    # `ho_chu_de.sang_anh()` đo sẵn số ảnh của từng chủ thể và đệm ra đĩa, nên phép xếp này
+    # KHÔNG tốn một lượt mạng nào. Đo 1.010 chủ thể: 46 có ≥8 ảnh, và top danh sách nói rõ
+    # loại nào giàu ảnh — cơ sở chính phủ Mỹ và thảm hoạ lịch sử Mỹ:
+    #   Edwards AFB 20 · Savannah River Plant 20 · Orion 20 · động đất SF 1906 20 ·
+    #   Hanford Site 16 · cháy Boston 1872 17 · cháy USS Forrestal 1967 14
+    # Lý do không phải nổi tiếng mà là AI CHỤP: tác phẩm của cơ quan liên bang Mỹ mặc nhiên
+    # thuộc phạm vi công cộng. Đo được A-ha 114.892 lượt xem mà chỉ 1 ảnh, còn Langley
+    # Research Center 8.832 lượt thì 12 ảnh — nên lượt xem KHÔNG dùng làm thước (đã bác).
+    #
+    # Xếp trước bằng sổ, rồi vòng chọn vẫn đo lại bằng `nap_anh_that` trước khi dựng: sổ là
+    # CẬN TRÊN (chưa qua bộ lọc tải về), không phải con số cuối (§13.15).
+    try:
+        _sd = {x[0]: H.so_anh_da_do(x[0]) for x in _ung[:60]}
+        if any(v > 0 for v in _sd.values()):
+            _ung.sort(key=lambda x: -_sd.get(x[0], -1))
+            _giau = sum(1 for v in _sd.values() if v >= 8)
+            print(f"   📒 sổ ảnh: {_giau}/{len(_sd)} ứng viên đầu có ≥8 ảnh — xếp lên trước")
+    except Exception:
+        pass
+
     _SAN_ANH = 8
     _dau = _ung[:6]
     if len(_dau) > 1:

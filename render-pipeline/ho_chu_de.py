@@ -421,6 +421,91 @@ def tiep(kenh: str, gocs: list, khuons: list, so_luong: int = 1, sau: int = 2) -
     return ra
 
 
+SO_ANH = os.path.join(GOC, "so_anh_that.json")   # chủ thể -> số ảnh THẬT tải về được
+
+
+def sang_anh(tran: int = 400, san: int = 8) -> None:
+    """Đo SỐ ẢNH THẬT của từng chủ thể đã qua cổng chuyện, đệm ra đĩa.
+
+    ── VÌ SAO ĐO THẲNG, KHÔNG DÙNG THƯỚC THAY THẾ  (9/9/2026) ──────────────────────────
+    Anh chốt phương án A: kênh chỉ kể chủ thể CÓ TƯ LIỆU. Em định lọc bằng LƯỢT XEM cho rẻ —
+    bốn điểm dữ liệu đầu gợi ý mối liên hệ rất chặt (Kodak 87k lượt/12 ảnh · Charter One 53
+    lượt/1 ảnh). Đo 26 chủ thể ngẫu nhiên thì bác sạch:
+
+        203.525 lượt -> 3 ảnh      8.832 lượt (Langley Research Center) -> 12 ảnh
+        114.892 (A-ha) -> 1 ảnh   11.597 (Loring Air Force Base)        ->  7 ảnh
+
+    Ngưỡng nào cũng cho trung vị 1 ảnh, kể cả ≥50.000 lượt. Lượt xem KHÔNG dự đoán số ảnh;
+    bốn điểm kia chỉ là trùng hợp — đúng lỗi em đã mắc hai lần trong ngày (§12.3).
+
+    Tín hiệu thật lộ ra ở ba chủ thể giàu ảnh nhất: đều là CƠ SỞ CỦA CHÍNH PHỦ MỸ, nơi ảnh do
+    cơ quan liên bang chụp mặc nhiên thuộc phạm vi công cộng. Nhưng đó cũng chỉ là một tương
+    quan, và bài học của cả ngày là đừng đổi một thước thay thế lấy một thước thay thế khác.
+
+    Nên: ĐO THẲNG. Một lượt gọi cho mỗi chủ thể, đệm ra đĩa, dùng chung cho cả 18 kênh — cùng
+    kiểu với `sang_hang_loat` cho cổng chuyện. Rẻ một lần, đúng mãi mãi.
+
+    Dùng `anh_cua` chứ không `nap_anh_that`: ở đây cần XẾP HẠNG, và tải ảnh của 1.700 chủ thể
+    chỉ để xếp hạng là phí. Con số này CAO HƠN thực tế (chưa qua bộ lọc tải về), nên nó là
+    CẬN TRÊN — vòng chọn vẫn đo lại bằng `nap_anh_that` trước khi dựng (§13.15).
+    """
+    import re as _re
+    import anh_tu_do as _A
+    # ── ĐẾM NỀN DÙNG ĐƯỢC, KHÔNG ĐẾM ẢNH TRẢ VỀ  (đo bộ 191, 9/9/2026) ─────────────────
+    # Sổ bản đầu đếm mọi ảnh `anh_cua` trả về. Bộ 191 chọn «Bank One Corporation» vì sổ báo
+    # nó có ảnh — dựng ra thì **cả 12 nhịp trống**, vì đúng 2 ảnh ấy đều là LOGO
+    # (`File:Bank One logo.svg` · `File:J P Morgan Chase Logo 2008 1.svg`), và logo đã bị
+    # chặn khỏi vai làm nền từ sáng nay.
+    # Sổ vì thế đếm một thứ KHÁC thứ sản phẩm dùng được — đúng họ lỗi đã lặp cả ngày (§13.15).
+    # Cùng biểu thức chặn logo với `pilot_hai._chen_anh_that`, để hai nơi không lệch nhau.
+    _DAU_LOGO = _re.compile(r"\b(logo|icon|symbol|emblem|wordmark|coat of arms|seal|badge)\b",
+                            _re.I)
+    da = _doc_sang()
+    dat = [k for k, v in da.items() if isinstance(v, int) and v >= san]
+    try:
+        d = json.load(io.open(SO_ANH, encoding="utf-8")) if os.path.exists(SO_ANH) else {}
+    except Exception:
+        d = {}
+    chua = [k for k in dat if k not in d]
+    print(f"   🖼 {len(dat)} chủ thể qua cổng chuyện · đã đo ảnh {len(d)} · còn {len(chua)}")
+    xong = 0
+    for ct in chua[:tran]:
+        try:
+            _ds = _A.anh_cua(ct, toi_da=20) or []
+            n = sum(1 for x in _ds
+                    if not _DAU_LOGO.search(str(x.get("ten", "")).replace("File:", "")))
+        except Exception:
+            continue                       # đọc hụt: KHÔNG ghi, để lượt sau đo lại (§19.20)
+        d[ct] = n
+        xong += 1
+        if xong % 25 == 0:
+            try:
+                cu = json.load(io.open(SO_ANH, encoding="utf-8")) if os.path.exists(SO_ANH) else {}
+            except Exception:
+                cu = {}
+            cu.update(d); d = cu
+            io.open(SO_ANH, "w", encoding="utf-8").write(json.dumps(d, ensure_ascii=False))
+            giau = sum(1 for v in d.values() if v >= 8)
+            print(f"      … đo {xong}/{min(tran, len(chua))} · sổ {len(d)} · ≥8 ảnh: {giau}")
+    try:
+        cu = json.load(io.open(SO_ANH, encoding="utf-8")) if os.path.exists(SO_ANH) else {}
+    except Exception:
+        cu = {}
+    cu.update(d)
+    io.open(SO_ANH, "w", encoding="utf-8").write(json.dumps(cu, ensure_ascii=False))
+    giau = sum(1 for v in cu.values() if v >= 8)
+    print(f"   ✅ sổ ảnh: {len(cu)} chủ thể đã đo · **{giau}** có ≥8 ảnh")
+
+
+def so_anh_da_do(ten: str) -> int:
+    """Số ảnh đã đo của một chủ thể, -1 nếu chưa đo. KHÔNG gọi mạng."""
+    try:
+        d = json.load(io.open(SO_ANH, encoding="utf-8")) if os.path.exists(SO_ANH) else {}
+    except Exception:
+        return -1
+    return int(d.get(" ".join(str(ten or "").split()), -1))
+
+
 def sang_hang_loat(gocs: list, tran: int = 500, san: int = 8, moi_me: int = 40) -> None:
     """Sàng nhiều chủ thể một lượt, có ĐIỂM LƯU — dùng ngoài giờ dựng.
 
@@ -476,6 +561,11 @@ def sang_hang_loat(gocs: list, tran: int = 500, san: int = 8, moi_me: int = 40) 
 
 if __name__ == "__main__":
     import sys
+    if "--anh" in sys.argv:
+        i = sys.argv.index("--anh")
+        n = int(sys.argv[i + 1]) if len(sys.argv) > i + 1 else 400
+        sang_anh(tran=n)
+        raise SystemExit(0)
     if "--sang" in sys.argv:
         i = sys.argv.index("--sang")
         n = int(sys.argv[i + 1]) if len(sys.argv) > i + 1 else 500

@@ -1019,7 +1019,13 @@ GU_DUNG = {
     "realcost": ("giua", "vao", "moc"),    "howmuch": ("trai", "ngang", "lanh"),
     "whatif": ("phai", "vao", "lanh"),     "survive": ("giua", "ngang", "am"),
     "dayinlife": ("trai", "ra", "am"),     "wheregoes": ("phai", "ngang", "moc"),
-    "therules": ("giua", "ra", "moc"),     "speedof": ("trai", "vao", "moc"),
+    # ── NGƯỜI DẪN VỀ GÓC TRÁI  (anh, 9/9/2026) ────────────────────────────────────────────
+    # Anh: *"cho vào góc trái videos… a thấy góc đó ko có hình ảnh chart nhiều ko bị che khuất"*.
+    # Anh quan sát đúng: thẻ số và lớp vector đều neo về nửa PHẢI của khung (xem `lech` trong
+    # `SoPanel`), nên góc trái là chỗ trống thật.
+    # `guViTri = "trai"` đẩy người dẫn lệch −0,26 bề ngang, VÀ bong bóng tự đảo sang phải
+    # (`benVat` ở `KichComic` dòng 478) — hai thứ đi cùng nhau, không phải hai chỗ chỉnh tay.
+    "therules": ("trai", "ra", "moc"),     "speedof": ("trai", "vao", "moc"),
     "odds": ("phai", "ra", "lanh"),        "hiddenfee": ("giua", "vao", "lanh"),
     "yearsof": ("trai", "ngang", "am"),    "howloud": ("phai", "vao", "am"),
     "whatweighs": ("giua", "ngang", "moc"), "rightnow": ("trai", "ra", "moc"),
@@ -1533,6 +1539,107 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
     # Tiêu đề nguồn thì nói thẳng, không phải suy: `... logo.png` là logo.
     _DAU_LOGO = re.compile(r"\b(logo|icon|symbol|emblem|wordmark|coat of arms|seal|badge|"
                            r"template|stub)\b", re.I)
+    # ── ẢNH NỀN PHẢI MANG TÊN CHỦ THỂ, MỌI TẦNG  (anh soi bộ 193, 9/9/2026) ───────────
+    # Bộ «Meat Hope» (công ty thịt Nhật) lấy nền là ảnh lưu trữ ALASKA: *"Preparing whale
+    # meat for the Point Hope Whaling Festival"*. NARA khớp "**Meat**" và "**Hope**" như hai
+    # TỪ RỜI — whale *meat* + Point *Hope*. Đọc được ngay trên khung: "CREDIT: NATIONAL PARK
+    # SERVICE". Đúng thứ anh gọi *"râu ông nọ cắm cằm bà kia"*.
+    #
+    # §19.13 đã dạy luật này và nó CHỈ được áp cho tầng Commons; tầng bài-Wikipedia và tầng
+    # NARA đi thẳng. Vá một nhánh, để nguyên nhánh song song (§6) — lần thứ tư trong phiên.
+    # Nay chặn ở ĐÂY, chỗ duy nhất mọi tầng đều đi qua trước khi thành nền.
+    #
+    # Khớp CỤM LIỀN, không khớp từ rời: «Meat Hope» phải xuất hiện nguyên cụm. Và nhận cả TÊN
+    # GỌI KHÁC từ Wikidata, vì «MetLife Building» cần nhận được ảnh «Pan Am Building» — tên cũ
+    # của chính toà nhà ấy.
+    _cum = []
+    try:
+        import logo_wd as _LW3
+        _cum = [" ".join(str(t).lower().split())
+                for t in (_LW3.ten_khac(CHU_THE_TAP) or [CHU_THE_TAP]) if t]
+    except Exception:
+        _cum = [" ".join(str(CHU_THE_TAP or "").lower().split())]
+    # ── TÊN CHỦ THỂ HAY CÓ TIỀN TỐ MÔ TẢ  (đo bộ 196, 9/9/2026) ──────────────────────
+    # «Bankruptcy of FTX» ra 0/12 nhịp có ảnh: mọi ảnh mang tên «FTX …», mà cụm đầy đủ
+    # "bankruptcy of ftx" thì không tiêu đề nào chứa. Bộ lọc cụm của em bắt oan sạch.
+    # Tên bài Wikipedia rất hay có dạng «<chuyện> of <chủ thể>» — Bankruptcy of · Sinking of ·
+    # Collapse of · Trial of. Lõi tên nằm SAU giới từ, và đó mới là thứ ảnh mang.
+    # Nhận CẢ HAI: cụm đầy đủ và lõi tên. Không nới hơn thế — lõi phải còn ≥4 ký tự để
+    # «FTX» qua được mà «of» thì không.
+    _loi = []
+    for c in list(_cum):
+        for _tt in (" of ", " in ", " at "):
+            if _tt in c:
+                _loi.append(c.split(_tt, 1)[1].strip())
+                break
+    _cum = [c for c in _cum + _loi if len(c) >= 3]
+    if _cum:
+        # CHỈ loại khi BIẾT tiêu đề mà nó không khớp. Ảnh không có trong sổ xuất xứ (nền kho
+        # `comic_nen/`, ảnh cũ tải trước khi có sổ) thì "không biết" — và không biết KHÔNG
+        # phải bằng chứng sai chủ thể (§15.6). Cổng selftest bắt đúng ca này: bản đầu loại
+        # sạch 2/2 ảnh chỉ vì chúng chưa có trong sổ.
+        _lac = []
+        for d in duong:
+            _t = " ".join(str(TEN_ANH.get(d, "")).lower().replace("file:", "").split())
+            if _t and not any(c in _t for c in _cum):
+                _lac.append(d)
+        if _lac:
+            duong = [d for d in duong if d not in _lac]
+            print(f"   🚫 {len(_lac)} ảnh KHÔNG mang tên «{str(CHU_THE_TAP)[:26]}» — không làm nền")
+            if not duong:
+                return anh_nens
+
+    # ── ĐÚNG CHỦ THỂ CHƯA ĐỦ — ẢNH CÒN PHẢI NHÌN ĐƯỢC  (anh: *"quá xấu tối ko được"*) ──
+    # Bộ 195 «3dfx» đạt mọi số đo em đặt ra — 12/12 nhịp có ảnh, 1,65 giây/hình, ảnh ĐÚNG chủ
+    # thể — và anh nhìn một cái là chê. Soi lại thì đúng: nền toàn ảnh macro die chip, sáng ở
+    # giữa và đen kịt xung quanh; `objectFit: cover` cộng Ken Burns phóng vào đúng phần đen.
+    # Em thêm cổng ĐÚNG CHỦ THỂ mà quên cổng NHÌN ĐƯỢC — §16.1 nguyên văn: điểm cổng và "đẹp"
+    # là hai đại lượng khác nhau, và cổng chỉ biết thứ nó được dạy để đo.
+    #
+    # Đo tỉ lệ điểm tối (độ sáng < 60) trên ảnh gốc:
+    #     3dfx          17,9% · 28,9% · 63,7% · 77,9%
+    #     tư liệu tốt    2,1% – 14,0%   (Meat Hope, Fine Air, NARA)
+    # Hai đầu tách sạch, và ngưỡng 25% nằm giữa khoảng trống — không cắt vào nhóm nào.
+    # Đọc ảnh bằng PIL ở cỡ 200px: vài mili giây mỗi tấm, không đáng kể so với một lượt tải.
+    def _nhin_duoc(d: str) -> bool:
+        try:
+            from PIL import Image
+            # `PUB` là hằng của module (dòng 42). Bản đầu em dùng `pub` — một biến CỤC BỘ
+            # của `nap_anh_that`, không có ở đây — nên hàm ném `NameError`, rơi vào `except`
+            # và trả `True`: cổng chạy mà KHÔNG loại tấm nào, im lặng. Đúng dạng "hỏng mà báo
+            # xanh" (§12.8), và chỉ lộ ra vì em đo lại chính 7 tấm 3dfx sau khi thêm cổng.
+            # `os` chứ KHÔNG phải `_o`: `_o` là bí danh CỤC BỘ của `nap_anh_that`, và `pub`
+            # cũng vậy. Em dùng nhầm cả hai trong cùng một hàm này — mỗi lần `except` nuốt
+            # `NameError` rồi trả `True`, nên cổng chạy mà không loại tấm nào, KHÔNG một dòng
+            # báo. Chỉ lộ ra vì em đo lại chính 7 tấm 3dfx sau khi thêm cổng và thấy vẫn 7/7.
+            # §12.8: hỏng mà báo xanh — và ở đây `except` fail-open chính là thứ giấu nó.
+            p = d if os.path.isabs(d) and os.path.exists(d) else os.path.join(PUB, d)
+            if not os.path.exists(p):
+                return True                 # không đọc được thì KHÔNG kết luận (§15.6)
+            if os.path.getsize(p) < 2048:
+                return False               # tệp rỗng/cụt: Remotion cũng không đọc được
+            im = Image.open(p).convert("L")
+            im.thumbnail((200, 200))
+            px = list(im.getdata())
+            return (sum(1 for v in px if v < 60) / max(1, len(px))) <= 0.25
+        except Exception:
+            # ── HỎNG MỀM ĐÚNG CHIỀU  (đo bộ 198, 9/9/2026) ────────────────────────────
+            # Bản đầu trả `True` ở đây: "đọc không được thì cứ dùng". Với một tệp ẢNH thì
+            # đó là chiều SAI — `f57850843a0b135954bf.jpg` là tệp **0 byte**, cổng cho qua,
+            # và Remotion chết cả lượt dựng:
+            #     CancelledError  Error loading image with src: .../anh_pd/f578…jpg
+            #     ⚠ tập 198: bản dài hỏng — bỏ cả bộ
+            # Props đã rất tốt (29 ảnh thật · 13/13 nhịp · 2,04 giây/hình) và mất trắng vì
+            # MỘT tệp rỗng. PIL không mở được thì trình duyệt cũng không: loại.
+            # §15.6 vẫn đúng ("không biết ≠ sai") nhưng ở đây ta BIẾT — biết là không đọc được.
+            return False
+    _toi = [d for d in duong if not _nhin_duoc(d)]
+    if _toi:
+        duong = [d for d in duong if d not in _toi]
+        print(f"   🌑 {len(_toi)} ảnh QUÁ TỐI (>25% điểm tối) — không làm nền")
+        if not duong:
+            return anh_nens
+
     _bo_logo = [d for d in duong
                 if _DAU_LOGO.search(str(TEN_ANH.get(d, "")).replace("File:", ""))]
     if _bo_logo:
@@ -2398,6 +2505,10 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # ảnh thật bản dài đã đặt. Chạy lại lượt rải chỉ dán thêm đúng ba tấm ấy lần nữa —
         # tức nhân bản, không phải làm giàu. Bỏ lượt rải ở nhánh short là hết lặp mà không
         # mất tấm nào: cái gì bản dài đặt đúng chỗ thì short đã mang theo.
+        # 9/9 — em từng đổi điều kiện này thành `if not NEN_SAN or NEN_CHI_ANH_THAT` vì tưởng
+        # nó chặn lượt chèn ảnh thật. Chẩn đoán SAI: `NEN_SAN` vốn rỗng nên điều kiện cũ luôn
+        # đúng. Và cổng `ảnh thật hiện trọn · không lặp cả bộ` bắt ngay: đổi thế làm short rải
+        # LẠI ảnh thật, nên cùng ba tấm hiện ở cả bốn clip của một bộ. Giữ nguyên bản gốc.
         if not NEN_SAN:
             anh_nens = _chen_anh_that(anh_nens, ANH_THAT, cau)
         if not NEN_CHI_ANH_THAT:
@@ -2469,8 +2580,11 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     # không đọc ra một khung đứng hình.
     # Đây là ĐÁNH ĐỔI CÓ Ý THỨC, không phải giải pháp đẹp: lời giải thật vẫn là chọn chủ thể
     # giàu ảnh, và nó nằm ở khâu mở hồ chứ không ở đây.
-    _co = [x for x in (anh_nens or []) if x]
-    if _co:
+    # Dưới HAI ảnh khác nhau thì KHÔNG lấp: bộ 194 «Lehman Brothers» chỉ có một tấm, lấp đủ
+    # 12 nhịp ra **11 cặp liền nhau trùng** — cả tập là một bức ảnh đứng yên, tệ hơn nền trống
+    # mà anh muốn tránh. Lấp chỉ có nghĩa khi còn thứ để luân phiên.
+    _co = list(dict.fromkeys([x for x in (anh_nens or []) if x]))
+    if len(_co) >= 2:
         _j = 0
         for _i in range(len(anh_nens)):
             if anh_nens[_i]:
