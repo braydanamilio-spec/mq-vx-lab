@@ -74,7 +74,14 @@ _DV = (r"%|percent|million|billion|trillion|thousand|km|kilometres?|miles?|kg|ki
        r"votes?|books?|letters?|inventions?|experiments?")
 # `\d{4}` bắt NĂM — mốc thời gian là xương sống của mọi câu chuyện, và bản đầu bỏ hết.
 _CAU = re.compile(r"[^.\n]*?\b(?:\d{4}|\d[\d,\.]*\s*(?:" + _DV + r"))\b[^.\n]*\.")
-_SO = re.compile(r"\b\d[\d,\.]*\b")
+# ── CHỮ SỐ TRONG MỘT KÝ HIỆU KHÔNG PHẢI MỘT LƯỢNG  (bộ 217, 9/9/2026) ─────────────────────
+# Câu *"The **B‑17** pilot training ended in April 1945, graduating 608 crews"* cho ra thẻ số
+# **17** — chữ số của tên máy bay, không phải một đại lượng nào. Lượng thật trong câu là 608.
+# Cùng họ với `so="SOUTH" · don="SEA COMPANY"` đã trả giá hôm qua: một chuỗi ký tự lọt vào
+# chỗ dành cho một con số. Ở đây ngược lại — một con số THẬT nhưng nó thuộc về một cái TÊN.
+# Hai phép nhìn lui: chữ số dính ngay sau một chữ cái (F4), hoặc sau `chữ cái + gạch nối`
+# (B-17 · MiG‑21 · A-4). Gạch nối nhận cả ba dạng Unicode hay gặp trong văn Wikipedia.
+_SO = re.compile(r"(?<![A-Za-z])(?<![A-Za-z][-\u2010\u2011\u2013])\b\d[\d,\.]*\b")
 # Số KÈM ĐƠN VỊ, và ký hiệu tiền đứng trước cũng tính. Xem `so_kem_don`.
 _SO_DON = re.compile(r"([$£€]\s?\d[\d,\.]*(?:\s*(?:million|billion|trillion))?)"
                      r"|(\d[\d,\.]*\s*(?:" + _DV + r"))\b", re.I)

@@ -4145,6 +4145,10 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("chữ số của một KÝ HIỆU (B-17) không thành thẻ số",
+          t_chu_so_cua_mot_KY_HIEU_khong_thanh_the_so)
+    check("không hai nhịp liền nhau dùng chung một ảnh",
+          t_khong_hai_nhip_lien_nhau_dung_chung_mot_anh)
     check("lượng của hook phải KÈM đơn vị, không phải số trần",
           t_luong_cua_hook_phai_kem_don_vi)
     check("khuôn hỏi TIỀN không phát cho kịch bản không có tiền",
@@ -10446,6 +10450,71 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_chu_so_cua_mot_KY_HIEU_khong_thanh_the_so():
+    """Chữ số nằm trong một ký hiệu (B‑17 · MiG-21 · F4) không được đọc thành một LƯỢNG.
+
+    ── VÌ SAO  (bộ 217, 9/9/2026) ────────────────────────────────────────────────────────
+    Nhịp *"The **B‑17** pilot training ended in April 1945, graduating 608 crews"* cho ra
+    thẻ số **17** — chữ số của tên máy bay. Lượng thật trong câu là 608.
+
+    Cùng họ với `so="SOUTH" · don="SEA COMPANY"` đã trả giá hôm qua, chỉ ngược chiều: ở đó
+    một chuỗi CHỮ lọt vào chỗ dành cho số; ở đây một con số THẬT lọt vào, nhưng nó thuộc về
+    một cái TÊN. Cả hai đều là "mượn giá trị cho việc nó không sinh ra để làm".
+
+    Gạch nối nhận cả ba dạng Unicode: văn Wikipedia dùng lẫn `-` `‑` `–`, và bắt sót một
+    dạng thì lỗi quay lại ở đúng những bài viết cẩn thận nhất (§18.11).
+    """
+    import chu_de as C
+    assert C._SO.findall("The B‑17 trained until April 1945, graduating 608 crews.") \
+        == ["1945", "608"], C._SO.findall("The B‑17 trained until April 1945, graduating 608 crews.")
+    assert C._SO.findall("A MiG-21 and an F4 beside 12 trucks.") == ["12"]
+    # KHÔNG bắt oan: số đứng sau dấu cách vẫn là một lượng
+    assert C._SO.findall("It cost 1,200 dollars in 1970.") == ["1,200", "1970"]
+
+
+def t_khong_hai_nhip_lien_nhau_dung_chung_mot_anh():
+    """Hai nhịp LIỀN NHAU không được mang cùng một ảnh nền, kể cả ảnh do phép ghép nghĩa đặt.
+
+    ── VÌ SAO  (anh dặn, và bộ 217 vẫn dính, 9/9/2026) ───────────────────────────────────
+    Anh: *"ko dùng đi dùng lại 1 footage"*. Vòng lấp nền tránh trùng liền kề, nhưng nó BỎ
+    QUA nhịp đã có nền — nên hai nhịp mà phép ghép-theo-nghĩa đặt CÙNG một ảnh vẫn dính
+    nhau. Đo bộ 217 (5 ảnh cho 13 nhịp): cặp 0-1 và 2-3 trùng. Vá một nhánh, để nguyên
+    nhánh song song (§6) — lần thứ sáu trong phiên.
+
+    Và phải giữ được ca NGHÈO NHẤT: hồ chỉ có MỘT ảnh thì mọi hoán vị đều trùng, nên phép
+    gỡ phải dừng chứ không được lặp vô hạn — đó là ca mà một vòng `while` viết ẩu sẽ treo
+    cả lượt dựng, và treo thì không để lại tệp nào (§10.1).
+    """
+    import ast, os
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "pilot_hai.py"), encoding="utf-8").read())
+    # rút CHÍNH khối gỡ cặp trùng rồi CHẠY nó — cổng đọc mã mà không chạy thì nó chỉ chứng
+    # minh có mã, không chứng minh mã ấy đúng (§13.10)
+    kh = None
+    for n in ast.walk(cay):
+        if (isinstance(n, ast.For) and getattr(n.target, "id", "") == "_i"
+                # `ast.unparse` bọc CẢ HAI vế trong ngoặc:
+                #     (anh_nens[_i], anh_nens[_j]) = (anh_nens[_j], anh_nens[_i])
+                # nên khớp tới dấu `=` là hụt — có một `)` chen vào. Hai lần liền bài kiểm
+                # của em sai chứ không phải mã sai (§13.15). Khớp phần bất biến, bỏ dấu `=`.
+                and "anh_nens[_i], anh_nens[_j]" in ast.unparse(n)):
+            kh = ast.unparse(n)
+            break
+    assert kh, "không tìm thấy khối gỡ cặp liền trùng — phép tìm hỏng, hoặc khối đã bị gỡ"
+
+    def _chay(ds):
+        g = {"anh_nens": list(ds)}
+        exec(kh, g)
+        return g["anh_nens"]
+
+    ra = _chay(["A","A","B","B","C","D","C","D","E","A","B","C","D"])   # đúng dãy bộ 217
+    assert sum(1 for i in range(1, len(ra)) if ra[i] == ra[i-1]) == 0, ra
+    assert sorted(ra) == sorted(["A","A","B","B","C","D","C","D","E","A","B","C","D"]), \
+        f"phép gỡ làm mất hoặc nhân bản ảnh: {ra}"
+    assert _chay(["Z"]*5) == ["Z"]*5, "ca một ảnh phải để nguyên, không treo và không đổi"
+    assert _chay([]) == [], "dãy rỗng phải đi qua êm"
 
 
 def t_luong_cua_hook_phai_kem_don_vi():

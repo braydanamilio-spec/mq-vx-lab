@@ -2668,6 +2668,30 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
                     break
             anh_nens[_i] = _chon or _uu[0]
             _j += 1
+        # ── GỠ CẶP LIỀN TRÙNG TRÊN CẢ DÃY  (bộ 217, 9/9/2026) ────────────────────────
+        # Anh: *"ko dùng đi dùng lại 1 footage"*. Vòng lấp phía trên tránh trùng liền kề,
+        # nhưng nó BỎ QUA nhịp đã có nền — nên hai nhịp mà phép ghép-theo-nghĩa đặt CÙNG
+        # một ảnh vẫn dính nhau. Đo bộ 217: 5 ảnh cho 13 nhịp, cặp 0-1 và 2-3 trùng.
+        # Vá đúng một nhánh, để nguyên nhánh song song (§6) — lần thứ sáu trong phiên.
+        # Đổi chỗ với một nhịp KHÔNG kề nó và mang ảnh khác; không tìm được thì để nguyên
+        # (hồ chỉ có một ảnh thì mọi hoán vị đều trùng, và đoán bừa còn tệ hơn).
+        for _i in range(1, len(anh_nens)):
+            if not anh_nens[_i] or anh_nens[_i] != anh_nens[_i - 1]:
+                continue
+            for _j in range(len(anh_nens)):
+                if abs(_j - _i) <= 1 or not anh_nens[_j] or anh_nens[_j] == anh_nens[_i]:
+                    continue
+                _t = anh_nens[_j]
+                if _t == anh_nens[_i - 1]:
+                    continue                                   # đổi vào lại thành trùng
+                if _i + 1 < len(anh_nens) and _t == anh_nens[_i + 1]:
+                    continue
+                if _j > 0 and anh_nens[_i] == anh_nens[_j - 1]:
+                    continue                                   # đẩy cái trùng sang chỗ khác
+                if _j + 1 < len(anh_nens) and anh_nens[_i] == anh_nens[_j + 1]:
+                    continue
+                anh_nens[_i], anh_nens[_j] = anh_nens[_j], anh_nens[_i]
+                break
         _lap = sum(1 for _i in range(1, len(anh_nens)) if anh_nens[_i] == anh_nens[_i - 1])
         _rieng = len(set(x for x in anh_nens if x))
         print(f"   🖼 lấp nền: {sum(1 for x in anh_nens if x)}/{len(anh_nens)} nhịp có ảnh "
