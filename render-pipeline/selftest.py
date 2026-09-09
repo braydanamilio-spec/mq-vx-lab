@@ -10566,6 +10566,12 @@ def t_the_so_phai_la_mot_LUONG_hoac_mot_NAM():
     assert K._so_dau("A MiG-21 flew twelve sorties.")[0] != "21", "ký hiệu vẫn thành thẻ số"
     # năm vẫn giữ — mốc thời gian là xương sống của câu chuyện
     assert K._so_dau("In 1974 operator error released plutonium.") == ("1974", "")
+    # SỐ HIỆU MODEL: "Atari 5200 failed" — 5200 là tên máy, "failed" là động từ (bộ yearsof)
+    assert K._so_dau("The Atari 5200 failed to gain traction.") == ("", ""), \
+        K._so_dau("The Atari 5200 failed to gain traction.")
+    assert K._so_dau("Development stalled on the 3200, so Atari dropped it.") == ("", "")
+    assert K._so_dau("A Boeing 747 carried 400 passengers.") == ("400", "passengers"), \
+        "số hiệu máy bay lấn át lượng thật đứng sau"
     # không có lượng nào thì KHÔNG thẻ, chứ không bịa
     assert K._so_dau("The task force recommended Rocky Flats be shut down.") == ("", "")
 

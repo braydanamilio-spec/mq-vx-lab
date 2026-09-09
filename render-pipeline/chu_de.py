@@ -132,6 +132,17 @@ def so_kem_don(cau: str) -> str:
     # Cùng phép chặn KÝ HIỆU của `_SO` — bản đầu của khối này viết một biểu thức MỚI mà
     # quên mang theo, và "B‑17 pilot training" lập tức ra thẻ «17 pilot». Thêm một bộ dò
     # số thứ hai mà không mang theo hàng rào của bộ thứ nhất là §6 ở dạng thuần nhất.
+    # ── SỐ HIỆU MODEL KHÔNG PHẢI MỘT LƯỢNG  (bộ Atari yearsof, 9/9/2026) ──────────────
+    # Demo kênh `yearsof` cho ra thẻ «5200 failed» và «3200 following»: "5200"/"3200" là số
+    # hiệu máy Atari (một cái TÊN), và "failed"/"following" là ĐỘNG TỪ bị nhận nhầm làm đơn
+    # vị. Cùng họ B‑17 và `so="SOUTH"`, ở tầng dự phòng.
+    # Hai hàng rào, mỗi cái chặn một nửa lỗi:
+    #   · đơn vị KHÔNG được là động từ/phân từ (đuôi -ed / -ing). Đơn vị thật là danh từ:
+    #     "page", "crews", "acres". "failed"/"following" rơi ngay.
+    #   · số KHÔNG được đứng ngay sau một TÊN RIÊNG viết hoa ("Atari 5200", "Boeing 747")
+    #     hay sau "the …" khi không có danh từ đơn vị — đó là dạng gọi model.
+    # Danh sách -ed/-ing là một QUY LUẬT hình thái, không phải danh sách ví dụ (§13.9); nó
+    # hữu hạn và đứng yên, khác một bảng đơn vị.
     for m in re.finditer(r"(?<![A-Za-z])(?<![A-Za-z][-\u2010\u2011\u2013])"
                          r"\b(\d[\d,\.]*)\s+([a-z]{3,})\b", van):
         so, tu = m.group(1), m.group(2)
@@ -139,6 +150,17 @@ def so_kem_don(cau: str) -> str:
             continue
         if tu in _CHUC_NANG:
             continue
+        if tu.endswith("ed") or tu.endswith("ing"):
+            continue                                   # động từ/phân từ, không phải đơn vị
+        # TÊN RIÊNG đứng trước: "Atari 5200", "the Model 500". Viết hoa mà KHÔNG phải đầu câu.
+        _tr = van[:m.start()].rstrip()
+        _tu_tr = re.search(r"([A-Za-z][A-Za-z'\-]*)\s*$", _tr)
+        if _tu_tr:
+            w = _tu_tr.group(1)
+            # đầu câu (sau . ! ? hoặc đầu chuỗi) thì viết hoa là ngữ pháp, không phải tên
+            _dau_cau = bool(re.search(r"[.!?]\s+$", _tr)) or _tu_tr.start() == 0
+            if w[0].isupper() and not _dau_cau and w.lower() not in _CHUC_NANG:
+                continue
         return f"{so} {tu}"
     return ""
 
