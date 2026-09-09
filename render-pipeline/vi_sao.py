@@ -496,6 +496,16 @@ def sinh(ma: str, i: int):
         if not hop_dinh_dang(chu_the, _van):
             print(f"   ⏭ «{chu_the[:40]}»: có thương vong — không kể được bằng giọng này")
             continue
+        # ── KHUÔN ĐÒI TIỀN MÀ KỊCH BẢN KHÔNG CÓ TIỀN  (bộ 214, 9/9/2026) ──────────────
+        # Hook đọc *"How much money died with Savannah River Plant, eighty dollars?"* trong
+        # khi kịch bản không có một con số tiền nào — mô hình mượn "eighty" của
+        # *"up to eighty PERCENT"* rồi gắn sang **dollars**. §19.4: nó bịa vì ta để lại chỗ
+        # trống. Bỏ CẶP chứ không bỏ chủ thể: cùng chủ thể ấy vẫn dựng được bằng 21 khuôn
+        # khác, nên đây là bộ lọc trên một trục, không phải mất một chủ thể (§15.7).
+        if K.khuon_doi_tien(khuon) and not K.co_so_tien(_van):
+            print(f"   ⏭ «{chu_the[:34]}» × khuôn hỏi TIỀN: kịch bản không có con số "
+                  f"tiền nào — bỏ cặp, không để mô hình bịa")
+            continue
         try:
             ho = C.ho_so(chu_the)
         except Exception:

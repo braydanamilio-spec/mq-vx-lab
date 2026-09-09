@@ -417,9 +417,106 @@ def kiem(so: str, nguon: str) -> bool:
     return g in nguon.replace(",", "")
 
 
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# ĐỔI ĐƠN VỊ SANG HỆ MỸ — Ở NGUỒN, TRƯỚC KHI AI NHÌN THẤY
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# §12.13 dặn từ 1/9: *"kênh Mỹ thì ĐƠN VỊ phải Mỹ"* — người xem Mỹ đọc "384,400 kilometres"
+# là biết ngay không phải kênh của mình. `cham_kich_ban.KHONG_MY` có canh, nhưng nó chỉ CHẤM
+# ĐIỂM (trục `don_vi_my`, trần 10) — và §13.3 đã trả giá cho đúng chuyện này: *một luật chỉ
+# trừ điểm là một luật tuỳ chọn*. Đo bộ 215: hai nhịp đọc *"10,000 metric tons"* và
+# *"1,230 metric tons"*, lọt sạch. `\btonnes?\b` của bảng ấy còn không khớp "metric tons".
+#
+# Ba nấc của §13.23 nói rõ nấc nào: đây là lỗi MÁY SỬA ĐƯỢC (một phép nhân), nên máy sửa —
+# không chặn, không trừ điểm, không tiêu một vòng gọi AI.
+#
+# Và sửa Ở NGUỒN chứ không ở lời thoại đã sinh, vì hai lý do:
+#   · mô hình không bao giờ NHÌN THẤY con số mét, nên nó không thể chép lại
+#   · cổng chặn số bịa đối chiếu lời thoại với CHÍNH văn bản này — sửa ở đây thì hai bên
+#     nhất quán; sửa ở lời thoại thì con số đã đổi sẽ bị chính cổng ấy tố là bịa
+#
+# Không vi phạm §19.3 (*AI không bao giờ được cấp một con số*): con số ở đây do PYTHON nhân,
+# từ một con số có thật trong nguồn.
+_QUY_DOI = [
+    # thứ tự QUAN TRỌNG: cụm dài trước, nếu không "square kilometres" bị "kilometres" ăn mất,
+    # và "metric ton" bị "ton" ăn mất.
+    (r"square\s+kilomet(?:re|er)s?|km(?:2|²)\b", 0.386102, "square mile", "square miles"),
+    (r"metric\s+tons?|tonnes?",                   1.10231,  "ton", "tons"),
+    (r"kilomet(?:re|er)s?\s+per\s+hour|km/h\b|kph\b", 0.621371, "mph", "mph"),
+    (r"kilomet(?:re|er)s?|\bkm\b",               0.621371, "mile", "miles"),
+    (r"centimet(?:re|er)s?|\bcm\b",              0.393701, "inch", "inches"),
+    (r"millimet(?:re|er)s?|\bmm\b",              0.0393701, "inch", "inches"),
+    (r"kilograms?|\bkg\b",                       2.20462,  "pound", "pounds"),
+    (r"hectares?|\bha\b",                        2.47105,  "acre", "acres"),
+    (r"lit(?:re|er)s?",                            0.264172, "gallon", "gallons"),
+    (r"met(?:re|er)s?\b",                         3.28084,  "foot", "feet"),
+]
+
+
+def _lam_tron_theo_nguon(goc: str, moi: float) -> str:
+    """Làm tròn kết quả về ĐÚNG độ chính xác mà nguồn ngụ ý.
+
+    "10,000" là bội của 1.000 nên nguồn chỉ khẳng định tới hàng nghìn — trả về 11.023,1 là
+    giả vờ chính xác hơn nguồn. Ngược lại "1,230" là bội của 10 nên giữ tới hàng chục.
+    Đây không phải chuyện thẩm mỹ: một con số chính xác hơn nguồn là một con số BỊA.
+    """
+    g = goc.replace(",", "")
+    if "." in g:                                   # nguồn có phần thập phân -> giữ đúng số chữ số
+        n = len(g.split(".", 1)[1])
+        return f"{round(moi, n):,.{n}f}"
+    try:
+        iv = int(g)
+    except ValueError:
+        return f"{moi:,.0f}"
+    # Bước làm tròn = ước số 10^k LỚN NHẤT của nguồn, NHƯNG chặn trên ở `|iv|/10` để kết quả
+    # còn ít nhất hai chữ số có nghĩa. Bản đầu không chặn: "10,000 metric tons" lấy bước
+    # 10.000, và 11.023 làm tròn về **10.000** — tức phép đổi chạy xong mà con số không đổi
+    # một đơn vị nào, đọc y hệt như chưa đổi. Một phép làm tròn nuốt trọn phép đổi thì nó
+    # không phải làm tròn nữa (§15.2: kết quả bằng đầu vào có hai nghĩa ngược nhau).
+    buoc, tran = 1, max(1, abs(iv) // 10)
+    for b in (1000000, 100000, 10000, 1000, 100, 10):
+        if iv and iv % b == 0 and b <= tran:
+            buoc = b
+            break
+    return f"{int(round(moi / buoc)) * buoc:,}"
+
+
+def sang_don_vi_my(van: str) -> str:
+    """Đổi mọi lượng hệ mét trong văn bản nguồn sang đơn vị Mỹ. Không đổi thì trả nguyên."""
+    if not van:
+        return van
+    t = van
+    # Nhiệt độ trước: nó là phép AFFINE, không phải phép nhân, nên không dùng chung khuôn.
+    def _do(m):
+        try:
+            c = float(m.group(1).replace(",", ""))
+        except ValueError:
+            return m.group(0)
+        return f"{_lam_tron_theo_nguon(m.group(1), c * 9 / 5 + 32)}°F"   # giữ nguyên lối viết °
+    t = re.sub(r"(-?[\d,]+(?:\.\d+)?)\s*(?:°\s*C\b|degrees?\s+Celsius\b)", _do, t, flags=re.I)
+
+    for rx, he, it, nhieu in _QUY_DOI:
+        def _nhan(m, he=he, it=it, nhieu=nhieu):
+            try:
+                v = float(m.group(1).replace(",", ""))
+            except ValueError:
+                return m.group(0)
+            ra = _lam_tron_theo_nguon(m.group(1), v * he)
+            # "1 mile" chứ không phải "1 miles". So bằng GIÁ TRỊ, không bằng chuỗi đã cắt
+            # đuôi: bản đầu dùng `rstrip("0")` nên "10,000" thành "1" và cho ra "10,000 ton".
+            try:
+                dv = it if abs(float(ra.replace(",", ""))) == 1 else nhieu
+            except ValueError:
+                dv = nhieu
+            return f"{ra} {dv}"
+        t = re.sub(r"([\d,]+(?:\.\d+)?)\s*(?:" + rx + r")", _nhan, t, flags=re.I)
+    return t
+
+
 def ho_so(ten: str) -> dict:
     """{ten, van, cau[]} — rỗng khi không đủ sự thật, và KHÔNG đoán bù."""
-    van = bai_viet(ten)
+    # Đổi đơn vị NGAY SAU khi đọc bài, trước mọi phép trích: cả `cau_su_that` lẫn
+    # `cau_nhan_qua` đều đọc từ đây, nên một chỗ sửa là mọi tầng dưới sạch (§13.5).
+    van = sang_don_vi_my(bai_viet(ten))
     cs = cau_su_that(van)
     nq = cau_nhan_qua(van)
     thay = {c["cau"] for c in cs}

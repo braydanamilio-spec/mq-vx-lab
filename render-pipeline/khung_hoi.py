@@ -360,3 +360,48 @@ def chon_cau(tieu: str, cau: list, keys=None) -> list:
             thay.add(i)
             tot.append(i)
     return tot[:6]
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# KHUÔN ĐÒI MỘT CON SỐ TIỀN — ĐỪNG PHÁT CHO CHỦ THỂ KHÔNG CÓ
+# ══════════════════════════════════════════════════════════════════════════════════════════
+# ── VÌ SAO  (anh soi bộ 214, 9/9/2026) ────────────────────────────────────────────────────
+# Hook bản dài đọc *"How much money died with Savannah River Plant, **eighty dollars**?"* —
+# kịch bản không có một con số tiền nào. Mô hình lấy chữ "eighty" từ câu *"owner could claim
+# up to eighty **percent**"* rồi gắn sang đơn vị **dollars**.
+#
+# Cổng chặn số bịa CÓ chạy, và nó đúng theo định nghĩa của nó: nó hỏi *"con số này có trong
+# kịch bản không"* — 80 CÓ. Cái nó không hỏi là *"ĐƠN VỊ có đúng không"*. Đúng số, sai nghĩa
+# là chiều thứ ba, và §19.3 mới canh hai chiều (thiếu / thừa).
+#
+# KHÔNG chữa bằng một cổng ngữ nghĩa: đo đơn vị khớp nghĩa là việc của ngôn ngữ, và một cổng
+# mờ như thế sẽ bắt oan nhiều hơn bắt đúng (§13.22). Chữa ở GỐC, đúng cách §19.4 đã chỉ:
+# *mô hình bịa vì KHÔNG CÒN GÌ THẬT ĐỂ NÓI* — đề bài đòi một con số tiền mà kịch bản không
+# có, nên nó lấp chỗ trống bằng đồ tự nghĩ.
+#
+# Cùng cơ chế `mo_cam` của §14.2 (đừng phát cho một kênh nhịp mà thế giới ấy không diễn được),
+# chỉ khác trục: đừng phát khuôn hỏi TIỀN cho chủ thể không có con số tiền nào.
+DOI_TIEN = (
+    "How much money died with {x}",
+    "What {x} would cost today",
+    "What replaced {x}, and what it cost",
+)
+
+# Con số TIỀN trong văn nguồn: ký hiệu tiền tệ, hoặc số kèm đơn vị tiền viết chữ.
+# Không nhận "eighty percent" — đó chính là con số đã bị mượn sai đơn vị.
+import re as _re
+_CO_TIEN = _re.compile(
+    r"(?:[$£€]\s?[\d,]+(?:\.\d+)?)"
+    r"|(?:[\d,]+(?:\.\d+)?\s*(?:million|billion|trillion)?\s*"
+    r"(?:dollars?|pounds\s+sterling|euros?|USD|GBP|EUR)\b)",
+    _re.I)
+
+
+def khuon_doi_tien(khuon: str) -> bool:
+    """Khuôn hỏi này có BẮT BUỘC phải nêu một con số tiền không."""
+    return str(khuon or "") in DOI_TIEN
+
+
+def co_so_tien(van: str) -> bool:
+    """Văn bản nguồn có ít nhất một con số TIỀN thật không."""
+    return bool(_CO_TIEN.search(str(van or "")))

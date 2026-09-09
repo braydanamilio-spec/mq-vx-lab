@@ -4145,6 +4145,10 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("khuôn hỏi TIỀN không phát cho kịch bản không có tiền",
+          t_khuon_hoi_tien_khong_phat_cho_kich_ban_khong_co_tien)
+    check("đơn vị mét đổi sang Mỹ NGAY Ở NGUỒN (số phải đổi thật)",
+          t_don_vi_met_doi_sang_my_o_NGUON)
     check("nền nhận tên đổi chữ cuối, vẫn chặn Meat Hope + Midway",
           t_nen_nhan_ten_doi_chu_cuoi_ma_van_chan_hai_ca_da_tra_gia)
     check("ảnh phụ (nenCat) qua cùng ba cổng với nền chính",
@@ -10440,6 +10444,110 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_khuon_hoi_tien_khong_phat_cho_kich_ban_khong_co_tien():
+    """Khuôn hỏi ĐÒI một con số tiền chỉ được phát cho chủ thể có con số tiền thật.
+
+    ── VÌ SAO  (anh soi bộ 214, 9/9/2026) ────────────────────────────────────────────────
+    Hook bản dài đọc *"How much money died with Savannah River Plant, **eighty dollars**?"*
+    — kịch bản không có một con số tiền nào. Mô hình mượn "eighty" của câu *"owner could
+    claim up to eighty **percent**"* rồi gắn sang đơn vị **dollars**.
+
+    Cổng chặn số bịa CÓ chạy và nó đúng theo định nghĩa của nó: nó hỏi *"con số này có trong
+    kịch bản không"* — 80 CÓ. Cái nó không hỏi là *"ĐƠN VỊ có đúng không"*. §19.3 mới canh
+    hai chiều (số thiếu / số thừa); đây là chiều thứ BA: đúng số, sai nghĩa.
+
+    Không chữa bằng cổng ngữ nghĩa — đo đơn vị khớp nghĩa là việc của ngôn ngữ, và một cổng
+    mờ như thế bắt oan nhiều hơn bắt đúng (§13.22). Chữa ở gốc theo §19.4: *mô hình bịa vì
+    KHÔNG CÒN GÌ THẬT ĐỂ NÓI*. Cùng cơ chế `mo_cam` của §14.2, khác trục.
+
+    Bỏ CẶP chứ không bỏ chủ thể: cùng chủ thể vẫn dựng được bằng 21 khuôn còn lại.
+    """
+    import ast, os
+    import khung_hoi as K
+
+    # hai chiều của phép nhận biết (§13.11)
+    assert K.khuon_doi_tien("How much money died with {x}"), "không nhận ra khuôn đòi tiền"
+    assert not K.khuon_doi_tien("Who owns {x} now"), "bắt oan khuôn không đòi tiền"
+    assert K.co_so_tien("the project cost $1.2 billion"), "bỏ sót con số tiền có ký hiệu"
+    assert K.co_so_tien("it lost 400 million dollars"), "bỏ sót con số tiền viết chữ"
+    assert not K.co_so_tien("owner could claim up to eighty percent"), \
+        "nhận nhầm phần trăm thành tiền — đó CHÍNH là con số đã bị mượn sai đơn vị"
+    assert not K.co_so_tien("the plant made 11,000 tons that year"), "nhận nhầm khối lượng"
+
+    # và vòng chọn phải THẬT SỰ dùng nó. Quét MÃ, bỏ docstring: chính docstring này nhắc
+    # lại "eighty dollars" và tên hai hàm ấy (§17.15).
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "vi_sao.py"), encoding="utf-8").read())
+    ma = []
+    for n in ast.walk(cay):
+        if isinstance(n, ast.FunctionDef):
+            b = n.body
+            if b and isinstance(b[0], ast.Expr) and isinstance(b[0].value, ast.Constant):
+                b = b[1:]
+            ma.append("\n".join(ast.unparse(x) for x in b))
+    het = "\n".join(ma)
+    assert "khuon_doi_tien" in het and "co_so_tien" in het, \
+        "vòng chọn không lọc khuôn đòi tiền — mô hình sẽ lại bịa một con số đô la"
+
+
+def t_don_vi_met_doi_sang_my_o_NGUON():
+    """Văn bản nguồn phải sạch đơn vị mét TRƯỚC khi mô hình nhìn thấy, và số phải đổi thật.
+
+    ── VÌ SAO  (anh soi bộ 215, 9/9/2026) ────────────────────────────────────────────────
+    Hai nhịp đọc *"10,000 metric tons"* và *"1,230 metric tons"* trên một kênh Mỹ. §12.13 đã
+    dặn từ 1/9, và `cham_kich_ban.KHONG_MY` có canh — nhưng nó chỉ CHẤM ĐIỂM (trục
+    `don_vi_my`, trần 10). §13.3: *một luật chỉ trừ điểm là một luật tuỳ chọn*. Bảng ấy còn
+    không khớp "metric tons" vì nó ghi `\btonnes?\b`.
+
+    Sửa Ở NGUỒN (`ho_so` -> `sang_don_vi_my`) chứ không ở lời thoại đã sinh, vì cổng chặn số
+    bịa đối chiếu lời thoại với chính văn bản ấy: đổi ở lời thoại thì con số mới sẽ bị chính
+    cổng ấy tố là bịa. Và không vi phạm §19.3 — con số do Python nhân, từ số có thật.
+
+    Cổng đo BỐN chiều, vì bản đầu hỏng hai trong bốn và chỉ đọc tay mới thấy:
+      1. đơn vị mét biến mất
+      2. con số THẬT SỰ đổi — bản đầu lấy bước làm tròn là ước 10^k lớn nhất, nên
+         "10,000 metric tons" ra **10,000 tons**: phép đổi chạy xong mà số không đổi
+      3. số nhiều đúng — bản đầu so bằng `rstrip("0")` nên "10,000" thành "1" -> "10,000 ton"
+      4. văn bản vốn đã đơn vị Mỹ thì KHÔNG bị đụng
+    """
+    import chu_de as C
+
+    ra = C.sang_don_vi_my("Annual production peaked in 1960 at 10,000 metric tons, later.")
+    assert "metric ton" not in ra.lower() and "tonne" not in ra.lower(), f"còn đơn vị mét: {ra}"
+    assert "11,000 tons" in ra, f"số không đổi hoặc số nhiều sai: {ra}"
+
+    ra2 = C.sang_don_vi_my("The site covers 3,900 hectares near the 25 km road.")
+    assert "9,600 acres" in ra2 and "16 mile" in ra2, ra2
+    assert "hectare" not in ra2 and " km" not in ra2, ra2
+
+    # nhiệt độ là phép AFFINE, không dùng chung khuôn nhân
+    assert "2,200°F" in C.sang_don_vi_my("It reached 1,200 °C inside."), \
+        C.sang_don_vi_my("It reached 1,200 °C inside.")
+
+    # số ÍT khi bằng 1
+    assert "1 mile fence" in C.sang_don_vi_my("A 1 kilometre fence."), \
+        C.sang_don_vi_my("A 1 kilometre fence.")
+
+    # KHÔNG đụng văn bản vốn đã Mỹ — cổng bắt oan tệ hơn cổng không bắt (§13.8)
+    my = "The plant ran 12 miles from town and cost 5 million dollars in 1960."
+    assert C.sang_don_vi_my(my) == my, C.sang_don_vi_my(my)
+
+    # `ho_so` phải ĐI QUA phép đổi — đây là chỗ duy nhất mọi tầng trích câu đọc chung.
+    # Quét MÃ chứ không quét chú thích: chính docstring này nhắc lại "metric tons" (§17.15).
+    import ast, os
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "chu_de.py"), encoding="utf-8").read())
+    than = next((n for n in ast.walk(cay)
+                 if isinstance(n, ast.FunctionDef) and n.name == "ho_so"), None)
+    assert than, "không tìm thấy `ho_so` — phép tìm hỏng, không phải mã hỏng"
+    b = than.body
+    if b and isinstance(b[0], ast.Expr) and isinstance(b[0].value, ast.Constant):
+        b = b[1:]                                        # bỏ DOCSTRING (§17.15)
+    ma = "\n".join(ast.unparse(x) for x in b)
+    assert "sang_don_vi_my" in ma, \
+        "`ho_so` không đi qua phép đổi đơn vị — mô hình sẽ lại nhìn thấy mét"
 
 
 def t_nen_nhan_ten_doi_chu_cuoi_ma_van_chan_hai_ca_da_tra_gia():
