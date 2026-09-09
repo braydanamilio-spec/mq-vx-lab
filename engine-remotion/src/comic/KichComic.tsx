@@ -72,11 +72,16 @@ const NUA_RONG = 100;         // nửa bề ngang khi tay ghim ngực
    khuất hình ảnh số liệu, nền"*. Hạ 0,44 -> 0,36 ở khung DỌC. Phần nhìn thấy (đỉnh đầu ->
    mép cắt ngang hông) nay chiếm 36% chiều cao panel thay vì 44% — nhường 8 điểm phần trăm
    cho ảnh nền và khối số liệu, đúng thứ tập này đi bán. */
-const TI_LE_NGUOI = 0.24;   // 9/9 lần BA: 0,36 -> 0,31 -> 0,24. Anh soi bộ 213: *"người to,
-                            // mà ảnh nền đâu, thu nhỏ tí ti vậy"* — 0,31 là một bước quá nhỏ.
-                            // Vai của nhân vật đổi hẳn từ lúc nền LÀ ảnh tư liệu: trước nó là
-                            // thứ duy nhất trong khung nên phải to; nay nó là NGƯỜI DẪN đứng
-                            // trước tư liệu, và người dẫn không được che tư liệu (§12.5).
+// ── TỈ LỆ NGƯỜI: HAI KHUNG, HAI CON SỐ  (soi short bộ 214, 9/9/2026) ──────────────────
+// Anh chê *"người to"* trên khung NGANG. Em hạ 0,31 -> 0,24 cho cả hai khung, rồi soi short
+// thì nhân vật teo thành một cái đầu bé xíu ở đáy — khung dọc cao gấp 1,78 lần nên cùng một
+// tỉ lệ CHIỀU CAO cho ra hai cảm giác khác hẳn. Đúng §12.5 và §17.1: một hằng số đo ở ngữ
+// cảnh này không mang sang ngữ cảnh kia được, kể cả khi công thức trông như nhau.
+// Khung dọc giữ 0,31 (anh chưa từng chê short); khung ngang xuống 0,24.
+// Khung NGANG không dùng hằng này: ở 16:9 trần THẮNG là bề ngang (§17.2), và nó nằm ngay
+// tại `kCan` — `w * 0.21`, hạ từ 0,28 trong cùng lượt sửa. Không khai thêm một hằng chiều
+// cao cho khung ngang: một hằng được ghi mà không ai đọc là một hằng chưa tồn tại (§15.12).
+const TI_LE_NGUOI = 0.31;        // khung DỌC 9:16
 
 const LE = 44;                // lề mực quanh khung
 const NET = 7;                // độ dày viền mực MẶC ĐỊNH (mỗi kênh ghi đè, xem `netMuc`)
