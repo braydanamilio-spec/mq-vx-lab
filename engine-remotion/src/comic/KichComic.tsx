@@ -878,6 +878,9 @@ export type PropsComic = {
   // một hướng sáng riêng. Bản ngắn không truyền thì rơi về `anhNen`/`sang` như cũ — đường chạy
   // đã duyệt không đụng gì.
   anhNens?: string[];
+  /* Ảnh PHỤ của từng nhịp — xem `anhLuc`. Không truyền thì mỗi nhịp giữ đúng một ảnh như cũ,
+     nên 20 kênh comic đang chạy không đổi một pixel. */
+  nenCat?: string[][];
   nenTron?: boolean[];   // nền nào bị `cover` giấu quá nhiều -> hiện TRỌN
   nenVe?: any[];         // nhịp không có ảnh thật -> lớp vẽ bằng code
   // ── ẢNH THẬT CỦA CHỦ THỂ, HIỆN Ở VÀI NHỊP ĐẦU  (anh, 8/9/2026) ──────────────────────
@@ -919,7 +922,7 @@ export const KichComic: React.FC<PropsComic> = ({
   nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, motNguoi, daoCuTap = "", tieuDe = "", handle = "", mau = "#F0483C",
   guViTri = "giua", guKen = "vao", guNen = "moc",
-  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "",
+  mauPhu = "#1F7AE0", kenh = "", soTap = 0, noiIdx = -1, hook = "", anhNen = "", nenCat,
   sang, anhNens, nenTron, nenVe, sangs, hookGiay, soLieu, hookDuoi = false, haiHuoc = true,
   anhChens,
   netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60,
@@ -962,6 +965,32 @@ export const KichComic: React.FC<PropsComic> = ({
   const pChuyen = L ? kep((giay - (L.s - 0.16)) / 0.34) : 1;
   const kieu: KieuChuyen = (["ngang", "quet", "doc"] as KieuChuyen[])[(iL + hat) % 3];
 
+  /* ── CẮT HÌNH KHÔNG ĐI THEO NHỊP THOẠI  (anh: *"đảm bảo đa dạng chuyển footage sau
+     1,5–2,5s"*, 9/9/2026) ───────────────────────────────────────────────────────────────
+     Đo 23 nhịp của hai bộ gần nhất: trung vị **5,21 giây**, chỉ 1/23 nhịp nằm trong dải
+     1,5–2,5s, nhịp dài nhất **11,8 giây**. Footage đứng yên gần 12 giây.
+
+     Gốc: một nhịp = một câu thoại, mà trung vị 11 chữ/câu và tốc độ đọc 0,45 giây/chữ =>
+     muốn cảnh 2,5 giây thì câu phải ≤6 chữ. Ép ngắn thế là mất nội dung — *"Fine Air was an
+     international cargo airline that operated from 1989 to 2002"* không nói được bằng 6 chữ.
+
+     Nên KHÔNG sửa ở khâu viết mà tách hai thứ vốn không cần dính nhau: giọng đọc đi theo
+     CÂU, hình đi theo ĐỒNG HỒ. Một câu 11 giây chạy 5 hình, giọng vẫn liền mạch — đúng cách
+     kênh giải thích thật làm.
+
+     Ảnh phụ lấy từ CHÍNH kho ảnh thật của tập (`nenCat`), không sinh thêm gì: anh đã chốt
+     *"ko ưu tiên dựng ảnh cf mới"*. Nhịp nào không có ảnh phụ thì giữ nguyên một ảnh — không
+     có ảnh thì thà đứng yên còn hơn nháy qua lại giữa hai khung trống. */
+  const CAT_GIAY = 2.0;
+  const anhLuc = (ix: number, Lx: Luot, t: number): string => {
+    const goc = (anhNens && anhNens[ix]) || anhNen || "";
+    const phu = (nenCat && nenCat[ix]) || [];
+    if (!phu.length) return goc;
+    const ds = goc ? [goc, ...phu] : phu;
+    const troi = Math.max(0, t - Lx.s);
+    return ds[Math.min(ds.length - 1, Math.floor(troi / CAT_GIAY))] || goc;
+  };
+
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
     <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            motNguoi={motNguoi} daoCuTap={daoCuTap}
@@ -973,7 +1002,7 @@ export const KichComic: React.FC<PropsComic> = ({
               sang mặt người nghe". Không có nó thì mười lối dựng ra mười video giống hệt. */
            hai={typeof (Lx as any).canh === "boolean" ? (Lx as any).canh : coCanh(ix, luot.length, hat)}
            dangNoi={dangNoi} noi={noi}
-           anhNen={(anhNens && anhNens[ix]) || anhNen}
+           anhNen={anhLuc(ix, Lx, dangNoi ? giay : Lx.e)}
            nenTron={!!(nenTron && nenTron[ix])}
            nenVe={(nenVe && nenVe[ix]) || null}
            logo={(anhChens && anhChens[ix]) || undefined}

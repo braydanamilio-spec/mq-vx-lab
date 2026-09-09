@@ -1908,7 +1908,12 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         MOT_GIONG = True
         CHU_THE_TAP = _ch.get("chu_the", "")
         DAO_CU_TAP = _ch.get("hinh_mau", "")
-        ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=14) if CHU_THE_TAP else []
+        # ── XIN 32 ẢNH, KHÔNG PHẢI 14  (anh: footage đổi mỗi 1,5–2,5s, 9/9/2026) ──────────────────
+        # Trần cũ 14 đặt khi ảnh chỉ dùng làm NỀN NHỊP — 12 nhịp thì 14 là dư. Nay hình còn
+        # đổi TRONG nhịp (xem `nenCat`), nên một tập 71 giây cần ~35 hình để đạt 2 giây/hình.
+        # Đo trên 20 chủ thể: chủ thể giàu có tới 33 ảnh, mà mình chỉ xin 14 — tự bỏ hơn nửa.
+        # Trần là trần XIN, không phải trần bắt buộc: chủ thể nghèo vẫn trả về ít, không hỏng.
+        ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=32) if CHU_THE_TAP else []
         print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · "
               f"🖼 ảnh thật: {len(ANH_THAT)}")
         # `import giai_thich as G` nằm ở DƯỚI trong chính hàm này, nên `G` là biến CỤC BỘ và
@@ -2451,6 +2456,38 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         if j2 < len(cau):
             so_lieu[j2] = lop_cua[_i]
     _bo_lech, _bo_lap = loc_the_so(so_lieu, cau)
+
+    # ── CẮT HÌNH THEO ĐỒNG HỒ, KHÔNG THEO CÂU  (anh, 9/9/2026) ────────────────────────
+    # Anh: *"đảm bảo đa dạng chuyển footage sau 1,5–2,5s"*. Đo 23 nhịp: trung vị 5,21 giây,
+    # 1/23 nhịp trong dải, dài nhất 11,8 giây.
+    # Engine nay nhận `nenCat[i]` = danh sách ảnh PHỤ của nhịp i và đổi hình mỗi 2 giây
+    # (xem `anhLuc` trong KichComic). Việc ở đây chỉ là RẢI ảnh dư vào đúng nhịp DÀI.
+    #
+    # Chỉ dùng ảnh THẬT đã có trong tay — không sinh thêm gì (*"ko ưu tiên dựng ảnh cf mới"*).
+    # Ưu tiên nhịp dài nhất trước: một nhịp 11 giây cần 5 hình, một nhịp 2 giây cần 0.
+    # Và KHÔNG cho một ảnh xuất hiện ở hai nhịp liền nhau — màn hình lặp là thứ anh đã chỉ ra.
+    nen_cat = [[] for _ in cau]
+    _du_anh = [a for a in (ANH_THAT or []) if a and a not in (anh_nens or [])]
+    if _du_anh:
+        def _dai_nhip(i: int) -> float:
+            return (luot[i]["e"] - luot[i]["s"]) if i < len(luot) else 0.0
+        _thu_tu = sorted(range(len(cau)), key=lambda i: -_dai_nhip(i))
+        _k = 0
+        for _i in _thu_tu:
+            if _k >= len(_du_anh):
+                break
+            _dai = _dai_nhip(_i)
+            _can = int(_dai // 2.0)                       # 2 giây một hình
+            if _can <= 0:
+                continue
+            _lay = []
+            for _ in range(min(_can, len(_du_anh) - _k)):
+                _lay.append(_du_anh[_k]); _k += 1
+            nen_cat[_i] = _lay
+        _n_cat = sum(len(x) for x in nen_cat)
+        if _n_cat:
+            print(f"   ✂️ rải {_n_cat} ảnh phụ vào {sum(1 for x in nen_cat if x)} nhịp dài "
+                  f"— hình đổi mỗi 2,0 giây")
     _ns = sum(1 for x in so_lieu if x)
     _ghi = f"   🔢 {_ns} lượt có lớp số liệu"
     if _bo_lech or _bo_lap:
@@ -2467,7 +2504,7 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         # hiện suốt tập: một thẻ đứng nguyên từ đầu tới cuối đúng là thứ anh đã chê ở
         # biểu tượng máy ảnh ("sao nó gắn trên videos từ đầu tới cuối vậy").
         "anhChens": chon_the_anh(loi, CHU_THE_TAP, LOGO_TAP, ANH_THAT),
-        "anhNens": anh_nens, "soLieu": so_lieu,
+        "anhNens": anh_nens, "nenCat": nen_cat, "soLieu": so_lieu,
         # Tấm nào bị `cover` giấu mất quá 40% một chiều thì engine hiện TRỌN — xem
         # `_nen_can_tron`. Đo ở đây vì Python biết cỡ ảnh, engine thì không.
         "nenTron": _nen_can_tron(anh_nens, ngang=bool(chuong)),
@@ -3251,7 +3288,7 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
     MOT_GIONG = True
     CHU_THE_TAP = _ch.get("chu_the", "")
     DAO_CU_TAP = _ch.get("hinh_mau", "")
-    ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=14) if CHU_THE_TAP else []
+    ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=32) if CHU_THE_TAP else []
     # ── LOGO/TRỤ SỞ TRA THẲNG TỪ WIKIDATA  (anh, 8/9/2026) ──────────────────────────
     # Khác `nap_anh_that` (tìm theo tên rồi lọc), `logo_wd` tra THUỘC TÍNH của thực thể —
     # `P154` là logo, `P18` là ảnh chính — nên ra ĐÚNG một tệp của đúng công ty ấy, không
