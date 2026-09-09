@@ -4145,6 +4145,8 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("dải ảnh thật ở khung dọc không bị bóp về 32%",
+          t_dai_anh_that_o_khung_doc_khong_bi_bop)
     check("thẻ số phải là một LƯỢNG hoặc một NĂM",
           t_the_so_phai_la_mot_LUONG_hoac_mot_NAM)
     check("tốc độ đọc lệch quanh CHUẨN NHÀ, không quanh 0",
@@ -10454,6 +10456,46 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_dai_anh_that_o_khung_doc_khong_bi_bop():
+    """Ảnh thật ở khung DỌC phải chiếm một dải cao thật, không co về dải 32%.
+
+    ── VÌ SAO  (anh soi short bộ 220, 9/9/2026) ──────────────────────────────────────────
+    Anh: *"phần ảnh thu càng ngày càng nhỏ lại thế"*. Hình học: ảnh 16:9 hiện TRỌN
+    (`objectFit: contain`) trong khung 9:16 cho dải ảnh cao đúng **32%** panel — 68% còn lại
+    là bản phóng-mờ của chính nó. Người xem tới vì tư liệu, và tư liệu chiếm một phần ba.
+
+    Anh đã chê CẢ HAI đầu, và đó mới là thông tin:
+        8/9  *"zoom bự quá … ko thấy được cái muốn thể hiện"*  -> `cover`: hỏng
+        9/9  *"ảnh thu càng ngày càng nhỏ"*                    -> `contain`: hỏng
+    Hai lời chê ngược nhau nghĩa là lời giải nằm ở GIỮA, không ở một trong hai nhánh của một
+    cờ nhị phân. Cờ `_tron` sinh ra như một lựa chọn hai đầu — đó là chỗ sai (§15.10).
+
+    Mức giữa: ảnh phủ trọn bề ngang, chiếm dải cao `_DAI_ANH`, cắt bớt hai mép.
+        hiện trọn -> dải 32% · thấy 100% bề ngang
+        dải 56%   -> dải 56% · thấy  57% bề ngang
+    Cổng canh cả HAI đầu: dải quá thấp thì quay lại lời chê 9/9, quá cao thì quay lại 8/9.
+    """
+    import os, re as _re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    tsx = io.open(os.path.join(goc, "..", "engine-remotion", "src", "comic", "NenComic.tsx"),
+                  encoding="utf-8").read()
+    # bỏ chú thích TRƯỚC khi soi: chính chú thích tại chỗ có chữ `contain` và các con số (§17.15)
+    ma = _re.sub(r"/\*[\s\S]*?\*/", "", tsx)
+    ma = _re.sub(r"(?m)//.*$", "", ma)
+
+    m = _re.search(r"_DAI_ANH\s*=\s*([0-9.]+)", ma)
+    assert m, "không tìm thấy `_DAI_ANH` — dải ảnh khung dọc lại thành một cờ hai đầu"
+    v = float(m.group(1))
+    assert 0.45 <= v <= 0.70, (
+        f"dải ảnh khung dọc = {v}: dưới 0,45 thì quay lại lời chê *ảnh thu nhỏ dần*, "
+        f"trên 0,70 thì quay lại lời chê *zoom bự quá*")
+
+    # và nhánh khung DỌC phải dùng `cover` trên dải ấy, không `contain` trên cả panel
+    assert "_tron && _doc" in ma, "nhánh khung dọc không còn tách riêng — dải ảnh sẽ về 32%"
+    assert _re.search(r"objectFit:\s*\(?_tron\s*&&\s*!_doc\s*\?\s*['\"]contain", ma), \
+        "khung dọc vẫn `contain` cả panel — đó chính là dải 32% anh chê"
 
 
 def t_the_so_phai_la_mot_LUONG_hoac_mot_NAM():

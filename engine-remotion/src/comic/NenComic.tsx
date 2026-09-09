@@ -662,6 +662,9 @@ export const NenPanel: React.FC<{
   // toàn cảnh còn 47% bề ngang). Luật đúng không phải HƯỚNG KHUNG mà là TỈ LỆ BỊ GIẤU — và
   // chỉ Python biết cỡ ảnh trước khi dựng, nên nó đo và gửi cờ sang (`props.nenTron`).
   const _anhThat = String(anh || "").indexOf("anh_pd/") >= 0;
+  // Dải ảnh ở khung DỌC — xem chú thích dài tại chỗ dùng. 0,56 là mức giữa giữa hai
+  // lời chê ngược nhau của anh, không phải một con số cho đẹp.
+  const _DAI_ANH = 0.56;
   const _tron = nenTron || (_anhThat && _doc);
   const _viTriNen = !_doc ? "50% 50%"
     : benVat === "trai" ? "22% 50%"
@@ -726,9 +729,30 @@ export const NenPanel: React.FC<{
               transform: "scale(1.12)",
             } as React.CSSProperties} />
           ) : null}
+          {/* ── DẢI ẢNH 32% LÀ QUÁ HẸP  (anh soi short bộ 220, 9/9/2026) ──────────────────
+              Anh: *"phần ảnh thu càng ngày càng nhỏ lại thế"*. Đo hình học: ảnh 16:9 hiện
+              TRỌN trong khung 9:16 thì dải ảnh chỉ cao **32%** panel, 68% còn lại là bản
+              phóng-mờ của chính nó. Người xem tới vì tư liệu, và tư liệu chiếm một phần ba.
+
+              Anh đã chê CẢ HAI đầu, nên đây không phải chuyện chọn bên:
+                  8/9  *"zoom bự quá … ko thấy được cái muốn thể hiện"*  -> cắt nhiều: hỏng
+                  9/9  *"ảnh thu càng ngày càng nhỏ"*                    -> hiện trọn: hỏng
+              Hai lần chê ngược nhau nghĩa là lời giải nằm ở GIỮA, không ở một trong hai
+              nhánh của một cờ nhị phân. Cờ `_tron` sinh ra như một lựa chọn hai đầu, và đó
+              mới là chỗ sai (§15.10: hai phân số cố định không mã hoá được một quan hệ).
+
+              Mức giữa: ảnh phủ trọn BỀ NGANG và chiếm một DẢI cao `_DAI_ANH` panel, cắt bớt
+              hai mép. Đo với ảnh 16:9 trong khung 9:16:
+                  hiện trọn      -> dải cao 32% · thấy 100% bề ngang
+                  dải 56%        -> dải cao 56% · thấy  57% bề ngang
+              Tức ảnh to gần gấp đôi mà vẫn còn hơn nửa bề ngang — xa hẳn "một cánh cửa".
+              Khung NGANG không đụng tới: ở đó `cover` vốn đã gần khít. */}
           <Img src={staticFile(anh)} style={{
-            width: "100%", height: "100%",
-            objectFit: (_tron ? "contain" : "cover"),
+            width: "100%",
+            height: (_tron && _doc ? `${(_DAI_ANH * 100).toFixed(0)}%` : "100%"),
+            top: (_tron && _doc ? `${((1 - _DAI_ANH) * 50).toFixed(1)}%` : undefined),
+            position: (_tron && _doc ? "absolute" : undefined),
+            objectFit: (_tron && !_doc ? "contain" : "cover"),
             objectPosition: (_tron ? "50% 42%" : _viTriNen),
             /* ── KEN BURNS: PHÓNG CHẬM + TRÔI  (anh yêu cầu, 7/9/2026) ──────────────────
                Nền giờ là ẢNH TĨNH thật (trụ sở Kodak 1900, thẻ logo). Một ảnh tĩnh đứng yên
