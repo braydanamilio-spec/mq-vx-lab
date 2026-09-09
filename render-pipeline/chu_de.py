@@ -75,6 +75,37 @@ _DV = (r"%|percent|million|billion|trillion|thousand|km|kilometres?|miles?|kg|ki
 # `\d{4}` bắt NĂM — mốc thời gian là xương sống của mọi câu chuyện, và bản đầu bỏ hết.
 _CAU = re.compile(r"[^.\n]*?\b(?:\d{4}|\d[\d,\.]*\s*(?:" + _DV + r"))\b[^.\n]*\.")
 _SO = re.compile(r"\b\d[\d,\.]*\b")
+# Số KÈM ĐƠN VỊ, và ký hiệu tiền đứng trước cũng tính. Xem `so_kem_don`.
+_SO_DON = re.compile(r"([$£€]\s?\d[\d,\.]*(?:\s*(?:million|billion|trillion))?)"
+                     r"|(\d[\d,\.]*\s*(?:" + _DV + r"))\b", re.I)
+
+
+def so_kem_don(cau: str) -> str:
+    """Lượng ĐẦU TIÊN trong câu, KÈM đơn vị của nó. "" khi câu chỉ có số trần.
+
+    ── VÌ SAO KHÔNG DÙNG SỐ TRẦN  (anh soi bộ 214 và 216, 9/9/2026) ─────────────────────
+    `hook_phu` lấy `dau["so"]` — con số đầu tiên, ĐÃ BỊ TÁCH khỏi đơn vị. Hai lượt liền cho
+    ra cùng một bệnh:
+        bộ 214: *"How much money died with Savannah River Plant, eighty DOLLARS?"*
+        bộ 216: *"The patent that outlived Savannah River Plant SHOWS 80."*
+    Cả hai lấy số 80 của câu *"owner could claim up to 80 PERCENT"*. Lần đầu mô hình tự gắn
+    đơn vị sai; lần sau nó không gắn gì và câu thành vô nghĩa. Thẻ số trên màn hình cũng ra
+    một chữ "80" trơ trọi — đúng §12.7: nhãn phải nói nó là NHÃN của cái gì.
+
+    Đây là §14.16 ở dạng thuần: luật *"hook phải có một lượng chính xác"* được thoả bằng cách
+    RẺ NHẤT mà câu chữ cho phép. Chỗ hở nằm ở phần không viết ra — ta nói *phải có số*, không
+    nói *số phải mang đơn vị của chính nó*.
+
+    Trả "" chứ không trả số trần: không có lượng thì `phim._la_so` bỏ thẻ và hook vẫn tới
+    người xem bằng chính câu chuyện (§15.2 — "" và "0" phải là hai câu trả lời khác nhau).
+    Năm bốn chữ số KHÔNG tính là lượng: "1948" không phải một đại lượng để hứa hẹn.
+    """
+    for m in _SO_DON.finditer(str(cau or "")):
+        t = " ".join((m.group(0) or "").split())
+        if re.fullmatch(r"(1[89]\d\d|20\d\d)", t.replace(",", "")):
+            continue
+        return t
+    return ""
 
 
 _LUC = [0.0]

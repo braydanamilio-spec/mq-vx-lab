@@ -4145,6 +4145,8 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("lượng của hook phải KÈM đơn vị, không phải số trần",
+          t_luong_cua_hook_phai_kem_don_vi)
     check("khuôn hỏi TIỀN không phát cho kịch bản không có tiền",
           t_khuon_hoi_tien_khong_phat_cho_kich_ban_khong_co_tien)
     check("đơn vị mét đổi sang Mỹ NGAY Ở NGUỒN (số phải đổi thật)",
@@ -10444,6 +10446,55 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_luong_cua_hook_phai_kem_don_vi():
+    """`hook_phu` phải là một lượng KÈM ĐƠN VỊ, không bao giờ là con số trần.
+
+    ── VÌ SAO  (anh soi bộ 214 rồi 216, 9/9/2026) ────────────────────────────────────────
+    `hook_phu = dau["so"]` lấy con số đầu tiên ĐÃ TÁCH khỏi đơn vị. Hai lượt liền, cùng con
+    số 80 của câu *"owner could claim up to 80 PERCENT"*, hai kiểu hỏng khác nhau:
+        bộ 214  *"How much money died with Savannah River Plant, eighty DOLLARS?"*
+        bộ 216  *"The patent that outlived Savannah River Plant SHOWS 80."*
+    Lần đầu mô hình tự gắn đơn vị SAI; lần sau nó không gắn gì và câu vô nghĩa. Thẻ số trên
+    màn hình cũng ra một chữ "80" trơ trọi — §12.7: nhãn phải nói nó là nhãn của cái gì.
+
+    §14.16 ở dạng thuần: ràng buộc *"hook phải có một lượng chính xác"* được thoả bằng cách
+    RẺ NHẤT câu chữ cho phép. Chỗ hở nằm ở phần không viết ra — ta nói *phải có số*, không
+    nói *số phải mang đơn vị của chính nó*. Nên vá ở chỗ SINH ra lượng ấy, không thêm cổng
+    chặn (§13.23 — máy sửa được thì máy sửa).
+
+    Năm bốn chữ số không tính là lượng: "1948" không phải một đại lượng để hứa hẹn.
+    """
+    import ast, os
+    import chu_de as C
+
+    assert C.so_kem_don("owner could claim up to 80 percent.") == "80 percent", \
+        C.so_kem_don("owner could claim up to 80 percent.")
+    assert C.so_kem_don("The project cost $1.2 billion.") == "$1.2 billion"
+    assert C.so_kem_don("peaked in 1960 at 11,000 tons, dropping later.") == "11,000 tons"
+    # câu chỉ có NĂM -> không phải một lượng, phải trả "" chứ không trả "1948" (§15.2)
+    assert C.so_kem_don("Since 1948 Crawford Greenewalt led the company.") == "", \
+        C.so_kem_don("Since 1948 Crawford Greenewalt led the company.")
+    assert C.so_kem_don("The plant was guarded by guns until it closed.") == ""
+
+    # và `khung_hoi` phải THẬT SỰ dùng nó — quét MÃ, bỏ docstring (§17.15): chính docstring
+    # này nhắc lại `dau["so"]` lẫn tên hàm.
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "khung_hoi.py"), encoding="utf-8").read())
+    ma = []
+    for n in ast.walk(cay):
+        if isinstance(n, ast.FunctionDef):
+            b = n.body
+            if b and isinstance(b[0], ast.Expr) and isinstance(b[0].value, ast.Constant):
+                b = b[1:]
+            ma.append("\n".join(ast.unparse(x) for x in b))
+    het = "\n".join(ma)
+    assert "hook_phu" in het, "không tìm thấy `hook_phu` — phép tìm hỏng, không phải mã hỏng"
+    dong = [d for d in het.splitlines() if "hook_phu =" in d]
+    assert dong, "không tìm thấy chỗ gán `hook_phu`"
+    assert any("so_kem_don" in d for d in dong), \
+        f"`hook_phu` vẫn lấy số trần — mô hình sẽ lại tự gắn đơn vị: {dong[0][:70]}"
 
 
 def t_khuon_hoi_tien_khong_phat_cho_kich_ban_khong_co_tien():

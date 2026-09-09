@@ -268,7 +268,17 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
 
     dau = cau[0]
     hook = tieu.upper()[:52]
-    hook_phu = dau["so"] or chu_the.upper()[:18]
+    # ── LƯỢNG PHẢI ĐI KÈM ĐƠN VỊ CỦA CHÍNH NÓ  (bộ 214 · 216, 9/9/2026) ──────────────
+    # `dau["so"]` là con số ĐÃ BỊ TÁCH khỏi đơn vị, và hai lượt liền cho cùng một bệnh:
+    #     214: *"How much money died with Savannah River Plant, eighty DOLLARS?"*
+    #     216: *"The patent that outlived Savannah River Plant SHOWS 80."*
+    # Cả hai lấy số 80 của câu *"claim up to 80 PERCENT"* — lần đầu mô hình tự gắn đơn vị
+    # sai, lần sau nó không gắn gì và câu thành vô nghĩa. §14.16: luật "hook phải có một
+    # lượng chính xác" được thoả bằng cách RẺ NHẤT câu chữ cho phép, và chỗ hở nằm ở phần
+    # ta không viết ra — ta nói *phải có số*, không nói *số phải mang đơn vị của nó*.
+    # Không có lượng nào kèm đơn vị thì để TÊN CHỦ THỂ như cũ: `phim._la_so` thấy không phải
+    # số nên bỏ hẳn thẻ, và hook vẫn tới người xem bằng chính câu chuyện.
+    hook_phu = _CD.so_kem_don(dau["cau"]).upper() or chu_the.upper()[:18]
 
     # ── NHỊP 0 PHẢI NÓI RÕ ĐÓ LÀ GÌ  (anh: *"xem ko hiểu"*, 7/9/2026) ────────────────────
     # Bản trước mở thẳng bằng CÚ LẬT ("ai cũng tưởng Kodak bỏ lỡ máy ảnh số"). Người xem
