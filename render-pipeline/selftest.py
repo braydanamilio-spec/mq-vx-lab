@@ -4145,6 +4145,7 @@ def main():
     check("hồ Groq rỗng KHÔNG được làm chết đường dựng thoại", t_thoai_co_tang_du_phong)
     check("thẻ NĂM hiện ngay, không đếm lên số không có thật", t_nam_khong_dem_len)
     check("LOGO không được dùng làm ảnh nền", t_logo_khong_lam_nen)
+    check("mọi nguồn ảnh phải TRẢ 0 cho truy vấn vô nghĩa", t_nguon_anh_phai_tra_zero)
     check("publish.yml truyền khoá đúng danh sách kênh", t_khoi_khoa_kenh_khong_lech)
     check("trang phục vẽ ra đúng vai đang nói (nữ không râu)", t_trang_phuc_dung_vai)
     check("KHÔNG nhịp nào trống (không hình, không chữ)", t_khong_nhip_nao_trong)
@@ -10315,6 +10316,39 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_nguon_anh_phai_tra_zero():
+    """Mọi nguồn ảnh phải có mặt trong đường sản xuất, và phải lọc được.
+
+    ── VÌ SAO  (anh, 9/9/2026) ───────────────────────────────────────────────────────────
+    Anh hỏi nguồn ảnh có đủ đa dạng không. Đo 20 chủ thể: trung vị 5 ảnh, 8/20 dưới 3 ảnh,
+    trong khi footage đổi mỗi 1,5–2,5 giây cần ~30 hình/tập. Thêm Openverse: +10,7 ảnh.
+
+    Bài kiểm bắt buộc trước khi tin một kho (§19.14): truy vấn VÔ NGHĨA phải trả 0. Kho không
+    phân biệt được "không có" với "có" thì mọi phép lọc sau nó đều lọc rác — Pexels trả 4.248
+    ảnh cho `zzqx wubblefrotz` nên đã bị loại, và luật ấy phải sống trong cổng, không chỉ
+    trong chú thích.
+
+    Cổng này KHÔNG gọi mạng: nó kiểm mã, còn phép thử mạng đã chạy tay và ghi số vào
+    `anh_openverse.py`. Cổng gọi mạng sẽ đỏ vì lý do không liên quan (§13.3 — cổng chặn phiên
+    thì phải chặn vì code, không vì đường truyền).
+    """
+    ma = _ma_py("pilot_hai")
+    assert "anh_openverse" in ma, "nguồn Openverse chưa được nối vào đường sản xuất"
+    i = ma.find('for _ten_mod in (')
+    assert i > 0, "không tìm thấy vòng lặp nguồn ảnh"
+    vong = ma[i:i + 160]
+    assert vong.find("anh_tu_do") < vong.find("anh_openverse"), \
+        "Openverse đứng TRƯỚC nguồn chính xác hơn — ảnh sai đắt hơn ảnh thiếu (§19.13)"
+
+    import anh_openverse as OV
+    src = _ma_py("anh_openverse")
+    assert "license=cc0,pdm" in src, "không lọc giấy phép NGAY Ở TRUY VẤN"
+    assert "cum not in ten.lower()" in src, "thiếu luật tên phải mang tên chủ thể"
+    assert "_DU_LON" in src, "thiếu sàn kích thước"
+    assert OV.anh_cua("", toi_da=5) == [], "chuỗi rỗng phải trả 0, không đi hỏi mạng"
+    assert OV.anh_cua("ab", toi_da=5) == [], "tên quá ngắn phải trả 0"
 
 
 if __name__ == "__main__":

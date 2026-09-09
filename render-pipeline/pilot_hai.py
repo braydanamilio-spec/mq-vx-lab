@@ -1694,7 +1694,16 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
     # (bóng bay). Kho không bao giờ trả zero là kho không phân biệt được "không có" với "có"
     # (§15.2), nên mọi phép lọc đặt sau nó chỉ đang lọc rác.
     ra, thay = [], set()
-    for _ten_mod in ("anh_tu_do", "anh_nara"):
+    # ── NGUỒN THỨ TƯ: OPENVERSE  (anh, 9/9/2026) ───────────────────────────────────────
+    # Anh: *"có thể thêm vài nguồn ok cho phong phú hoặch dự phòng"*. Đo 20 chủ thể ngẫu
+    # nhiên: ba nguồn cũ cho TRUNG VỊ 5 ảnh/chủ thể, 8/20 chủ thể có dưới 3 ảnh — trong khi
+    # footage đổi mỗi 1,5–2,5 giây cần ~30 hình một tập.
+    # Openverse gộp nhiều bảo tàng, KHÔNG cần khoá, và qua bài kiểm truy vấn vô nghĩa
+    # (`zzqx wubblefrotz` -> 0). Đo sau bộ lọc: +10,7 ảnh/chủ thể.
+    # Đứng CUỐI vì độ chính xác giảm dần: ảnh của BÀI (người viết chọn) > NARA (bản ghi có
+    # tên chủ thể) > Openverse (tìm theo chữ, phải lọc cụm). Một ảnh sai đắt hơn một ảnh
+    # thiếu, nên nguồn nhiễu hơn chỉ được LẤP phần còn thiếu (§19.13).
+    for _ten_mod in ("anh_tu_do", "anh_nara", "anh_openverse"):
         if len(ra) >= toi_da:
             break
         try:
