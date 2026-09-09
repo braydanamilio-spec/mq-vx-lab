@@ -2809,8 +2809,13 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     # chuyền hoàn chỉnh. Nối trước khi dựng workflow, không phải sau.
     try:
         import phim_dang as PD
+        # `long=bool(chuong)`, KHÔNG ghi cứng False (anh soi .tai.json bộ 220, 9/9/2026).
+        # `chuong > 0` là bản dài `v11L_` (16:9), mà tham số `long` ghi cứng False làm
+        # `viet_bai` gắn `#Shorts` + `loai:short` cho video DÀI — nó sẽ lên kệ Shorts sai
+        # (§10.3: mỗi mảnh giao hàng phải đúng loại của nó). Cùng slug đã phân biệt bằng
+        # `chuong`; tham số này phải theo cùng nguồn, không đặt tay một hằng.
         co = PD.giao_hang(slug, out, ma, g["ten"], tieu, hook, hook_phu,
-                          dur, False, nhip, CHU_THE_TAP)
+                          dur, bool(chuong), nhip, CHU_THE_TAP)
         _t = "✅" if all(co.values()) else "❌"
         print(f"   {_t} giao hàng: " + " · ".join(f"{k}{'✓' if v else '✗'}"
                                                   for k, v in co.items()))

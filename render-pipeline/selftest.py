@@ -4196,6 +4196,10 @@ def main():
           t_nen_nhan_ten_doi_chu_cuoi_ma_van_chan_hai_ca_da_tra_gia)
     check("ảnh phụ (nenCat) qua cùng ba cổng với nền chính",
           t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh)
+    check("bản dài KHÔNG bị gắn nhãn Short (#Shorts/loai)",
+          t_ban_dai_khong_gan_nhan_short)
+    check("lịch 5 mẻ/ngày, mỗi mẻ 2 mốc, IDX không đè dải cũ",
+          t_lich_5_me_va_idx_khong_dung_dai_cu)
     check("edge-tts qua constraints + còn token Sec-MS-GEC (403 câm)",
           t_edge_tts_ghim_qua_constraints_va_con_token)
     check("kho đệm chọn chủ thể phải nằm TRONG GIT (CI mới có)", t_dem_chu_de_phai_trong_git)
@@ -10208,6 +10212,78 @@ def t_workflow_nap_du_ho_khoa():
                       "GROQ_KEYS lọt suốt hai ngày: " + "; ".join(lech[:6]))
     assert all("GROQ_KEYS" in co for co in song.values()), \
         "luồng render không nạp GROQ_KEYS — 18/18 luồng đã ĐỎ vì đúng chỗ này"
+
+
+def t_ban_dai_khong_gan_nhan_short():
+    """`giao_hang` phải nhận `long` theo `chuong`, không ghi cứng False.
+
+    ── VÌ SAO  (anh soi .tai.json bộ 220, 9/9/2026) ──────────────────────────────────────
+    `v11L_therules_0220.tai.json` (bản DÀI 16:9, 67s) mang `loai:short · long:False` và mô
+    tả YouTube đuôi `#Shorts`. Gốc: lời gọi `PD.giao_hang(..., dur, False, nhip, ...)` ghi
+    CỨNG `long=False` trong `mot_tap`, kể cả khi `chuong > 0` (bản dài). Hậu quả upload:
+    video dài lên kệ Shorts sai luồng (§10.3 — mỗi mảnh giao hàng phải đúng loại của nó).
+    `slug` đã phân biệt long/short bằng `chuong`; tham số `long` phải theo CÙNG nguồn.
+
+    Quét MÃ, bỏ chú thích (§17.15): chính chú thích vừa thêm nhắc lại `False`.
+    """
+    import ast, os
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "pilot_hai.py"), encoding="utf-8").read())
+    than = next((n for n in ast.walk(cay)
+                 if isinstance(n, ast.FunctionDef) and n.name == "mot_tap"), None)
+    assert than, "không tìm thấy `mot_tap`"
+    goi = None
+    for n in ast.walk(than):
+        if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and n.func.attr == "giao_hang"):
+            goi = n
+    assert goi, "không tìm thấy lời gọi giao_hang trong mot_tap"
+    # tham số thứ 9 (0-based 8) là `long`
+    arg = goi.args[8]
+    src = ast.unparse(arg)
+    assert src != "False", \
+        f"giao_hang ghi cứng long=False -> bản dài gắn #Shorts. Phải theo `chuong`: {src}"
+    assert "chuong" in src, f"long phải suy từ `chuong`: {src}"
+
+
+def t_lich_5_me_va_idx_khong_dung_dai_cu():
+    """render_comic_18.yml phải có 5 mẻ/ngày, mỗi mẻ 2 mốc, và IDX không đè dải cũ.
+
+    ── VÌ SAO CÓ CỔNG THAY VÌ TEST TRÊN GITHUB  (§8, 9/9/2026) ───────────────────────────
+    §8 cấm `gh workflow run` để thử — nên công thức lịch mới (5 mẻ, bucket giờ, IDX) không
+    chạy thử được trên runner. Cổng này mô phỏng CHÍNH công thức bash trên mọi giờ có mốc
+    cron và xác nhận ba bất biến, đúng cách §13.10 (chạy chính logic, không đọc suông):
+      · 10 mốc -> đúng 5 mẻ, mỗi mẻ 2 mốc (một mốc + một thử lại)
+      · hai mốc cùng mẻ rơi cùng bucket -> IDX bằng nhau -> thử lại idempotent
+      · dải IDX mới (NGAY*5*SO) KHÔNG chồng dải cũ (NGAY*SO) -> video đã dựng không dựng lại
+    """
+    import os, re as _re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    wf = io.open(os.path.join(goc, "..", ".github", "workflows",
+                              "render_comic_18.yml"), encoding="utf-8").read()
+    ma = _re.sub(r"(?m)^\s*#.*$", "", wf)                       # bỏ chú thích (§17.15)
+
+    gio = [int(m.group(1)) for m in _re.finditer(r'cron:\s*"20\s+(\d+)\s', ma)]
+    assert len(gio) == 10, f"phải có 10 mốc cron (5 mẻ × 2), có {len(gio)}"
+
+    def _me(g):                                                 # ĐÚNG công thức bash
+        return min(4, max(0, (g - 8 + 1) // 3))
+    nhom = {}
+    for g in gio:
+        nhom.setdefault(_me(g), []).append(g)
+    assert len(nhom) == 5, f"phải đúng 5 mẻ, ra {sorted(nhom)}"
+    assert all(len(v) == 2 for v in nhom.values()), f"mỗi mẻ phải 2 mốc: {nhom}"
+
+    # IDX phải theo scheme mới
+    assert _re.search(r"IDX=\$\(\(\s*NGAY\s*\*\s*5\s*\*\s*SO", ma), \
+        "IDX không theo scheme 5 mẻ (NGAY*5*SO + ME*SO + k)"
+    # dải mới vs cũ, mọi ngày
+    for NGAY in (1, 12345, 99999):
+        for SO in (3,):
+            cu = {NGAY * SO + k for k in range(SO)}
+            moi = {NGAY * 5 * SO + m * SO + k for m in range(5) for k in range(SO)}
+            assert not (cu & moi), f"IDX mới đè dải cũ ở NGAY={NGAY}"
+            assert len(moi) == 5 * SO, "IDX mới có trùng trong ngày"
 
 
 def t_edge_tts_ghim_qua_constraints_va_con_token():
