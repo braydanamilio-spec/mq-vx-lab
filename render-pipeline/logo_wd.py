@@ -64,7 +64,29 @@ def _khong_dau(t: str) -> str:
 
 
 def thuc_the_qid(ten: str) -> tuple:
-    """(qid, nhãn, mô tả) — hoặc (None, "", "") nếu không tìm được / nghĩa lạc."""
+    """(qid, nhãn, mô tả) — hoặc (None, "", "") nếu không tìm được / nghĩa lạc.
+
+    ── HỎI WIKIPEDIA TRƯỚC, TÌM KIẾM LÀ ĐƯỜNG LÙI  (đo 9/9/2026) ────────────────────────
+    `wbsearchentities` là một phép TÌM KIẾM: nó xếp hạng theo độ khớp chuỗi, nên nó có thể
+    trả về một thực thể KHÁC trùng tên. Đo bốn chủ thể:
+        Fine Air  ->  tìm kiếm Q2929369  ·  bài Wikipedia Q5450036   ← LỆCH
+        Savannah River Plant · MetLife Building · 3dfx  ->  khớp
+    Lệch một lần trên bốn, và hậu quả không phải là "thiếu tên gọi khác" mà là **mang tên
+    gọi khác của một thực thể khác vào cổng nhận ảnh** — tức cổng nhận nhầm chứ không loại
+    nhầm, dạng tệ hơn.
+    `titles=` + `redirects=1` thì không xếp hạng gì cả: nó trả về đúng thực thể của bài mà
+    chủ thể trỏ tới, và đi qua trang đổi hướng luôn. Hỏng thì rơi về đường tìm kiếm cũ.
+    """
+    try:
+        d0 = _goi("https://en.wikipedia.org/w/api.php?action=query&format=json"
+                  "&redirects=1&prop=pageprops&ppprop=wikibase_item&titles="
+                  + urllib.parse.quote(ten))
+        for _, pg in ((d0.get("query") or {}).get("pages") or {}).items():
+            q0 = (pg.get("pageprops") or {}).get("wikibase_item")
+            if q0:
+                return q0, str(pg.get("title") or ten), ""
+    except Exception:
+        pass
     u = ("https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json"
          "&language=en&limit=5&search=" + urllib.parse.quote(ten))
     for x in (_goi(u).get("search") or []):

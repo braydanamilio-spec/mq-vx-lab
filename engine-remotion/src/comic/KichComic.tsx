@@ -72,7 +72,11 @@ const NUA_RONG = 100;         // nửa bề ngang khi tay ghim ngực
    khuất hình ảnh số liệu, nền"*. Hạ 0,44 -> 0,36 ở khung DỌC. Phần nhìn thấy (đỉnh đầu ->
    mép cắt ngang hông) nay chiếm 36% chiều cao panel thay vì 44% — nhường 8 điểm phần trăm
    cho ảnh nền và khối số liệu, đúng thứ tập này đi bán. */
-const TI_LE_NGUOI = 0.31;   // 9/9 lần hai: 0,36 -> 0,31 theo yêu cầu «thấp nhỏ xuống chút nữa»
+const TI_LE_NGUOI = 0.24;   // 9/9 lần BA: 0,36 -> 0,31 -> 0,24. Anh soi bộ 213: *"người to,
+                            // mà ảnh nền đâu, thu nhỏ tí ti vậy"* — 0,31 là một bước quá nhỏ.
+                            // Vai của nhân vật đổi hẳn từ lúc nền LÀ ảnh tư liệu: trước nó là
+                            // thứ duy nhất trong khung nên phải to; nay nó là NGƯỜI DẪN đứng
+                            // trước tư liệu, và người dẫn không được che tư liệu (§12.5).
 
 const LE = 44;                // lề mực quanh khung
 const NET = 7;                // độ dày viền mực MẶC ĐỊNH (mỗi kênh ghi đè, xem `netMuc`)
@@ -364,7 +368,7 @@ const Panel: React.FC<{
     /* 9/9 lần hai — anh: *"cho nhân vật thấp nhỏ xuống chút nữa tránh che khuất"*.
        0,34 -> 0,28 bề ngang. Cùng lượt với việc đẩy người dẫn về góc trái (`guViTri`), nên
        phần khung dành cho ảnh nền và khối số rộng thêm hẳn một phần tư. */
-    : Math.min((w * 0.28) / (NUA_RONG * 2.1),
+    : Math.min((w * 0.21) / (NUA_RONG * 2.1),   // 9/9 lần ba: 0,28 -> 0,21, cùng lý do trên
                (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
   const k = doiNguoi ? kRong : kCan;
   // ĐỈNH ĐẦU NEO ĐÚNG MÉP CHỪA, không neo vào một phân số thứ hai. Bản cũ tính trần bằng
@@ -480,6 +484,17 @@ const Panel: React.FC<{
      im lặng (§13.6: hằng số sống lâu hơn ngữ cảnh sinh ra nó).
      Chỉ áp khi CÓ một người đứng hẳn một bên; hai người thì không còn dải nào để nhường và
      giá trị mặc định của `Truc` giữ nguyên hành vi cũ. */
+  /* ── BÊN CỦA BONG BÓNG: MỘT NGUỒN, BA LỚP ĐỌC  (bộ 212, 9/9/2026) ────────────────────
+     Ba lớp phải tránh bong bóng — thoại, thẻ logo, khối số liệu — và cả ba tự tính lấy bên
+     của nó bằng ba công thức khác nhau. Từ khi có `motNguoi`, thoại theo `guViTri` còn hai
+     lớp kia vẫn theo `noiA` (ai đang nói), nên chúng trỏ đúng nửa số nhịp.
+     Soi bộ 212: khối «90 PERCENT» dạt sang trái ở nhịp mà bong bóng cũng bên trái, và bị
+     nuốt mất chữ. Soi bộ 210: thẻ logo nằm ngay dưới đuôi bong bóng.
+     Đúng §17.4 — ba lớp cùng chọn một chỗ, không lớp nào biết lớp nào. Nay một biến. */
+  const _benBong: "trai" | "phai" =
+    motNguoi ? (guViTri === "trai" ? "phai" : "trai")
+             : canRong ? (noiA ? "phai" : "trai")
+                       : (noiA ? "trai" : "phai");
   const _neTrai = _motBen !== null && _motBen < 0.5 ? _motBen + 0.14 + 0.04 : 0.10;
   const _nePhai = _motBen !== null && _motBen > 0.5 ? _motBen - 0.14 - 0.04 : 0.90;
   const cxB = doiNguoi ? w * 0.72
@@ -693,8 +708,7 @@ const Panel: React.FC<{
                  tran={yChan - CAO_NGUOI * (doiNguoi ? caoMax : (noiA ? caoA : caoB)) * k}
                  /* Bong bóng ở bên nào thì số dạt sang bên kia. Chỉ ở khung NGANG — khung dọc
                     bong bóng nằm trên đầu, không tranh chỗ với số. */
-                 lech={canRong ? ((canRong ? (noiA ? "phai" : "trai") : "") === "trai"
-                                    ? 0.16 : -0.16) : 0}
+                 lech={canRong ? (_benBong === "trai" ? 0.16 : -0.16) : 0}
                  /* Bong bóng ĐỨNG BÊN (`lech` khác 0) thì nó không tranh chiều dọc — để số
                     ở nguyên chỗ cao nhất. Bong bóng ĐỨNG TRÊN (`lech` = 0, khung dọc) thì
                     mép trên của khối phải là đáy bong bóng, không phải một phân số. Điều
@@ -728,10 +742,15 @@ const Panel: React.FC<{
           `0,20·w` để lại ~75% mặt thẻ trắng trơn — đúng thứ anh dặn *"ko dùng nền trắng
           trơn"*, chỉ là trắng ở thẻ chứ không ở nền. Khai CHIỀU CAO, để bề ngang theo tỉ lệ
           thật của ảnh (§17.2: hình không vuông thì đừng kẹp bằng một ô vuông). */}
-      {logo ? (
+      {/* 9/9 — THẺ NÀY CHỈ CÓ NGHĨA KHI NỀN CHƯA LÀ ẢNH THẬT. Anh soi bộ 213: nền trắng
+          trơn mà ảnh tư liệu thì bị nhét vào một thẻ bé xíu góc phải — *"ảnh nền đâu"*.
+          Chú thích ngay dưới đã tự nói ra luật này cho ĐẠO CỤ (*"nay nền đã LÀ chủ thể
+          nên đạo cụ vừa nói lại thứ nền đã nói"*) và thẻ ảnh không được áp — vá một
+          nhánh, để nguyên nhánh song song (§6). */}
+      {logo && !anhNen ? (
         <div style={{
           position: "absolute", bottom: h * 0.07,
-          [guViTri === "phai" ? "left" : "right"]: w * 0.05,
+          [_benBong === "phai" ? "left" : "right"]: w * 0.05,
           height: h * 0.15, width: "auto", maxWidth: w * 0.30,
           background: "#FFFFFFEE", borderRadius: 18,
           border: `${Math.max(3, NET - 3)}px solid #14110F`,
@@ -756,8 +775,7 @@ const Panel: React.FC<{
                  /* Bong bóng NGƯỢC bên người dẫn. Bản cũ suy từ `noiA` (ai đang nói) — đúng
                     cho hai người, nhưng ở chế độ MỘT người thì nó không biết người ấy đứng
                     đâu, nên bong bóng có thể rơi đúng bên người dẫn vừa dời sang. */
-                 ben={motNguoi ? (guViTri === "trai" ? "phai" : "trai")
-                      : canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
+                 ben={_benBong}
                  duoi={canRong ? (noiA ? "trai" : "phai") : undefined}
                  hep={canRong} s0={L.s} e0={L.e} net={netMuc} boGoc={boGoc} hook={hook}
                  duoiKhung={bongDuoi}

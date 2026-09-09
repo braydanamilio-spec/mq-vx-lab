@@ -345,7 +345,9 @@ def t_logo_wikidata():
     # được Remotion phục vụ; và `Img` còn GIỮ KHUNG tới khi ảnh nạp xong, còn `img` thô có
     # thể render trước lúc ảnh về -> khung trắng, hỏng mà không ai báo (§12.8).
     import re as _re2
-    _the = _re2.search(r"logo \?[^}]*\{[\s\S]{0,1200}?</div>", tsx)
+    # `logo ?` -> `logo && !anhNen ?` (9/9: thẻ chỉ hiện khi nền CHƯA là ảnh thật). Khuôn
+    # cũ ghim đúng hai chữ ấy cạnh nhau nên nó đỏ khi thêm một điều kiện hoàn toàn hợp lệ.
+    _the = _re2.search(r"logo\s*(?:&&[^?]*)?\?[^}]*\{[\s\S]{0,1400}?</div>", tsx)
     assert _the, "không tìm thấy khối thẻ ảnh trong engine"
     assert "staticFile(logo)" in _the.group(0), "ảnh thẻ không qua staticFile -> ảnh vỡ"
     assert "<Img " in _the.group(0), "thẻ dùng <img> thô -> có thể ra khung trắng"
@@ -4143,6 +4145,8 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("nền nhận tên đổi chữ cuối, vẫn chặn Meat Hope + Midway",
+          t_nen_nhan_ten_doi_chu_cuoi_ma_van_chan_hai_ca_da_tra_gia)
     check("ảnh phụ (nenCat) qua cùng ba cổng với nền chính",
           t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh)
     check("edge-tts qua constraints + còn token Sec-MS-GEC (403 câm)",
@@ -10436,6 +10440,50 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_nen_nhan_ten_doi_chu_cuoi_ma_van_chan_hai_ca_da_tra_gia():
+    """Cổng "nền phải mang tên chủ thể" nới tới tên đổi chữ cuối, mà KHÔNG mở lại hai ca cũ.
+
+    ── VÌ SAO  (bộ 212, 9/9/2026) ───────────────────────────────────────────────────────
+    «Savannah River Plant» tìm ra 24 ảnh và cổng cụm loại 23. Đọc tay (§13.21) sáu tiêu đề
+    liên quan thì 5/6 là ảnh ĐÚNG chủ thể — kho lưu trữ gọi nơi ấy là "Savannah River
+    **Site**" còn bài Wikipedia gọi là "Plant". Wikidata không cứu được: đã đo, `ten_khac`
+    trả về đúng một tên vì đây là thực thể riêng chứ không phải trang đổi hướng.
+
+    Nới cổng luôn có giá, nên cổng này canh CẢ HAI chiều (§13.11) trên đúng ba ca đã trả
+    giá thật — hai ca sinh ra luật cụm liền, và một ca sinh ra phép nới:
+        «Savannah River Plant» × "… Savannah River Site"          -> phải NHẬN
+        «Meat Hope»            × "… whale meat … Point Hope …"    -> phải LOẠI
+        «Midway Express»       × "Midway Pony Express station"    -> phải LOẠI
+    Ranh giới ≥2 từ còn lại là thứ giữ hai ca sau: tên hai chữ bỏ chữ cuối còn một chữ, và
+    một chữ thì luật tự tắt. Đây là chỗ phép nới nguy hiểm nhất, nên nó phải tắt ở đúng đó.
+    """
+    import pilot_hai as PH
+    # Trả `CHU_THE_TAP` về chỗ cũ: nó là biến MODULE, nên cổng nào chạy sau sẽ thừa hưởng
+    # chủ thể của cổng này. Bản đầu quên, và cổng ảnh-phụ ngay dưới đỏ oan vì đang cầm
+    # «Midway Express» — bài kiểm hỏng chứ không phải mã hỏng (§13.15).
+    _cu_ct = PH.CHU_THE_TAP
+
+    def _thu(chu_the, tieu_de):
+        PH.CHU_THE_TAP = chu_the
+        d = "_t3_" + str(abs(hash(tieu_de)) % 99999) + ".jpg"
+        PH.TEN_ANH[d] = tieu_de
+        # `[None]` = một nhịp chưa có nền; `cau` rỗng -> đi nhánh rải đều, nên kết quả nói
+        # thẳng ảnh có được nhận hay không.
+        return d in (PH._chen_anh_that([None], [d]) or [])
+
+    assert _thu("Savannah River Plant",
+                "File:Historic P and R Reactor Photos - Savannah River Site (7515730976).jpg"), \
+        "ảnh ĐÚNG chủ thể vẫn bị loại vì kho gọi tên bằng chữ cuối khác"
+    assert _thu("Savannah River Plant", "File:Savannah River Plant reactor design.png"), \
+        "cụm đầy đủ mà cũng loại — phép nới làm hỏng ca vốn đúng"
+    assert not _thu("Meat Hope",
+                    "Preparing whale meat for the Point Hope Whaling Festival.jpg"), \
+        "ảnh cá voi Alaska lọt lại — phép nới mở lại đúng ca đã trả giá"
+    assert not _thu("Midway Express", "File:Midway Pony Express station.jpg"), \
+        "trạm Pony Express lọt lại — phép nới mở lại ca sinh ra luật cụm liền"
+    PH.CHU_THE_TAP = _cu_ct
 
 
 def t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh():

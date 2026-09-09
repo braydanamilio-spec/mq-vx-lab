@@ -1105,6 +1105,15 @@ def _nen_theo_loi(cau_short: list) -> list:
             ra.append(NEN_SAN[i % len(NEN_SAN)])
     return ra
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
+# ── HẠNG MỤC WIKIMEDIA: LẤY VỀ RỒI VỨT ĐI  (bộ 213, 9/9/2026) ───────────────────────
+# §19.13 chốt rằng câu hỏi "ảnh này có phải CỦA chủ thể không" trả lời được bằng
+# `Categories`, và `anh_tu_do` xin sẵn `Categories|ObjectName` từ hôm ấy. Nhưng chỗ duy
+# nhất giữ lại là `TEN_ANH`, và nó chỉ giữ TIÊU ĐỀ — hai trường kia đi tới nơi rồi bị
+# vứt trước khi cổng nhìn thấy (§15.12: lấy về mà không ai đọc).
+# Đo «Savannah River Plant»: 24 ảnh, 19 bị loại, và đọc tay thì gần hết là ảnh ĐÚNG —
+# kho gọi bằng tên viết tắt (SRS) hoặc tên khu ("H Canyon", "D Area Powerhouse"), còn
+# hạng mục thì ghi thẳng «Savannah River Site».
+META_ANH: dict = {}      # đường ảnh -> hạng mục + ObjectName, bằng chứng THỨ HAI của cổng
 
 # ── SỔ NÀY PHẢI SỐNG LÂU HƠN TIẾN TRÌNH  (8/9/2026) ─────────────────────────────────────
 # `TEN_ANH` giữ đúng thứ cần để trả lời câu anh hỏi — *"thẻ ảnh có khớp cái đang nói không,
@@ -1585,16 +1594,46 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
             if _tt in c:
                 _loi.append(c.split(_tt, 1)[1].strip())
                 break
-    _cum = [c for c in _cum + _loi if len(c) >= 3]
+    # ── TÊN CƠ SỞ HAY ĐỔI CHỮ CUỐI  (bộ 212, 9/9/2026) ────────────────────────────────
+    # «Savannah River Plant» tìm ra 24 ảnh và cổng cụm loại 23. Đọc tay sáu tiêu đề liên
+    # quan: *Aerial of P Reactor at SRS* · *Historic P and R Reactor Photos — Savannah River
+    # **Site*** ×3 · *SRS at 60 — Savannah River Ecology Lab* — **5/6 là ảnh ĐÚNG chủ thể**,
+    # bị loại vì kho lưu trữ gọi nơi ấy là "Site" còn bài Wikipedia gọi là "Plant".
+    # Wikidata KHÔNG cứu được ca này: `ten_khac` trả về đúng một tên (đã đo) vì đây là một
+    # thực thể riêng, không phải trang đổi hướng.
+    #
+    # Luật nới: bỏ CHỮ CUỐI của tên, và chỉ khi phần còn lại còn ≥2 từ và ≥8 ký tự. Ranh
+    # giới ấy không phải để cho đẹp — nó giữ nguyên hai ca đã trả giá:
+    #     «Savannah River Plant» -> "savannah river"  (2 từ, 14 ký tự) -> NHẬN, cứu 5 ảnh
+    #     «Meat Hope»            -> "meat"            (1 từ)            -> KHÔNG áp dụng,
+    #                               nên ảnh cá voi Alaska vẫn bị loại như cũ
+    #     «Midway Express»       -> "midway"          (1 từ)            -> KHÔNG áp dụng,
+    #                               nên «Midway Pony Express station» vẫn bị loại
+    # Tên hai chữ là chỗ phép nới nguy hiểm nhất, và đó đúng là chỗ luật này tự tắt.
+    _bo_duoi = []
+    for c in list(_cum):
+        _tu = c.split()
+        if len(_tu) >= 3:
+            _ng = " ".join(_tu[:-1])
+            if len(_ng) >= 8:
+                _bo_duoi.append(_ng)
+    _cum = [c for c in _cum + _loi + _bo_duoi if len(c) >= 3]
     if _cum:
         # CHỈ loại khi BIẾT tiêu đề mà nó không khớp. Ảnh không có trong sổ xuất xứ (nền kho
         # `comic_nen/`, ảnh cũ tải trước khi có sổ) thì "không biết" — và không biết KHÔNG
         # phải bằng chứng sai chủ thể (§15.6). Cổng selftest bắt đúng ca này: bản đầu loại
         # sạch 2/2 ảnh chỉ vì chúng chưa có trong sổ.
+        # Xét TIÊU ĐỀ *hoặc* HẠNG MỤC: hạng mục là bằng chứng mạnh hơn hẳn — nó do người
+        # đóng góp xếp, còn tiêu đề chỉ là tên tệp. Đo trên chính hồ ảnh «Savannah River
+        # Plant»: ảnh của khu ấy mang hạng mục «Savannah River Site» dù tiêu đề chỉ ghi
+        # «SRS at 60 -- H Canyon». Và phép nới này KHÔNG mở cửa cho ảnh lạc: đo ba tấm
+        # «Corps hosts wetlands field exercise at Savannah State University» — hạng mục của
+        # chúng là «PD US Army», không chứa cụm nào, nên vẫn bị loại đúng.
         _lac = []
         for d in duong:
             _t = " ".join(str(TEN_ANH.get(d, "")).lower().replace("file:", "").split())
-            if _t and not any(c in _t for c in _cum):
+            _m = " ".join(str(META_ANH.get(d, "")).lower().replace("file:", "").split())
+            if _t and not any(c in _t or (bool(_m) and c in _m) for c in _cum):
                 _lac.append(d)
         if _lac:
             duong = [d for d in duong if d not in _lac]
@@ -1860,6 +1899,8 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
                 _sh.copyfile(d, dich)
             ra.append("anh_pd/" + ten)
             TEN_ANH["anh_pd/" + ten] = a.get("ten", "")
+            META_ANH["anh_pd/" + ten] = " ".join(
+                str(a.get(k) or "") for k in ("cat", "ob"))
             _ghi_so_anh()
             if len(ra) >= toi_da:
                 break
@@ -1928,6 +1969,8 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
                     _sh.copyfile(d, dich)
                 ra.append("anh_pd/" + ten)
                 TEN_ANH["anh_pd/" + ten] = a.get("ten", "")
+                META_ANH["anh_pd/" + ten] = " ".join(
+                    str(a.get(k) or "") for k in ("cat", "ob"))
                 _ghi_so_anh()
                 if len(ra) >= toi_da:
                     break
@@ -2599,24 +2642,36 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     # Dưới HAI ảnh khác nhau thì KHÔNG lấp: bộ 194 «Lehman Brothers» chỉ có một tấm, lấp đủ
     # 12 nhịp ra **11 cặp liền nhau trùng** — cả tập là một bức ảnh đứng yên, tệ hơn nền trống
     # mà anh muốn tránh. Lấp chỉ có nghĩa khi còn thứ để luân phiên.
-    _co = list(dict.fromkeys([x for x in (anh_nens or []) if x]))
-    if len(_co) >= 2:
+    # ── LẤP TỪ CẢ HỒ ĐÃ LỌC, KHÔNG TỪ MẤY TẤM ĐÃ ĐẶT  (anh soi bộ 213, 9/9/2026) ──────
+    # Anh: *"ảnh nền đâu"* · *"ko dùng đi dùng lại 1 footage"*. Cả hai là MỘT lỗi ở đây:
+    # `_co` dựng từ `anh_nens` — tức chỉ những tấm mà phép ghép THEO NGHĨA đã đặt được.
+    # Đo «Savannah River Plant»: hồ có **16 ảnh qua cổng**, phép ghép nghĩa đặt được 2, nên
+    # khối này quay vòng đúng 2 tấm ấy cho 13 nhịp và bỏ phí 14 tấm còn lại.
+    # Nay lấp từ `ANH_SACH` (hồ đã qua ba cổng), ưu tiên tấm CHƯA dùng: 16 ảnh cho 13 nhịp
+    # thì mỗi nhịp một ảnh khác nhau, không một cặp nào lặp.
+    _da = [x for x in (anh_nens or []) if x]
+    _con = [a for a in (ANH_SACH or []) if a not in _da]     # chưa dùng -> ưu tiên
+    _co = list(dict.fromkeys(_da + _con))
+    if _co:
         _j = 0
         for _i in range(len(anh_nens)):
             if anh_nens[_i]:
                 continue
             _truoc = anh_nens[_i - 1] if _i > 0 else ""
-            for _ in range(len(_co)):
-                _ung_anh = _co[_j % len(_co)]
-                _j += 1
-                if _ung_anh != _truoc:
-                    anh_nens[_i] = _ung_anh
+            # Tấm chưa dùng lần nào đứng trước; hết mới quay vòng cả hồ.
+            _uu = [a for a in _co if a not in anh_nens] or _co
+            _chon = ""
+            for _k in range(len(_uu)):
+                _x = _uu[(_j + _k) % len(_uu)]
+                if _x != _truoc:
+                    _chon = _x
                     break
-            else:
-                anh_nens[_i] = _co[0]        # chỉ có ĐÚNG một ảnh: đành lặp
+            anh_nens[_i] = _chon or _uu[0]
+            _j += 1
         _lap = sum(1 for _i in range(1, len(anh_nens)) if anh_nens[_i] == anh_nens[_i - 1])
-        print(f"   🖼 lấp nền: {len(anh_nens)}/{len(anh_nens)} nhịp có ảnh thật "
-              f"({len(_co)} ảnh gốc quay vòng · {_lap} cặp liền nhau trùng)")
+        _rieng = len(set(x for x in anh_nens if x))
+        print(f"   🖼 lấp nền: {sum(1 for x in anh_nens if x)}/{len(anh_nens)} nhịp có ảnh "
+              f"thật · {_rieng} ảnh KHÁC NHAU · {_lap} cặp liền nhau trùng")
 
     _bo_lech, _bo_lap = loc_the_so(so_lieu, cau)
 
