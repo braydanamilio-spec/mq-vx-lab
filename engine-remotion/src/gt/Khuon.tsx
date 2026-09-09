@@ -1561,7 +1561,18 @@ export const SoLieu: React.FC<{
        một dòng thời gian trên điện thoại. */
 export const Truc: React.FC<{
   W: number; H: number; moc: { nhan: string; phu?: string }[]; vt: number; mau: string; p: number;
-}> = ({ W, H, moc, vt, mau, p }) => {
+  /* Dải NGANG mà trục được phép chiếm, tính theo phần của W. Mặc định 0,10–0,90 = đúng hành
+     vi cũ, nên mọi nơi gọi cũ không đổi một pixel nào.
+     ── VÌ SAO CÓ THAM SỐ NÀY  (anh soi bộ 210, 9/9/2026) ────────────────────────────────
+     Anh dời người dẫn về góc trái. Trục thì chạy 0,10 -> 0,90 nên hai mốc ĐẦU nằm đúng sau
+     đầu nhân vật: khung 14,7 giây đọc ra "1981 … 86 … 1994" — mốc 1986 bị xé đôi.
+     Chú thích ở `KichComic` từng ghi "16:9 không còn dải trống nào" và đã BÁC hướng bó lớp
+     vector. Điều đó đo lúc nhân vật rộng 0,36–0,46·W và đứng GIỮA, và nó đúng cho dải trống
+     NẰM NGANG TRÊN ĐỈNH ĐẦU. Nay nhân vật rộng 0,28·W và nằm hẳn một bên, nên chỗ trống là
+     một dải ĐỨNG bên kia — trục khác, câu hỏi khác (§12.5: dùng lại một kết luận ở ngữ cảnh
+     mới thì phải hỏi lại). Nên đây không phải làm lại thứ đã bác. */
+  x0f?: number; x1f?: number;
+}> = ({ W, H, moc, vt, mau, p, x0f = 0.10, x1f = 0.90 }) => {
   /* Trục hiện xong trong 35% thời lượng cảnh, không phải 55%. Ở nhịp 1,6 giây thì 55% là
      0,9 giây — cảnh gần hết mà trục mới vẽ xong, người xem không kịp đọc mốc cuối. */
   const ch = Math.min(1, p / 0.35);
@@ -1590,7 +1601,10 @@ export const Truc: React.FC<{
            mốc, đúng cách bảng số liệu in vẫn làm
          · cỡ chữ trần 0,042·H -> 0,058·H; nhãn hai ba chữ ở cỡ cũ đọc ra như chú thích
        Không thêm hình mới: `moc` không mang biểu tượng, bịa ra một cái là bịa dữ liệu. */
-    const y0 = H * 0.10, y1 = H * 0.80, x = W * 0.18;
+    /* Trục ĐỨNG cũng phải nằm trong dải được phép: `Math.max` giữ nguyên 0,18 ở mặc
+       định (18 kênh giải thích không đổi một pixel) và chỉ dịch khi nơi gọi khai một
+       dải hẹp hơn vì có người dẫn đứng ở mép trái. */
+    const y0 = H * 0.10, y1 = H * 0.80, x = W * Math.max(0.18, x0f);
     const oCao = (y1 - y0) / Math.max(1, so - 1 || 1);
     const cN = (t: string) => Math.min(H * 0.058, oCao * 0.52,
                                        (W * 0.70 / Math.max(1, t.length)) * 1.55);
@@ -1628,7 +1642,7 @@ export const Truc: React.FC<{
     );
   }
 
-  const x0 = W * 0.10, x1 = W * 0.90, y = H * 0.52;
+  const x0 = W * x0f, x1 = W * x1f, y = H * 0.52;
   const oRong = (x1 - x0) / Math.max(1, so);
   return (
     <g>

@@ -4143,6 +4143,10 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("ảnh phụ (nenCat) qua cùng ba cổng với nền chính",
+          t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh)
+    check("edge-tts qua constraints + còn token Sec-MS-GEC (403 câm)",
+          t_edge_tts_ghim_qua_constraints_va_con_token)
     check("kho đệm chọn chủ thể phải nằm TRONG GIT (CI mới có)", t_dem_chu_de_phai_trong_git)
     check("thẻ số trên màn phải ĐƯỢC ĐỌC LÊN, và không trùng", t_the_so_phai_duoc_doc_len)
     check("hồ Groq rỗng KHÔNG được làm chết đường dựng thoại", t_thoai_co_tang_du_phong)
@@ -10155,6 +10159,84 @@ def t_workflow_nap_du_ho_khoa():
         "luồng render không nạp GROQ_KEYS — 18/18 luồng đã ĐỎ vì đúng chỗ này"
 
 
+def t_edge_tts_ghim_qua_constraints_va_con_token():
+    """Luồng render còn sống phải cài `edge-tts` QUA `constraints.txt`, và bản cài được phải
+    còn sinh token `Sec-MS-GEC`.
+
+    ── VÌ SAO  (16/16 lượt ĐỎ tính tới 9/9/2026) ────────────────────────────────────────
+    Lượt 34319795237 chết ở `RuntimeError: TTS rỗng sau 3 lần thử (403, message='Invalid
+    response status', url='wss://speech.pl…')`. Không phải mạng, không phải hạn mức:
+    Microsoft nay đòi token `Sec-MS-GEC` ở bắt tay websocket, và bản bị ghim tay trong
+    `render_comic_18.yml` ra đời TRƯỚC yêu cầu ấy.
+
+    Đo hai chiều, và đây là điều kiện để tin kết luận (§13.11):
+        `grep -rl Sec-MS-GEC` trong bản 6.1.12 -> **0 tệp**
+        `grep -rl Sec-MS-GEC` trong bản 7.2.8  -> **3 tệp**, có hẳn `drm.py` sinh ra để tính nó
+    Máy anh chạy 7.2.8 nên mọi bản dựng thử đều có tiếng; runner chạy bản cũ nên không bản
+    nào có. Hai môi trường lệch nhau ĐÚNG một biến, và biến ấy chép tay.
+
+    Bản ghim ấy tự nó là một bản vá ĐÚNG cho lỗi khác (§16.5, `ResolutionImpossible` ở bước
+    cài) — chữa một đầu, mở ra đầu kia (§14.8). `constraints.txt` đã ghi `edge-tts>=7.2,<8`
+    từ 3/9 và hai luồng render kia đi qua nó; chỉ tệp này chép một con số ra ngoài (§13.2).
+
+    Cổng đo HAI thứ, vì chúng hỏng độc lập:
+      1. **Đường cài** — không luồng nào được ghim tay, mọi luồng phải đi qua constraints.
+         Quét MÃ, không quét chú thích: chính docstring này và chú thích vừa thêm vào
+         workflow đều nhắc lại con số ấy (§17.15, đã dính bốn lần trong một ngày).
+      2. **Sản phẩm** — bản `edge_tts` THẬT SỰ import được phải còn sinh token. Đường cài
+         đúng mà thư viện bỏ token ở bản sau thì câu trả lời vẫn là 403, và mã thoát của pip
+         không biết gì về chuyện đó (§15.3: bước có sản phẩm thì kiểm sản phẩm).
+    """
+    goc = os.path.dirname(os.path.abspath(__file__))
+    wf = os.path.join(goc, "..", ".github", "workflows")
+
+    def _soi(ma):
+        """(ghim_tay, dòng cài ngoài constraints) cho MỘT thân workflow ĐÃ bỏ chú thích."""
+        ghim = re.findall(r"edge[-_]tts\s*==\s*[\w.]+", ma)
+        cai = [d for d in ma.splitlines()
+               if re.search(r"pip\s+install", d) and re.search(r"edge[-_]tts", d)]
+        thieu = [d.strip() for d in cai if "constraints.txt" not in ma]
+        return ghim, thieu
+
+    song = {}
+    for t in sorted(os.listdir(wf)):
+        if not (t.startswith("render_") and t.endswith((".yml", ".yaml"))):
+            continue
+        ma = re.sub(r"(?m)^\s*#.*$", "",
+                    io.open(os.path.join(wf, t), encoding="utf-8").read())   # §17.15
+        if "cron:" not in ma or not re.search(r"edge[-_]tts", ma):
+            continue                       # luồng đã nghỉ / không dùng TTS thì không canh
+        song[t] = _soi(ma)
+    assert song, "không tìm thấy luồng render nào còn cron mà cài edge-tts — phép tìm hỏng"
+
+    xau = [f"{t}: ghim tay {g}" for t, (g, _) in song.items() if g]
+    xau += [f"{t}: cài ngoài constraints ({d[:60]})" for t, (_, ds) in song.items() for d in ds]
+    assert not xau, ("edge-tts phải đi qua render-pipeline/constraints.txt — ghim tay là "
+                     "nguyên nhân 16/16 lượt đỏ (403 thiếu Sec-MS-GEC): " + "; ".join(xau))
+
+    # thử ngược: thân ghim tay PHẢI bị bắt, và chú thích thì KHÔNG (§13.11 · §17.15)
+    _pha = '    - cron: "0 6 * * *"\n      pip install edge-tts' + "==" + '6.1.12\n'
+    assert _soi(_pha)[0], "cổng không bắt được ghim tay — cổng chết, không phải repo lành"
+    # bình luận PHẢI phủ mọi dòng — bản đầu của phép thử này chỉ ghi `#` ở dòng đầu nên nó
+    # tố oan chính cổng vừa viết (§13.15: nghi bài kiểm của mình trước)
+    _cmt = "\n".join("  # " + d for d in _pha.splitlines())
+    assert not _soi(re.sub(r"(?m)^\s*#.*$", "", _cmt))[0], \
+        "cổng đọc chú thích thành mã (§17.15)"
+
+    # ── tầng 2: bản cài được có còn sinh token không ──────────────────────────────────
+    try:
+        import edge_tts as _ett
+    except Exception as e:                       # môi trường chưa cài thì không phán (§15.12)
+        print(f"   ⓘ chưa import được edge_tts ({type(e).__name__}) — bỏ qua tầng token")
+        return
+    thu = os.path.dirname(os.path.abspath(_ett.__file__))
+    co = [f for f in os.listdir(thu) if f.endswith(".py")
+          and "Sec-MS-GEC" in io.open(os.path.join(thu, f), encoding="utf-8",
+                                      errors="ignore").read()]
+    assert co, (f"edge_tts đang cài ({getattr(_ett, '__version__', '?')}) KHÔNG sinh token "
+                "Sec-MS-GEC -> websocket trả 403 và mọi lượt dựng ra video câm")
+
+
 def t_dem_chu_de_phai_trong_git():
     """Hai kho đệm chọn chủ thể phải đi theo git, không chỉ nằm trên máy anh.
 
@@ -10354,6 +10436,51 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh():
+    """Ảnh PHỤ (`nenCat`, cắt hình mỗi 2 giây) phải qua đúng ba cổng nền như nền CHÍNH.
+
+    ── VÌ SAO  (anh soi bộ 210, 9/9/2026) ────────────────────────────────────────────────
+    Ba cổng — mang tên chủ thể · không quá tối · không phải logo — sống BÊN TRONG
+    `_chen_anh_that`, tức chỉ lọc danh sách nền chính. Bộ dựng ảnh phụ lại đọc thẳng
+    `ANH_THAT`, nên nó đi vòng qua cả ba. Đo được: nhịp 9 của bộ 210 lấy đúng tấm logo vừa
+    bị loại và phóng full-bleed ra một mảng đen với chữ «CA WES» bị cắt đôi.
+
+    Ảnh phụ hiện Y HỆT nền chính — cùng `objectFit: cover`, cùng cả khung — nên "nền chính"
+    và "ảnh phụ" là hai cái tên cho một vai. Một vai thì một bộ cổng (§6: vá một nhánh, để
+    nguyên nhánh song song — lần thứ năm trong tuần).
+
+    Cổng đo TÊN BIẾN chứ không đo kết quả một lượt dựng: kết quả phụ thuộc chủ thể và mạng,
+    còn `_du_anh = [... ANH_THAT ...]` thì luôn sai bất kể chủ thể nào. Rút bằng AST, bỏ
+    docstring lẫn chú thích trước khi soi — chính chú thích vừa thêm vào `pilot_hai` có
+    chuỗi `ANH_THAT` trong câu giải thích (§17.15).
+    """
+    import ast
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "pilot_hai.py"), encoding="utf-8").read())
+
+    gan = None
+    for nut in ast.walk(cay):
+        if isinstance(nut, ast.Assign) and any(
+                getattr(t, "id", "") == "_du_anh" for t in nut.targets):
+            gan = ast.unparse(nut.value)          # `unparse` bỏ chú thích, giữ MÃ (§17.15)
+    assert gan, "không tìm thấy chỗ dựng `_du_anh` — phép tìm hỏng, không phải mã hỏng"
+    assert "ANH_SACH" in gan, \
+        f"ảnh phụ dựng từ hồ CHƯA lọc — logo/ảnh tối sẽ thành nền: {gan[:80]}"
+    assert "ANH_THAT" not in gan, \
+        f"ảnh phụ vẫn còn đọc ANH_THAT — đó là hồ THÔ, chưa qua cổng nào: {gan[:80]}"
+
+    # ── chiều thứ hai: hồ công bố phải THẬT SỰ là hồ đã lọc, và phải dọn giữa hai clip ──
+    import pilot_hai as PH
+    PH.TEN_ANH.update({"_t2_logo.png": "File:Acme Corp logo.png",
+                       "_t2_anh.jpg": "View of Acme Flight 101 crash debris line.jpg"})
+    PH._chen_anh_that([None, None], ["_t2_logo.png", "_t2_anh.jpg"])
+    assert "_t2_logo.png" not in PH.ANH_SACH, "hồ công bố vẫn chứa logo"
+    assert "_t2_anh.jpg" in PH.ANH_SACH, "hồ công bố mất cả ảnh thật"
+    PH._chen_anh_that([None], [])              # clip sau không có ảnh nào
+    assert PH.ANH_SACH == [], \
+        "hồ không được dọn giữa hai clip — clip sau sẽ cắt hình bằng ảnh của clip trước"
 
 
 def t_nguon_anh_phai_tra_zero():

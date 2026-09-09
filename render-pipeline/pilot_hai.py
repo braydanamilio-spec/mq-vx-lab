@@ -1001,6 +1001,14 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
 MOT_GIONG = False        # bật: MỘT chuyên gia nói liên tục, hình đổi theo lời
 DAO_CU_TAP = ""          # hình mẫu của cả tập (`chu_de.hinh_mau`) — lấp chỗ câu không gợi vật
 ANH_THAT: list = []      # ảnh PD/CC0 của chính chủ thể — xem `_chen_anh_that`
+# ── HỒ ẢNH ĐÃ QUA BA CỔNG NỀN  (anh soi bộ 210, 9/9/2026) ────────────────────────────
+# Ba cổng (mang tên chủ thể · không quá tối · không phải logo) chạy BÊN TRONG
+# `_chen_anh_that`, nên chúng chỉ lọc danh sách nền CHÍNH. Danh sách ảnh PHỤ dùng để cắt
+# hình mỗi 2 giây (`nenCat`) lại dựng thẳng từ `ANH_THAT` — tức đi vòng qua cả ba.
+# Đo trên bộ 210: nhịp 9 lấy đúng tấm logo vừa bị loại, phóng full-bleed ra một mảng
+# đen với chữ «CA WES» bị cắt. §6 nguyên xi: vá một nhánh, để nguyên nhánh song song.
+# Nay `_chen_anh_that` CÔNG BỐ hồ đã lọc, và mọi nơi cần ảnh nền đọc từ đây.
+ANH_SACH: list = []      # ANH_THAT sau ba cổng — nguồn DUY NHẤT cho mọi lớp nền
 # ── NÉT DỰNG RIÊNG TỪNG KÊNH  (anh: "mỗi channel có 1 chút nét riêng", 7/9/2026) ────────────
 # §17.3 đã trả giá cho bài này ở bộ giải thích: **đa dạng thì CHỌN được, bản sắc thì phải KHAI**.
 # Rút từ hồ chung thì hai kênh vẫn có thể rút trúng nhau, và đo được cặp tệ nhất trùng 79%.
@@ -1521,6 +1529,11 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
     mọi cặp đều khớp bằng nhau và phép so mất hết sức phân giải (§13.4 — cắt phần giống nhau
     ĐÚNG ra trước rồi mới đo).
     """
+    # Dọn TRƯỚC mọi lối ra: hàm này được gọi lại cho từng clip của bộ (long + ba short), nên
+    # một lối ra sớm mà không dọn sẽ để clip sau đọc hồ của clip trước — đúng thứ một biến
+    # chung luôn hỏng theo (§15.12).
+    global ANH_SACH
+    ANH_SACH = []
     if not duong:
         return anh_nens
     # ── LOGO KHÔNG PHẢI ẢNH NỀN  (anh soi bộ 171, 8/9/2026) ────────────────────────────
@@ -1648,6 +1661,9 @@ def _chen_anh_that(anh_nens: list, duong: list, cau: list = None) -> list:
               f"(vẫn dùng cho thẻ logo)")
         if not duong:
             return anh_nens
+    # Chỗ DUY NHẤT cả ba cổng đều đã chạy xong. Công bố ở đây chứ không ở từng lối ra: mọi
+    # `return` phía trên là ca "không còn ảnh nào dùng được", và hồ rỗng đúng là câu trả lời.
+    ANH_SACH = list(duong)
     ra = list(anh_nens)
     if not cau:
         n, m = len(ra), len(duong)
@@ -2614,7 +2630,9 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     # Ưu tiên nhịp dài nhất trước: một nhịp 11 giây cần 5 hình, một nhịp 2 giây cần 0.
     # Và KHÔNG cho một ảnh xuất hiện ở hai nhịp liền nhau — màn hình lặp là thứ anh đã chỉ ra.
     nen_cat = [[] for _ in cau]
-    _du_anh = [a for a in (ANH_THAT or []) if a and a not in (anh_nens or [])]
+    # `ANH_SACH` chứ KHÔNG phải `ANH_THAT`: ảnh phụ hiện full-bleed y như nền chính, nên
+    # nó phải qua đúng ba cổng ấy. Dùng `ANH_THAT` là cách tấm logo lọt vào bộ 210.
+    _du_anh = [a for a in (ANH_SACH or []) if a and a not in (anh_nens or [])]
     if _du_anh:
         def _dai_nhip(i: int) -> float:
             return (luot[i]["e"] - luot[i]["s"]) if i < len(luot) else 0.0

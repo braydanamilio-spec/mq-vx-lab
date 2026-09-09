@@ -109,9 +109,21 @@ jobs:
           # ấy chạy được, tức lỗi MẠNG chứ không phải xung đột thật — vì không ghim phiên bản,
           # pip phải lùi qua ~30 bản, mỗi lần lùi một vòng mạng.
           # Và kiểm bằng `import`, KHÔNG bằng mã thoát của pip (§15.3).
+          #
+          # 9/9/2026 — GHIM `==6.1.12` LÀ NGUYÊN NHÂN 16/16 LƯỢT ĐỎ. Bản ghim ấy chữa đúng lỗi
+          # CÀI ở trên rồi mở ra một đầu khác: Microsoft nay đòi token `Sec-MS-GEC` ở bắt tay
+          # websocket, và 6.1.12 KHÔNG có nó -> `403 Invalid response status` ở
+          # `wss://speech.platform.bing.com` -> `RuntimeError: TTS rỗng sau 3 lần thử`.
+          # Đo hai chiều: `grep -rl Sec-MS-GEC` ra 0 tệp ở 6.1.12, 3 tệp ở 7.2.8 (có hẳn
+          # `drm.py` sinh ra để tính token ấy). Máy anh chạy 7.2.8 nên dựng có tiếng bình
+          # thường — hai môi trường lệch nhau ĐÚNG một biến.
+          # `constraints.txt` đã ghi `edge-tts>=7.2,<8` từ trước, và hai workflow render kia
+          # dùng nó; chỉ tệp này chép tay một con số (§13.2). Nay đi qua constraints như hai
+          # tệp kia: một nguồn sự thật, mà vẫn ghim (pip không phải lùi ~30 bản).
           for i in 1 2 3; do
             python -m pip install -q --upgrade pip && \
-            python -m pip install -q "edge-tts==6.1.12" Pillow "PyYAML>=6.0,<7" && break
+            python -m pip install -q -c render-pipeline/constraints.txt \
+                edge-tts Pillow "PyYAML>=6.0,<7" && break
             echo "   ⚠ cài hụt lần $i/3"; sleep 20
           done
           # PyYAML thêm 7/9/2026. Luồng này CHƯA THÀNH CÔNG LẦN NÀO: lượt duy nhất chết ở cổng

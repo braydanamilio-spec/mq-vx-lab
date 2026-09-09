@@ -472,6 +472,16 @@ const Panel: React.FC<{
   const cxA = doiNguoi ? w * 0.28
             : _motBen !== null ? w * _motBen
             : canRong ? w * 0.29 : w * (0.5 + _lechGu);
+  /* ── DẢI CÒN TRỐNG CHO LỚP ĐỒ HOẠ  (anh soi bộ 210, 9/9/2026) ─────────────────────────
+     Anh dời người dẫn về góc trái, và ngay khung đầu có trục thì mốc «1986» bị xé đôi sau
+     đầu nhân vật: trục chạy 0,10 -> 0,90 trong khi người chiếm 0,08 -> 0,36.
+     Người rộng tối đa `0,28·w` (xem `s0` ở trên) nên nửa bề ngang là 0,14 — con số này SUY
+     TỪ chính hằng số đang dùng, không đặt tay, vì hai chỗ lệch nhau là cách bố cục hỏng
+     im lặng (§13.6: hằng số sống lâu hơn ngữ cảnh sinh ra nó).
+     Chỉ áp khi CÓ một người đứng hẳn một bên; hai người thì không còn dải nào để nhường và
+     giá trị mặc định của `Truc` giữ nguyên hành vi cũ. */
+  const _neTrai = _motBen !== null && _motBen < 0.5 ? _motBen + 0.14 + 0.04 : 0.10;
+  const _nePhai = _motBen !== null && _motBen > 0.5 ? _motBen - 0.14 - 0.04 : 0.90;
   const cxB = doiNguoi ? w * 0.72
             : _motBen !== null ? w * _motBen
             : canRong ? w * 0.71 : w * (0.5 + _lechGu);
@@ -538,6 +548,7 @@ const Panel: React.FC<{
              style={{ position: "absolute", inset: 0, zIndex: 2, opacity: 0.94 }}>
           {nenVe.k === "truc" ? (
             <Truc W={w} H={h} moc={nenVe.moc} vt={nenVe.vt} mau={mau}
+                  x0f={_neTrai} x1f={_nePhai}
                   p={L.e > L.s ? kep((giay - L.s) / (L.e - L.s)) : 0} />
           ) : nenVe.k === "so" ? (
             <SoLieu W={w} H={h} so={String(nenVe.so)} don={String(nenVe.don || "")}
@@ -703,11 +714,25 @@ const Panel: React.FC<{
           Đặt NGƯỢC bên người dẫn (`guViTri`) để không đè lên mặt; `objectFit: contain` vì
           logo méo là hỏng hẳn — khác ảnh nền, logo không được phép cắt. Đĩa trắng mờ phía sau
           là cách nhà đã giải bài "biểu tượng tàng hình khi trùng tông nền" (§13.27). */}
+      {/* ── THẺ LOGO ĐANG NẰM DƯỚI BONG BÓNG, VÀ RỖNG BỐN PHẦN NĂM  (bộ 210, 9/9/2026) ──
+          Hai lỗi, một gốc: cả thẻ này lẫn bong bóng đều khai *"đặt NGƯỢC bên người dẫn"*.
+          Lúc viết, bên bong bóng suy từ `noiA` (ai đang nói) nên hai luật thường ra hai bên
+          khác nhau; từ khi có `motNguoi` thì bong bóng cũng theo `guViTri`, và hai luật LUÔN
+          trỏ cùng một bên. Soi khung 14,7 giây: thẻ logo nằm ngay dưới đuôi bong bóng, bị
+          che mất nửa trên, và đè nốt mốc «2007» của trục. §12.5 nguyên xi — một câu luật
+          đúng ở ngữ cảnh nó sinh ra, sai ở ngữ cảnh mới.
+          Nay neo theo thứ nó phải tránh: bong bóng ở TRÊN, người dẫn ở MỘT BÊN, nên thẻ về
+          góc DƯỚI phía không có người.
+
+          Và bỏ khung vuông: logo hãng gần như luôn là dải NGANG, nên `contain` trong ô vuông
+          `0,20·w` để lại ~75% mặt thẻ trắng trơn — đúng thứ anh dặn *"ko dùng nền trắng
+          trơn"*, chỉ là trắng ở thẻ chứ không ở nền. Khai CHIỀU CAO, để bề ngang theo tỉ lệ
+          thật của ảnh (§17.2: hình không vuông thì đừng kẹp bằng một ô vuông). */}
       {logo ? (
         <div style={{
-          position: "absolute", top: h * 0.055,
+          position: "absolute", bottom: h * 0.07,
           [guViTri === "phai" ? "left" : "right"]: w * 0.05,
-          width: w * 0.20, height: w * 0.20,
+          height: h * 0.15, width: "auto", maxWidth: w * 0.30,
           background: "#FFFFFFEE", borderRadius: 18,
           border: `${Math.max(3, NET - 3)}px solid #14110F`,
           boxShadow: "5px 6px 0 #14110F22",
@@ -721,8 +746,8 @@ const Panel: React.FC<{
               Và phải là `Img` của Remotion chứ không chỉ thêm `staticFile`: `Img` GIỮ KHUNG
               lại tới khi ảnh nạp xong, còn `img` thô có thể render trước lúc ảnh về và cho
               ra một khung trắng — hỏng mà không ai báo. */}
-          <Img src={staticFile(logo)} style={{ maxWidth: "100%", maxHeight: "100%",
-                                              objectFit: "contain" }} />
+          <Img src={staticFile(logo)} style={{ height: "100%", width: "auto",
+                                              maxWidth: "100%", objectFit: "contain" }} />
         </div>
       ) : null}
 

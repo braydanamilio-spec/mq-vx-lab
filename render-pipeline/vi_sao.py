@@ -387,12 +387,19 @@ def sinh(ma: str, i: int):
     #
     # Xếp trước bằng sổ, rồi vòng chọn vẫn đo lại bằng `nap_anh_that` trước khi dựng: sổ là
     # CẬN TRÊN (chưa qua bộ lọc tải về), không phải con số cuối (§13.15).
+    # ── HỎI SỔ CHO MỌI ỨNG VIÊN, KHÔNG CHỈ 60 TÊN ĐẦU  (bộ 210, 9/9/2026) ────────────
+    # `_ung[:60]` là §15.1 nguyên xi: cắt trước, lọc sau. Sổ có 51 chủ thể ≥8 ảnh trên 1.752
+    # đã đo, nhưng chủ thể nào không rơi vào 60 tên đầu thì KHÔNG BAO GIỜ được xếp lên — và
+    # thứ tự 60 tên ấy do điểm nhân quả quyết, không liên quan gì tới ảnh. Đo bộ 210: 0/6 ứng
+    # viên có ≥8 ảnh, tập ra 1/12 nhịp có ảnh thật, 11 nhịp nền trơn — đúng thứ anh chê.
+    # Cái trần ấy sinh ra vì `so_anh_da_do` nạp lại cả tệp mỗi lượt hỏi; nay nó có bộ nhớ nên
+    # hỏi hết danh sách tốn đúng một lượt đọc đĩa.
     try:
-        _sd = {x[0]: H.so_anh_da_do(x[0]) for x in _ung[:60]}
+        _sd = {x[0]: H.so_anh_da_do(x[0]) for x in _ung}
         if any(v > 0 for v in _sd.values()):
             _ung.sort(key=lambda x: -_sd.get(x[0], -1))
             _giau = sum(1 for v in _sd.values() if v >= 8)
-            print(f"   📒 sổ ảnh: {_giau}/{len(_sd)} ứng viên đầu có ≥8 ảnh — xếp lên trước")
+            print(f"   📒 sổ ảnh: {_giau}/{len(_sd)} ứng viên có ≥8 ảnh — xếp lên trước")
     except Exception:
         pass
 

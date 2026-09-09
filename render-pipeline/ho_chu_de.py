@@ -497,13 +497,30 @@ def sang_anh(tran: int = 400, san: int = 8) -> None:
     print(f"   ✅ sổ ảnh: {len(cu)} chủ thể đã đo · **{giau}** có ≥8 ảnh")
 
 
+_SO_ANH_NHO: dict = {}          # (mtime, bảng) — xem `so_anh_da_do`
+
+
 def so_anh_da_do(ten: str) -> int:
-    """Số ảnh đã đo của một chủ thể, -1 nếu chưa đo. KHÔNG gọi mạng."""
+    """Số ảnh đã đo của một chủ thể, -1 nếu chưa đo. KHÔNG gọi mạng.
+
+    ── VÌ SAO CÓ BỘ NHỚ  (9/9/2026) ─────────────────────────────────────────────────────
+    Bản đầu nạp và phân tích LẠI cả tệp cho MỖI lượt hỏi. Nơi gọi (`vi_sao`) vì thế phải tự
+    giới hạn ở 60 ứng viên đầu để khỏi chậm — và cái trần ấy chính là §15.1 (*phép CẮT đặt
+    trước phép LỌC*): sổ có 51 chủ thể ≥8 ảnh, nhưng chủ thể nào không rơi vào 60 tên đầu thì
+    **vĩnh viễn** không được xếp lên. Đo bộ 210: 0/6 ứng viên có ≥8 ảnh, và tập ra 1/12 nhịp
+    có ảnh thật.
+    Sổ là tệp trên đĩa, không phải mạng — nên chi phí đúng của nó là MỘT lượt đọc mỗi lượt
+    chạy. Khoá theo `mtime` để lượt sàng ghi thêm là lần hỏi sau thấy ngay.
+    """
     try:
-        d = json.load(io.open(SO_ANH, encoding="utf-8")) if os.path.exists(SO_ANH) else {}
+        mt = os.path.getmtime(SO_ANH) if os.path.exists(SO_ANH) else 0
+        if _SO_ANH_NHO.get("mt") != mt:
+            _SO_ANH_NHO["mt"] = mt
+            _SO_ANH_NHO["bang"] = (json.load(io.open(SO_ANH, encoding="utf-8"))
+                                   if mt else {})
     except Exception:
         return -1
-    return int(d.get(" ".join(str(ten or "").split()), -1))
+    return int((_SO_ANH_NHO.get("bang") or {}).get(" ".join(str(ten or "").split()), -1))
 
 
 def sang_hang_loat(gocs: list, tran: int = 500, san: int = 8, moi_me: int = 40) -> None:
