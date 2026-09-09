@@ -373,8 +373,23 @@ const Panel: React.FC<{
     /* 9/9 lần hai — anh: *"cho nhân vật thấp nhỏ xuống chút nữa tránh che khuất"*.
        0,34 -> 0,28 bề ngang. Cùng lượt với việc đẩy người dẫn về góc trái (`guViTri`), nên
        phần khung dành cho ảnh nền và khối số rộng thêm hẳn một phần tư. */
-    : Math.min((w * 0.21) / (NUA_RONG * 2.1),   // 9/9 lần ba: 0,28 -> 0,21, cùng lý do trên
-               (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_NGUC) * (noiA ? caoA : caoB)));
+    /* ── 9/9 lần TƯ: NỬA NGƯỜI Ở GÓC, KHÔNG PHẢI NGUYÊN THÂN GIỮA KHUNG ─────────────
+       Anh: *"nhân vật để nửa người ở góc trái thôi cho nó đẹp, đừng thô thiển thế"*.
+       Đo khung 11,4s bộ 215: người **nguyên thân từ 0,30 tới 0,90·H, đáy lơ lửng ở 0,90**
+       — tức một hình cắt rời DÁN lên bức ảnh, đúng chữ "thô thiển". Ba lượt hạ cỡ trước
+       đều chữa TRIỆU CHỨNG (người bé đi) mà giữ nguyên gốc: một hình đứng trọn vẹn giữa
+       nền bao giờ cũng đọc ra hình dán, bé hay to cũng thế (§2 — sửa vòng thứ ba mà vẫn
+       cùng họ lỗi thì thứ sai là CÁCH TIẾP CẬN).
+       Người dẫn thật trong khung hình luôn bị MÉP KHUNG cắt: đó là thứ nói "người này ở
+       trong cảnh", không phải "hình này được dán vào cảnh".
+       Nên đổi hai thứ cùng lúc:
+         · cỡ suy từ span ĐẦU→HÔNG (`CAO_NGUOI - Y_HONG`) thay vì đầu→ngực — cùng công
+           thức khung dọc đang dùng, không chế thêm hệ quy chiếu thứ hai (§6)
+         · hông neo ĐÚNG mép đáy panel (xem `yChan`), chân nằm ngoài khung
+       Bề ngang nới 0,21 -> 0,26 vì nửa người thì hình ngắn hơn hẳn: đo ra đầu→hông chiếm
+       ~0,43·H, tức người chiếm góc dưới-trái chứ không còn chắn giữa khung. */
+    : Math.min((w * 0.26) / (NUA_RONG * 2.1),
+               (h * (1 - _chuaCan)) / ((CAO_NGUOI - Y_HONG) * (noiA ? caoA : caoB)));
   const k = doiNguoi ? kRong : kCan;
   // ĐỈNH ĐẦU NEO ĐÚNG MÉP CHỪA, không neo vào một phân số thứ hai. Bản cũ tính trần bằng
   // `_chuaCan` (0,28–0,44 theo số dòng) rồi đặt đầu ở hằng số 0,30 — hai phân số cố định cạnh
@@ -384,8 +399,13 @@ const Panel: React.FC<{
   // dài, khung càng cận — cắt ở hông (1 dòng) tới ngang ngực (3 dòng).
   const yChan = doiNguoi
     ? (khungDoc ? h * (bongDuoi ? SAN - 0.21 : SAN) : h + Y_HONG * caoMin * k)
-    : h * (khungDoc ? Math.max(_chuaBong, 1 - TI_LE_NGUOI) : _chuaCan)
-      + CAO_NGUOI * (noiA ? caoA : caoB) * kCan;
+    : khungDoc
+      /* khung DỌC giữ nguyên: ở 9:16 nhân vật đứng trọn là đúng, và anh chưa từng chê */
+      ? h * Math.max(_chuaBong, 1 - TI_LE_NGUOI)
+        + CAO_NGUOI * (noiA ? caoA : caoB) * kCan
+      /* khung NGANG: hông đúng mép đáy, chân ra ngoài khung — cùng thành ngữ mà nhánh hai
+         người ở ngay trên đã dùng từ trước, không phải phép tính mới (§13.1). */
+      : h + Y_HONG * (noiA ? caoA : caoB) * kCan;
 
   // Người NGHE không được đứng yên tay buông — nửa còn lại của trò đùa nằm ở phản ứng của nó.
   const CU_CHI_NGHE: Record<string, TenCuChi> = {
