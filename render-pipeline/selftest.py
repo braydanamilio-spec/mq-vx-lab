@@ -1079,8 +1079,11 @@ def t_san_nhan_biet_va_hong_mem():
                 and any(getattr(t, "id", "") == "_ung" for t in _n.targets)):
             continue
         _v = _n.value
-        assert not (isinstance(_v, _ast.Name) and _v.id.startswith("_du")), \
-            f"`_ung = {getattr(_v, 'id', '?')}` VỨT ứng viên — đứng dây chuyền khi hồ mỏng"
+        # 9/9: `_ung = _du_anh` NAY LÀ CÁCH LÀM ĐÚNG — sàn ảnh cắt thật, và nhánh ấy chỉ chạy
+        # khi `_du_anh` khác rỗng nên không có đường dẫn tới "không dựng được gì". Bất biến
+        # thật là "không bao giờ RỖNG", và nó được canh bằng CHẠY MÃ ở
+        # `t_uu_tien_chu_the_co_anh`, không canh bằng cấm một hình dạng gán.
+        # Giữ lại phép cấm cho comprehension: lọc thẳng `_ung` thì không có nhánh nào đỡ.
         # Comprehension DỰNG danh sách lần đầu thì hợp lệ (`_ung = [(ct, kh, …) for ct in …]`);
         # comprehension đọc LẠI `_ung` ở vế phải mới là phép lọc, và phép lọc thì vứt phần trượt.
         # Dấu hiệu phân biệt nằm sẵn trong cây: `_ung` có xuất hiện ở vế phải hay không.
@@ -10036,7 +10039,8 @@ def t_uu_tien_chu_the_co_anh():
 
     goc = [(f"ct{i}", i) for i in range(9)]        # 9 ứng viên, đã qua cổng chuyện
     for ten, bang in (
-        ("giàu ảnh lẫn nghèo ảnh", {"ct0": 0, "ct1": 7, "ct2": 1, "ct3": 12, "ct4": 2, "ct5": 5}),
+        # số ảnh chọn quanh sàn 8: ct1=9 · ct3=12 · ct5=8 ĐẠT; ct0/2/4 trượt
+        ("giàu ảnh lẫn nghèo ảnh", {"ct0": 0, "ct1": 9, "ct2": 1, "ct3": 12, "ct4": 7, "ct5": 8}),
         ("KHÔNG AI đủ ảnh",        {f"ct{i}": 1 for i in range(9)}),
         ("hỏi ảnh HỎNG hết (-1)",  {f"ct{i}": -1 for i in range(9)}),
         ("ai cũng đủ ảnh",         {f"ct{i}": 9 for i in range(9)}),
@@ -10057,15 +10061,21 @@ def t_uu_tien_chu_the_co_anh():
                       "print": lambda *a, **k: None}
         exec(khoi, moi_truong)
         ra = moi_truong["_ung"]
-        assert len(ra) == len(goc), \
-            f"[{ten}] tầng ảnh CẮT ứng viên: {len(goc)} -> {len(ra)} — đứng dây chuyền như bundle 157/158"
-        assert set(ra) == set(goc), f"[{ten}] tầng ảnh làm mất/đổi ứng viên"
+        # ── BẤT BIẾN ĐÃ ĐỔI, VÀ ĐÂY LÀ LÝ DO  (9/9/2026) ───────────────────────────────
+        # Bản trước đòi `len(ra) == len(goc)` — tức CẤM cắt — vì bundle 157/158 từng đứng vì
+        # một sàn cứng. Đo lại: 1.752 chủ thể qua cổng chuyện, ~525 có ≥10 ảnh, × 24 khuôn =
+        # 12.600 bộ/kênh. Cắt xuống 30% hồ KHÔNG làm đứng gì.
+        # Thứ làm đứng 157/158 là lọc sạch trơn rồi trả RỖNG, không phải việc cắt.
+        # Nên bất biến đúng là: **không bao giờ trả về danh sách rỗng**, và mọi ứng viên còn
+        # lại phải nằm trong danh sách gốc (không bịa ra ứng viên mới).
+        assert ra, f"[{ten}] tầng ảnh trả về RỖNG — đứng dây chuyền như bundle 157/158"
+        assert set(ra) <= set(goc), f"[{ten}] tầng ảnh bịa ra ứng viên không có trong hồ"
         if ten.startswith("giàu"):
-            assert [x[0] for x in ra[:3]] == ["ct1", "ct3", "ct5"], \
-                f"nhóm ≥3 ảnh không được đẩy lên đầu: {[x[0] for x in ra]}"
+            assert [x[0] for x in ra] == ["ct1", "ct3", "ct5"], \
+                f"sàn phải giữ ĐÚNG nhóm đủ ảnh: {[x[0] for x in ra]}"
         if ten.startswith("KHÔNG AI") or ten.startswith("hỏi ảnh"):
             assert ra == goc, \
-                f"[{ten}] thứ tự đổi dù không ứng viên nào CHỨNG MINH được là đủ ảnh"
+                f"[{ten}] phải giữ NGUYÊN cả danh sách khi không ai chứng minh được là đủ ảnh"
 
 def t_workflow_nap_du_ho_khoa():
     """Mọi khối khoá mà HÀM NẠP đọc đều phải được workflow render truyền xuống.

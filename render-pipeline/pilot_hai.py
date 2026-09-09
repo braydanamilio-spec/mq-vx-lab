@@ -1703,6 +1703,9 @@ def nap_anh_that(chu_the: str, toi_da: int = 6) -> list:
     # Đứng CUỐI vì độ chính xác giảm dần: ảnh của BÀI (người viết chọn) > NARA (bản ghi có
     # tên chủ thể) > Openverse (tìm theo chữ, phải lọc cụm). Một ảnh sai đắt hơn một ảnh
     # thiếu, nên nguồn nhiễu hơn chỉ được LẤP phần còn thiếu (§19.13).
+    # `anh_smithsonian` KHÔNG có trong danh sách này — xem đầu `anh_smithsonian.py`: khoá
+    # chạy (dùng lại khoá NARA, trần 1.000/giờ) nhưng API KHÔNG trả URL ảnh, đo 0/10 bản ghi.
+    # Nối một nguồn đóng góp 0 ảnh chỉ tốn 2 lượt gọi mỗi lượt dựng (§13.22).
     for _ten_mod in ("anh_tu_do", "anh_nara", "anh_openverse"):
         if len(ra) >= toi_da:
             break

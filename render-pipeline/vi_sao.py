@@ -322,7 +322,24 @@ def sinh(ma: str, i: int):
     # Và ƯU TIÊN, không CẮT: một sàn cứng đặt trước cổng chuyện đã làm đứng dây chuyền hai
     # lượt liền sáng nay (157, 158 đều "chưa có chủ thể đủ chuyện — BỎ bộ này"). Không có ứng
     # viên nào đủ ảnh thì vẫn dựng bằng ứng viên tốt nhất, chỉ là tập ấy nhiều nền trống hơn.
-    _SAN_ANH = 3
+    # ── SÀN THẬT, KHÔNG CÒN LÀ ƯU TIÊN  (anh: *"tìm cách fix nha e"*, 9/9/2026) ──────────
+    # Bản trước để 3 và chỉ ĐẨY LÊN ĐẦU, không cắt — vì một sàn cứng từng làm đứng dây chuyền
+    # hai lượt liền (bundle 157, 158). Nhưng đo lại thì nỗi lo ấy đặt sai chỗ:
+    #
+    #   chủ thể qua cổng chuyện          1.752
+    #   trong đó có ≥10 ảnh  (đo 6/20)     ~525  × 24 khuôn = 12.600 bộ/kênh
+    #
+    # 12.600 bộ mỗi kênh là dư sức nuôi nhiều năm. Cắt xuống 30% hồ KHÔNG làm đứng gì cả —
+    # thứ làm đứng bundle 157/158 là sàn cứng đặt TRƯỚC cổng chuyện rồi lọc sạch trơn, không
+    # phải bản thân việc cắt.
+    #
+    # Nên bất biến thật không phải "đừng bao giờ cắt" mà là **"đừng bao giờ trả về rỗng"**.
+    # Còn ứng viên đủ ảnh thì DÙNG RIÊNG chúng; không còn ai thì giữ nguyên cả danh sách.
+    #
+    # 8 chứ không phải 10: một tập dài 12 nhịp, 8 ảnh phủ 2/3 số nhịp, phần còn lại để nền
+    # TRỐNG — anh đã chốt *"nền 100% ảnh thật liên quan… hay nền trống"* và *"ko ưu tiên dựng
+    # ảnh cf mới"*, nên chỗ thiếu là chỗ trống, không phải chỗ để AI vẽ bù.
+    _SAN_ANH = 8
     _dau = _ung[:6]
     if len(_dau) > 1:
         _anh = {}
@@ -333,14 +350,16 @@ def sinh(ma: str, i: int):
                 _anh[_x[0]] = -1
         _du_anh = [x for x in _dau if _anh.get(x[0], -1) >= _SAN_ANH]
         if _du_anh:
-            _bo = len(_dau) - len(_du_anh)
-            if _bo:
-                print(f"   🖼 {len(_du_anh)}/{len(_dau)} ứng viên đầu có ≥{_SAN_ANH} ảnh tư liệu "
-                      f"— ưu tiên nhóm ấy")
-            _ung = _du_anh + [x for x in _ung if x not in _du_anh]
+            # CẮT thật: chỉ dựng chủ thể có đủ ảnh. Danh sách còn lại KHÁC RỖNG theo đúng
+            # điều kiện của nhánh này, nên không có đường nào dẫn tới "không dựng được gì".
+            print(f"   🖼 {len(_du_anh)}/{len(_dau)} ứng viên đầu có ≥{_SAN_ANH} ảnh tư liệu "
+                  f"— CHỈ dựng nhóm ấy")
+            _ung = _du_anh
         else:
-            print(f"   ⚠ không ứng viên nào có ≥{_SAN_ANH} ảnh tư liệu — vẫn dựng, tập sẽ "
-                  f"nhiều nền trống hơn")
+            # Hỏng mềm: hồ mỏng hoặc lượt hỏi ảnh hụt thì vẫn dựng bằng danh sách đầy đủ.
+            # Đây là nhánh giữ cho dây chuyền không đứng, và nó phải luôn tồn tại.
+            print(f"   ⚠ không ứng viên nào có ≥{_SAN_ANH} ảnh tư liệu — vẫn dựng bằng cả "
+                  f"danh sách, tập sẽ nhiều nền trống hơn")
 
     try:
         _t = _ung[0]
