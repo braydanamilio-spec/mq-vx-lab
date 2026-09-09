@@ -351,6 +351,34 @@ def ghi(kenh: str, chu_the: str, khuon: str) -> None:
     io.open(SO, "w", encoding="utf-8").write(json.dumps(s, ensure_ascii=False))
 
 
+def tra_lai(kenh: str, chu_the: str, khuon: str) -> bool:
+    """Trả một cặp (chủ thể × khuôn) về hồ khi bản dựng HỎNG. True nếu có gỡ được.
+
+    ── VÌ SAO  (bộ 198, 9/9/2026) ───────────────────────────────────────────────────────
+    `ghi` chạy lúc CHỌN kịch bản, tức trước khi biết bản dựng có ra tệp không. Bộ 198 có
+    props rất tốt (29 ảnh thật · 13/13 nhịp) rồi chết ở một tệp ảnh 0 byte — và cặp
+    «Atchison, Topeka and Santa Fe Railway» × khuôn ấy vẫn bị ghi là ĐÃ DÙNG. Em phải gỡ
+    tay khỏi sổ.
+
+    Ghi SỚM là đúng và giữ nguyên: nó chặn hai luồng song song chọn trùng, và chặn lượt sau
+    dựng lại thứ vừa dựng. Cái thiếu là đường LÙI cho nhánh hỏng — vá một nhánh, để nguyên
+    nhánh song song (§6). Ở đây "hỏng" nghĩa là không có tệp nào ra đời, nên trả lại không
+    thể sinh trùng.
+
+    Gỡ ĐÚNG MỘT lượt xuất hiện cuối cùng: cùng một cặp có thể được ghi hai lần nếu lượt
+    trước cũng hỏng, và gỡ sạch thì mất luôn dấu của lượt đã dựng xong.
+    """
+    s = _so()
+    ds = s.get(kenh) or []
+    cap = [chu_the, khuon]
+    for j in range(len(ds) - 1, -1, -1):
+        if list(ds[j]) == cap:
+            del ds[j]
+            io.open(SO, "w", encoding="utf-8").write(json.dumps(s, ensure_ascii=False))
+            return True
+    return False
+
+
 def con_lai(kenh: str, gocs: list, khuons: list, sau: int = 2) -> int:
     """Số CẶP (chủ thể × khuôn) còn chưa dựng — trần lý thuyết của kênh này.
 

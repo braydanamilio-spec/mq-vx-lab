@@ -263,8 +263,24 @@ def sinh(ma: str, i: int):
     # lấy cái nào đã qua cổng — với 4 chủ thể đạt thì 40 cặp ấy gần như không bao giờ trúng,
     # nên `vi_sao` báo "không chủ thể nào đủ chuyện" và rơi về bộ sinh cũ DÙ hồ đã có hàng
     # tốt. Cổng lọc đúng, phép bốc sai nguồn (§15.1: bốc trước lọc sau).
+    # ── BỐC RỘNG RỒI MỚI LỌC  (đo bộ 210 · 211, 9/9/2026) ─────────────────────────────
+    # `so_luong=6` là cái trần THẬT làm mọi tập gần đây trắng ảnh — không phải trần `[:60]`
+    # ở lượt xếp theo sổ ảnh phía dưới (em đã chẩn đoán nhầm chỗ ấy trước, và đo lại thì
+    # `_ung` chỉ có ĐÚNG 6 phần tử nên trần 60 chưa bao giờ chạm tới).
+    # Sổ có 51 chủ thể ≥8 ảnh trên 1.795 đã qua cổng chuyện — bốc 6 cặp ngẫu nhiên thì xác
+    # suất trúng một trong số ấy là ~3%. Đo hai lượt liền: 0/6 và 0/6.
+    # `tiep_tu` là phép số học trên danh sách đã đệm, KHÔNG gọi mạng — bốc 120 cặp tốn đúng
+    # bằng bốc 6. §15.1: bốc trước lọc sau, và tập cần giữ chỉ chiếm 3% hồ.
     _ung = [(ct, kh, _sang.get(ct, SAN_NHAN_QUA))
-            for ct, kh in H.tiep_tu(ma, _dat, khuons, so_luong=6)]
+            for ct, kh in H.tiep_tu(ma, _dat, khuons, so_luong=120)]
+    # Cắt bằng SỔ ẢNH trước khi hỏi lượt xem: sổ đọc đĩa (miễn phí), `luot_xem` gọi mạng cho
+    # chủ thể chưa đệm. Xếp theo ảnh ở đây KHÔNG vi phạm §19.19 — mọi ứng viên trong `_ung`
+    # đều ĐÃ qua cổng chuyện, nên đây đúng là "tiêu chí phụ giữa những chủ thể đã qua cổng".
+    if len(_ung) > 40:
+        _sd0 = {x[0]: H.so_anh_da_do(x[0]) for x in _ung}
+        if any(v > 0 for v in _sd0.values()):
+            _ung.sort(key=lambda x: -_sd0.get(x[0], -1))
+        _ung = _ung[:40]
     if not _ung:
         print(f"   ⚠ {ma}: không chủ thể nào trong 10 cặp đầu đủ chuyện — dùng bộ sinh cũ")
         return None

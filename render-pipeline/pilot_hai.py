@@ -3485,6 +3485,15 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         n += 1
     else:
         print(f"   ⚠ {ma} tập {idx}: bản dài hỏng — bỏ cả bộ, không dựng short lẻ")
+        # Không tệp nào ra đời -> trả cặp (chủ thể × khuôn) về hồ, đừng đốt nó. Bộ 198 đốt
+        # «Atchison, Topeka and Santa Fe Railway» vì một tệp ảnh 0 byte và em phải gỡ tay.
+        try:
+            import ho_chu_de as _H9
+            _dc = _VS.DA_CHON.get((ma, idx)) or {}
+            if _dc.get("chu_the") and _H9.tra_lai(ma, _dc["chu_the"], _dc.get("khuon", "")):
+                print(f"   ↩︎ trả «{_dc['chu_the']}» về hồ — lượt sau dựng lại được")
+        except Exception as _e9:
+            print(f"   ⓘ không trả lại được cặp ({type(_e9).__name__}) — không chặn lượt")
         _chot_so(_job, "failed", error="bản dài hỏng")
         return 0
 
