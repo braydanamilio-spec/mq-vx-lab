@@ -459,8 +459,22 @@ const Panel: React.FC<{
   // mọi khung, không phải một món đồ thêm vào (§17.3 · §17.4). Lệch 0,18 khung là đủ để hai
   // kênh đọc ra khác nhau mà vẫn chừa chỗ cho ảnh nền ở nửa còn lại.
   const _lechGu = motNguoi ? (guViTri === "trai" ? -0.26 : guViTri === "phai" ? 0.26 : 0) : 0;
-  const cxA = doiNguoi ? w * 0.28 : canRong ? w * 0.29 : w * (0.5 + _lechGu);
-  const cxB = doiNguoi ? w * 0.72 : canRong ? w * 0.71 : w * (0.5 + _lechGu);
+  /* ── `guViTri` PHẢI ĂN CẢ Ở KHUNG NGANG  (đo khung bộ 201, 9/9/2026) ─────────────────
+     Anh bảo đưa người dẫn về góc trái. Em đặt `guViTri="trai"` và dựng lại — đo áo tím trên
+     khung thì nhân vật vẫn ở **73–75% bề ngang**, tức bên PHẢI y như cũ.
+     Vì nhánh `canRong` (khung 16:9) dùng HẰNG `0.29`/`0.71` và bỏ qua `_lechGu` hoàn toàn.
+     Bản sửa của em không có tác dụng, và nếu không đo pixel thì em đã báo với anh là xong.
+     Nay một người dẫn thì vị trí do `guViTri` quyết ở MỌI khung: 0,22 trái · 0,78 phải.
+     Hai người vẫn giữ 0,28/0,72 như cũ — 20 kênh comic không đổi một pixel. */
+  const _motBen = motNguoi
+    ? (guViTri === "trai" ? 0.22 : guViTri === "phai" ? 0.78 : 0.5)
+    : null;
+  const cxA = doiNguoi ? w * 0.28
+            : _motBen !== null ? w * _motBen
+            : canRong ? w * 0.29 : w * (0.5 + _lechGu);
+  const cxB = doiNguoi ? w * 0.72
+            : _motBen !== null ? w * _motBen
+            : canRong ? w * 0.71 : w * (0.5 + _lechGu);
 
   return (
     <div style={{
@@ -714,7 +728,11 @@ const Panel: React.FC<{
 
       {L.nar ? (
       <BongThoai chu={L.nar} tu={tu} giay={giay} W={w} H={h}
-                 ben={canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
+                 /* Bong bóng NGƯỢC bên người dẫn. Bản cũ suy từ `noiA` (ai đang nói) — đúng
+                    cho hai người, nhưng ở chế độ MỘT người thì nó không biết người ấy đứng
+                    đâu, nên bong bóng có thể rơi đúng bên người dẫn vừa dời sang. */
+                 ben={motNguoi ? (guViTri === "trai" ? "phai" : "trai")
+                      : canRong ? (noiA ? "phai" : "trai") : (noiA ? "trai" : "phai")}
                  duoi={canRong ? (noiA ? "trai" : "phai") : undefined}
                  hep={canRong} s0={L.s} e0={L.e} net={netMuc} boGoc={boGoc} hook={hook}
                  duoiKhung={bongDuoi}
