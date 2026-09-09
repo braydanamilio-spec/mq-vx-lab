@@ -614,7 +614,23 @@ const Panel: React.FC<{
             chủ thể"* — chứ không liệt kê nhịp nào được phép (§13.9). Câu thoại có gọi tên
             một đồ vật cụ thể thì vẫn vẽ: lúc ấy nó minh hoạ chính câu đang nói, không phải
             một nhãn dán cả tập. */}
-        <DaoCu ten={doDaoCu(L.nar) || (anhNen ? "" : (daoCuTap || ""))}
+        {/* ── ĐẠO CỤ VECTOR TUYỆT ĐỐI KHÔNG ĐÈ LÊN ẢNH THẬT  (anh soi bộ 218, 9/9/2026) ──
+            Anh gửi hai khung: một chiếc **VALI xanh bạc hà** nổi trên thân F-16, và một
+            **LỐP XE đen** nằm giữa đường băng. Đo ra ngay từ khoá:
+                "Luke suspended routine **flight** training"  -> `vali`
+                "**Engine** problems caused most of the mishaps" -> `lop_xe`
+            Cả hai sai cả hai tầng: sai NGHĨA (huấn luyện bay không phải hành lý; động cơ
+            phản lực không phải lốp ô tô) và sai VAI (một hình vẽ phẳng dán lên ảnh tư liệu).
+
+            Chú thích ngay dưới đã viết đúng luật — *"đạo cụ là tầng dự phòng khi nền không
+            mang chủ thể"* — nhưng điều kiện chỉ bọc nhánh DỰ PHÒNG (`daoCuTap`), còn nhánh
+            từ khoá thì đi thẳng. §6 lần thứ bảy trong phiên: vá một nhánh, để nguyên nhánh
+            song song. Lỗi ẩn suốt vì trước đây phần lớn nhịp KHÔNG có ảnh thật; từ lúc nền
+            phủ 12/12 nhịp thì nó hiện ra ở mọi tập.
+
+            Sửa đúng vai: có ảnh thật thì KHÔNG đạo cụ, bất kể lời thoại nói gì. Ảnh tư liệu
+            đã là chủ thể rồi — thêm một hình vẽ vào chỉ là nói lại, và nói sai. */}
+        <DaoCu ten={anhNen ? "" : (doDaoCu(L.nar) || daoCuTap || "")}
                w={w} h={h} mau={mau} mauPhu={mauPhu} hai={doiNguoi} />
       </svg>
 

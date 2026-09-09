@@ -4145,6 +4145,8 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("tốc độ đọc lệch quanh CHUẨN NHÀ, không quanh 0",
+          t_toc_do_doc_lech_quanh_CHUAN_NHA)
     check("chữ số của một KÝ HIỆU (B-17) không thành thẻ số",
           t_chu_so_cua_mot_KY_HIEU_khong_thanh_the_so)
     check("không hai nhịp liền nhau dùng chung một ảnh",
@@ -10450,6 +10452,60 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_toc_do_doc_lech_quanh_CHUAN_NHA():
+    """Tốc độ đọc của MỌI kênh phải lệch quanh `tts_karaoke.DEFAULT_RATE`, không quanh 0.
+
+    ── VÌ SAO  (anh soi short bộ 218, 9/9/2026) ──────────────────────────────────────────
+    Anh: *"nó nói như bị kéo giãn ra, nói chậm slomotion, ko tự nhiên"*.
+
+    Đo TRƯỚC khi sửa (§13.4), và phép đo đầu tiên BÁC giả thuyết hiển nhiên: âm tiết/giây
+    giữa các nhịp chỉ chênh 1,36–1,46 lần, tức giọng KHÔNG hề bị kéo giãn. Thứ sụt là
+    TỪ/giây (1,76 so với 3,05) — vì "1946" là MỘT từ mà bốn âm tiết. Nếu tin cảm giác mà đi
+    sửa khâu dựng tiếng thì đã sửa thứ không hỏng.
+
+    Nhưng chính phép đo ấy lộ ra cái thật: cả tập đọc ở ~3,7 âm tiết/giây. Gốc là
+    `ga = (gr[0], f"{-8 + h % 9}%", …)` trong `phim.py` — dải **[-8%, 0%]**, nên không kênh
+    nào nhanh hơn bình thường. Đo cả 18 kênh: từ -2% tới -8%. Chuẩn nhà là `+6%`, kèm chú
+    thích *"nhanh nhẹ cho hợp nhịp viral"* — tức bộ này chậm hơn chuẩn nhà 8–14 điểm phần
+    trăm, suốt từ khi viết, và không có gì báo.
+
+    §13.6: hằng số sống lâu hơn ngữ cảnh sinh ra nó. Dải [-8, 0] hợp lý nếu mốc là 0, và nó
+    chưa bao giờ được đối chiếu với mốc thật.
+
+    Cổng đọc mốc từ CHÍNH `tts_karaoke` chứ không chép lại con số: hai nơi chép cùng một
+    hằng là hai nơi sẽ lệch nhau (§13.5) — và đây đúng là lần lệch ấy.
+    """
+    import ast, os, re as _re
+    import tts_karaoke as TK
+
+    _m = _re.match(r"([+-]?)(\d+)%?$", str(TK.DEFAULT_RATE).strip())
+    assert _m, f"DEFAULT_RATE không đọc được: {TK.DEFAULT_RATE!r}"
+    moc = int(_m.group(2)) * (-1 if _m.group(1) == "-" else 1)
+    assert moc > 0, ("chuẩn nhà không còn DƯƠNG — nếu đây là chủ ý thì sửa cổng này cùng "
+                     f"lúc, đừng để nó xanh nhầm: {TK.DEFAULT_RATE!r}")
+
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "phim.py"), encoding="utf-8").read())
+    kh = None
+    for n in ast.walk(cay):
+        if isinstance(n, ast.Assign) and any(getattr(t, "id", "") == "ga" for t in n.targets):
+            kh = ast.unparse(n)
+    assert kh, "không tìm thấy chỗ gán `ga` — phép tìm hỏng, không phải mã hỏng"
+    assert "_moc" in kh, f"tốc độ đọc không neo vào chuẩn nhà: {kh[:90]}"
+
+    # và CHẠY chính công thức ấy trên 18 mã kênh thật — đọc mã chỉ chứng minh có mã (§13.10)
+    import giai_thich as G
+    ma_kenh = [k for k in getattr(G, "GU_RIENG", {}) ] or ["therules", "howbig", "odds"]
+    xau = []
+    for ma in ma_kenh:
+        h = sum(ord(c) for c in ma)
+        r = moc - 4 + h % 9
+        if not (0 < r <= moc + 4):
+            xau.append(f"{ma} {r:+d}%")
+    assert not xau, ("kênh đọc chậm hơn bình thường hoặc lệch quá xa chuẩn nhà: "
+                     + ", ".join(xau[:6]))
 
 
 def t_chu_so_cua_mot_KY_HIEU_khong_thanh_the_so():

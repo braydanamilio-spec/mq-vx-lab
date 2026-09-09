@@ -341,7 +341,28 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
     # ── GIỌNG ─────────────────────────────────────────────────────────────────────────────
     gr = G.GU_RIENG.get(ma, ("en-US-GuyNeural", "music/forecast.mp3", ""))
     h = sum(ord(c) for c in ma)
-    ga = (gr[0], f"{-8 + h % 9}%", f"{-4 + h % 7}Hz")
+    # ── TỐC ĐỘ ĐỌC PHẢI LỆCH QUANH CHUẨN NHÀ, KHÔNG LỆCH QUANH SỐ ÂM ─────────────────────
+    # Anh soi short bộ 218: *"nó nói như bị kéo giãn ra, nói chậm slomotion, ko tự nhiên"*.
+    # Đo trước khi sửa (§13.4): âm tiết/giây của các nhịp CHÊNH NHAU chỉ 1,36–1,46 lần, tức
+    # giọng KHÔNG bị kéo giãn — thứ sụt là TỪ/giây, vì "1946" là một từ mà bốn âm tiết.
+    # Nhưng phép đo ấy lại lộ ra cái thật: cả tập đọc ở 3,7 âm tiết/giây, dưới hẳn mức tự
+    # nhiên của lời dẫn tiếng Anh.
+    # Gốc là công thức lệch pha này: `-8 + h % 9` cho dải **[-8%, 0%]** — không kênh nào
+    # nhanh hơn bình thường, và đo cả 18 kênh thì chúng nằm giữa -2% và -8%.
+    # Chuẩn nhà là `tts_karaoke.DEFAULT_RATE = "+6%"`, kèm chú thích *"nhanh nhẹ cho hợp nhịp
+    # viral"*. Tức bộ này chạy chậm hơn chuẩn nhà 8–14 điểm phần trăm, suốt từ khi viết.
+    # §13.6: hằng số sống lâu hơn ngữ cảnh sinh ra nó — dải này hợp lý nếu mốc là 0, và nó
+    # chưa bao giờ được đối chiếu với mốc thật.
+    # Đọc mốc TỪ `tts_karaoke` chứ không chép lại: hai nơi chép cùng một con số là hai nơi
+    # sẽ lệch nhau (§13.5).
+    try:
+        import tts_karaoke as _TK
+        _moc = int(str(_TK.DEFAULT_RATE).strip().rstrip("%").lstrip("+") or 0)
+        if str(_TK.DEFAULT_RATE).strip().startswith("-"):
+            _moc = -_moc
+    except Exception:
+        _moc = 6                      # hỏng thì vẫn phải là mốc DƯƠNG, không rơi về 0
+    ga = (gr[0], f"{_moc - 4 + h % 9:+d}%", f"{-4 + h % 7}Hz")
     loi = [n["loi"] for n in nhip0]
     rel_mp3 = f"{slug}.mp3"
     dur, tu, moc = doc_hai_giong([(t, 0, "trung_tinh") for t in loi], ga, ga,
