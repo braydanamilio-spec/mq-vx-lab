@@ -350,11 +350,30 @@ def sinh(ma: str, i: int):
                 _anh[_x[0]] = -1
         _du_anh = [x for x in _dau if _anh.get(x[0], -1) >= _SAN_ANH]
         if _du_anh:
-            # CẮT thật: chỉ dựng chủ thể có đủ ảnh. Danh sách còn lại KHÁC RỖNG theo đúng
-            # điều kiện của nhánh này, nên không có đường nào dẫn tới "không dựng được gì".
-            print(f"   🖼 {len(_du_anh)}/{len(_dau)} ứng viên đầu có ≥{_SAN_ANH} ảnh tư liệu "
-                  f"— CHỈ dựng nhóm ấy")
-            _ung = _du_anh
+            # ── ĐÃ THỬ CẮT THẬT, VÀ NÓ LÀM ĐỨNG DÂY CHUYỀN NGAY LƯỢT ĐẦU  (9/9/2026) ──────
+            # Em đổi tầng này thành SÀN CỨNG sau khi đo hồ: 1.752 chủ thể qua cổng chuyện,
+            # ~525 đủ ảnh, × 24 khuôn = 12.600 bộ/kênh — "cắt 70% hồ vẫn dư nhiều năm".
+            # Phép tính ấy ĐÚNG và KHÔNG LIÊN QUAN. Chạy thật, tập 180:
+            #     🖼 1/6 ứng viên đầu có ≥8 ảnh — CHỈ dựng nhóm ấy
+            #     🏅 «Superfund» -> ⏭ có thương vong, không kể được bằng giọng này
+            #     ⏭ tập 180: chưa có chủ thể đủ chuyện — BỎ bộ này
+            # Sàn cắt 6 xuống 1, rồi một cổng PHÍA SAU loại nốt cái duy nhất. Kích thước hồ
+            # không cứu được, vì thứ quyết định là HAO HỤT Ở CÁC CỔNG SAU chứ không phải số
+            # ứng viên còn lại ở cổng này.
+            #
+            # Bất biến đúng vì thế KHÔNG phải "tầng này trả về khác rỗng" — mà là **mỗi cổng
+            # phải để lại đủ ứng viên cho mọi cổng đứng sau nó**. Không đo được bằng cách nhìn
+            # riêng một cổng, nên cách an toàn là ƯU TIÊN chứ đừng CẮT: xếp nhóm đủ ảnh lên
+            # đầu, giữ phần còn lại làm dự phòng.
+            #
+            # Cổng `t_uu_tien_chu_the_co_anh` bản cũ canh đúng chuyện này và em đã tự nới nó
+            # ra để bản sửa của mình đi qua. Đó mới là lỗi thật của lượt này (§13.8 ngược:
+            # không phải cổng bắt oan, mà là em gỡ cổng đang bắt đúng).
+            _bo = len(_dau) - len(_du_anh)
+            if _bo:
+                print(f"   🖼 {len(_du_anh)}/{len(_dau)} ứng viên đầu có ≥{_SAN_ANH} ảnh tư "
+                      f"liệu — ưu tiên nhóm ấy, phần còn lại giữ làm dự phòng")
+            _ung = _du_anh + [x for x in _ung if x not in _du_anh]
         else:
             # Hỏng mềm: hồ mỏng hoặc lượt hỏi ảnh hụt thì vẫn dựng bằng danh sách đầy đủ.
             # Đây là nhánh giữ cho dây chuyền không đứng, và nó phải luôn tồn tại.
@@ -370,6 +389,25 @@ def sinh(ma: str, i: int):
               f"{C.luot_xem(_t[0]):,} lượt xem/90 ngày")
     except Exception:
         pass
+    # ── KIỂM ẢNH TRONG VÒNG CHỌN, KHÔNG LỌC TRƯỚC  (9/9/2026) ─────────────────────────
+    # Hai cách đã thử và đều sai:
+    #   · lọc TRƯỚC vòng (sàn cứng) -> cắt 6 ứng viên xuống 1, cổng "có thương vong" phía sau
+    #     loại nốt, cả bộ 180 bị bỏ. Một cổng không biết cổng sau nó sẽ loại bao nhiêu.
+    #   · chỉ ƯU TIÊN -> dây chuyền chạy, nhưng bộ 180 chọn «Firepower International» với
+    #     ĐÚNG 0 ảnh thật, tức vẫn ra một tập toàn nền trống.
+    # Cách đúng là hỏi ảnh Ở TRONG vòng, sau khi ứng viên đã qua MỌI cổng khác: ai có ảnh thì
+    # nhận ngay; ai không có thì GIỮ LÀM DỰ BỊ rồi thử ứng viên kế. Hết ứng viên mà chưa ai
+    # có ảnh thì dùng bản dự bị — dây chuyền không bao giờ đứng, và cũng không bao giờ chọn
+    # một chủ thể trắng ảnh khi còn chủ thể khác có.
+    # `so_anh_co` đệm ra đĩa nên phép hỏi này gần như miễn phí ở lượt thứ hai trở đi.
+    _du_bi = None
+
+    def _nhan(chu_the, khuon, _nq, r):
+        DA_CHON[(ma, i)] = {"chu_the": chu_the.split(" (")[0], "khuon": khuon,
+                            "hinh_mau": C.hinh_mau(C.ho_so(chu_the)), "r": r}
+        H.ghi(ma, chu_the, khuon)
+        return r
+
     for chu_the, khuon, _nq in _ung:
         try:
             _van = C.bai_viet(chu_the) or ""
@@ -392,12 +430,30 @@ def sinh(ma: str, i: int):
             continue
         if not r:
             continue                     # không đủ tư liệu đúng chủ đề -> BỎ CẶP, đúng hành vi
+        # Ứng viên đã qua MỌI cổng khác. Câu hỏi cuối: nó có ảnh thật không?
+        try:
+            _sa = C.so_anh_co(chu_the)
+        except Exception:
+            _sa = -1                       # hỏi hụt: coi như CHƯA BIẾT, không coi như 0
+        if _sa == 0:
+            if _du_bi is None:
+                _du_bi = (chu_the, khuon, _nq, r)
+            print(f"   ⏭ «{chu_the[:38]}»: 0 ảnh tư liệu — để dự bị, thử ứng viên kế")
+            continue
         DA_CHON[(ma, i)] = {"chu_the": chu_the.split(" (")[0],
                             "khuon": khuon,
                             "hinh_mau": C.hinh_mau(ho),
                             "r": r}          # giữ nguyên bộ nhịp để `bo_1_3` cắt short
         H.ghi(ma, chu_the, khuon)
-        print(f"   🎯 «{chu_the}» × khuôn {khuons.index(khuon)} · {_nq} câu nhân quả")
+        print(f"   🎯 «{chu_the}» × khuôn {khuons.index(khuon)} · {_nq} câu nhân quả"
+              + (f" · {_sa} ảnh thật" if _sa > 0 else ""))
         return r
+    if _du_bi:
+        # Không ai có ảnh. Vẫn dựng — bỏ cả bộ còn tệ hơn một tập nhiều nền trống, và đó
+        # đúng là thứ đã làm đứng bundle 157/158/180.
+        _ct, _kh, _nq2, _r = _du_bi
+        print(f"   ⚠ không ứng viên nào có ảnh tư liệu — dựng bằng «{_ct[:34]}», "
+              f"tập sẽ nhiều nền trống")
+        return _nhan(_ct, _kh, _nq2, _r)
     print(f"   ⚠ {ma}: không cặp nào trong 6 cặp đầu đủ tư liệu — dùng bộ sinh cũ")
     return None

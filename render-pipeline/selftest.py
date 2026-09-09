@@ -10068,11 +10068,18 @@ def t_uu_tien_chu_the_co_anh():
         # Thứ làm đứng 157/158 là lọc sạch trơn rồi trả RỖNG, không phải việc cắt.
         # Nên bất biến đúng là: **không bao giờ trả về danh sách rỗng**, và mọi ứng viên còn
         # lại phải nằm trong danh sách gốc (không bịa ra ứng viên mới).
-        assert ra, f"[{ten}] tầng ảnh trả về RỖNG — đứng dây chuyền như bundle 157/158"
-        assert set(ra) <= set(goc), f"[{ten}] tầng ảnh bịa ra ứng viên không có trong hồ"
+        # ── BẤT BIẾN TRẢ LẠI, VÀ LÝ DO ĐẮT HƠN LẦN TRƯỚC  (9/9/2026) ──────────────────
+        # Em đã nới cổng này thành "chỉ cần khác rỗng" để một bản sửa của mình đi qua: đổi
+        # tầng ảnh thành SÀN CỨNG. Chạy thật tập 180 thì sàn cắt 6 ứng viên xuống 1, một cổng
+        # PHÍA SAU loại nốt cái duy nhất ấy, và cả bộ bị bỏ — đúng bundle 157/158.
+        # Nên bất biến phải quay lại mức chặt: **tầng này KHÔNG được vứt ứng viên nào**, vì
+        # nó không thể biết các cổng sau sẽ loại bao nhiêu. Ưu tiên thì được, cắt thì không.
+        assert len(ra) == len(goc), \
+            f"[{ten}] tầng ảnh VỨT ứng viên: {len(goc)} -> {len(ra)}. Cổng sau còn loại tiếp, "
+        assert set(ra) == set(goc), f"[{ten}] tầng ảnh làm mất/đổi ứng viên"
         if ten.startswith("giàu"):
-            assert [x[0] for x in ra] == ["ct1", "ct3", "ct5"], \
-                f"sàn phải giữ ĐÚNG nhóm đủ ảnh: {[x[0] for x in ra]}"
+            assert [x[0] for x in ra[:3]] == ["ct1", "ct3", "ct5"], \
+                f"nhóm đủ ảnh phải lên ĐẦU: {[x[0] for x in ra]}"
         if ten.startswith("KHÔNG AI") or ten.startswith("hỏi ảnh"):
             assert ra == goc, \
                 f"[{ten}] phải giữ NGUYÊN cả danh sách khi không ai chứng minh được là đủ ảnh"
@@ -10272,6 +10279,26 @@ def t_thoai_co_tang_du_phong():
 
     import phim_canh as PC
     assert callable(getattr(PC, "_goi_cf", None)), "phim_canh._goi_cf biến mất"
+
+    # ── PHẢI GỌI THẬT, KHÔNG CHỈ ĐỌC CHỮ  (9/9/2026) ────────────────────────────────────
+    # Bản đầu của cổng này chỉ quét mã tìm `if not keys` và `C._goi_cf`. Nó XANH, trong khi
+    # bản vá em vừa push làm CHẾT MỌI LƯỢT DỰNG: lambda nhận 2 tham số mà chỗ gọi vẫn truyền
+    # 3 -> `TypeError` ngay lượt đầu, ở dòng đầu tiên của khâu viết thoại.
+    # Năm cổng xanh vì không cổng nào CHẠY `doi_thoai`. §13.10: cổng cho mã chạy ở đường
+    # khác phải chạy CHÍNH mã ấy.
+    # Gọi với hồ khoá RỖNG và một `_goi_cf` giả -> đi đúng nhánh dự phòng, không đụng mạng.
+    import pilot_hai as PH
+    _cf_that, _gk_that = PC._goi_cf, PC._khoa_groq
+    _da_goi = []
+    try:
+        PC._khoa_groq = lambda: []
+        PC._goi_cf = lambda sp, up: (_da_goi.append(1), '[{"ai":"a","chu":"x","cx":"trung_tinh"}]')[1]
+        PH.doi_thoai(["Một câu dẫn."], [{"vai": "A", "ta": "a"}, {"vai": "B", "ta": "b"}])
+    except TypeError as e:
+        raise AssertionError(f"doi_thoai gọi sai chữ ký ở nhánh dự phòng: {e}")
+    finally:
+        PC._goi_cf, PC._khoa_groq = _cf_that, _gk_that
+    assert _da_goi, "hồ khoá rỗng mà KHÔNG rơi vào Cloudflare"
 
 
 def t_nam_khong_dem_len():

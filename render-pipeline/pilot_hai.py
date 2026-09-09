@@ -695,7 +695,7 @@ def doi_thoai(loi: list, vai: list, man: list = None) -> list:
             "\n\nYour previous answer DROPPED these figures: " + ", ".join(thieu) +
             ". Each one is on a card the viewer will see. Rewrite so every one of them is "
             "spoken out loud, digits exactly as written above, in the turn for its own line. "
-            "A viewer listening without watching must hear each figure."), keys)
+            "A viewer listening without watching must hear each figure."))
         ds = C._tach_json(t) or []
         # Mô hình chép cả SỐ THỨ TỰ của câu dẫn vào lời ("0. The real cause…"). Nó đang làm
         # đúng thứ đề bài đánh số, và người xem thì nghe thấy "không chấm". Dọn ở đây, chỗ
