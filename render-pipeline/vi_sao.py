@@ -430,15 +430,33 @@ def sinh(ma: str, i: int):
             continue
         if not r:
             continue                     # không đủ tư liệu đúng chủ đề -> BỎ CẶP, đúng hành vi
-        # Ứng viên đã qua MỌI cổng khác. Câu hỏi cuối: nó có ảnh thật không?
+        # ── ĐẾM ẢNH BẰNG ĐÚNG ĐƯỜNG SẢN PHẨM ĐI  (đo bộ 181, 9/9/2026) ────────────────
+        # Bản trước hỏi `C.so_anh_co`, và nó báo «Liberty Express Airlines» có 2 ảnh nên vòng
+        # chọn nhận. Dựng ra thì `nap_anh_that` trả về **0** và cả 12 nhịp nền trống.
+        # `so_anh_co` đếm ỨNG VIÊN từ `anh_cua`; `nap_anh_that` còn phải TẢI VỀ rồi qua thêm
+        # bộ lọc chân dung, sàn cỡ, chặn logo và khử trùng — 2 ứng viên rụng sạch.
+        # §13.15: phép đo phải đi qua ĐÚNG đường mà mã thật đi, nếu không nó đo một sản phẩm
+        # không tồn tại. Nên gọi thẳng `nap_anh_that`.
+        # Không lãng phí: ảnh tải về vào chung kho `anh_pd/` và lượt dựng sau dùng lại ngay;
+        # chi phí thật chỉ là ảnh của những ứng viên bị loại. Xin 8 thôi — đủ để trả lời câu
+        # "có ảnh không", không cần xin trọn 32 cho một ứng viên chưa chắc được chọn.
         try:
-            _sa = C.so_anh_co(chu_the)
+            import pilot_hai as _PH          # nhập muộn: `pilot_hai` nhập `vi_sao` ở tầng trên
+            _sa = len(_PH.nap_anh_that(chu_the, toi_da=8) or [])
         except Exception:
             _sa = -1                       # hỏi hụt: coi như CHƯA BIẾT, không coi như 0
-        if _sa == 0:
-            if _du_bi is None:
-                _du_bi = (chu_the, khuon, _nq, r)
-            print(f"   ⏭ «{chu_the[:38]}»: 0 ảnh tư liệu — để dự bị, thử ứng viên kế")
+        # ── NHẬN NGAY KHI ĐỦ GIÀU, CÒN LẠI GIỮ BẢN GIÀU NHẤT  (đo bộ 182, 9/9/2026) ────
+        # Bản trước chỉ bỏ qua chủ thể có ĐÚNG 0 ảnh, nên nó nhận ngay «Mountain West
+        # Airlines» với 2 ảnh -> 2/11 nhịp có nền, còn KÉM HƠN bộ 171 (4/12).
+        # Có bản dự bị rồi thì không còn lý do dễ dãi: duyệt hết ứng viên, nhận NGAY ai đủ
+        # `_SAN_ANH`, còn không thì cuối vòng lấy người GIÀU ẢNH NHẤT đã gặp.
+        # Không bao giờ đứng (luôn còn bản giàu nhất), và không bao giờ bỏ một chủ thể giàu
+        # ảnh để lấy một chủ thể nghèo chỉ vì nó đứng trước.
+        if _sa < _SAN_ANH:
+            if _du_bi is None or _sa > _du_bi[4]:
+                _du_bi = (chu_the, khuon, _nq, r, _sa)
+            print(f"   ⏭ «{chu_the[:34]}»: {max(0, _sa)} ảnh (< {_SAN_ANH}) — giữ dự bị, "
+                  f"thử ứng viên kế")
             continue
         DA_CHON[(ma, i)] = {"chu_the": chu_the.split(" (")[0],
                             "khuon": khuon,
@@ -451,9 +469,9 @@ def sinh(ma: str, i: int):
     if _du_bi:
         # Không ai có ảnh. Vẫn dựng — bỏ cả bộ còn tệ hơn một tập nhiều nền trống, và đó
         # đúng là thứ đã làm đứng bundle 157/158/180.
-        _ct, _kh, _nq2, _r = _du_bi
-        print(f"   ⚠ không ứng viên nào có ảnh tư liệu — dựng bằng «{_ct[:34]}», "
-              f"tập sẽ nhiều nền trống")
+        _ct, _kh, _nq2, _r, _sa2 = _du_bi
+        print(f"   ⚠ không ứng viên nào đạt {_SAN_ANH} ảnh — dựng bằng «{_ct[:30]}» "
+              f"({max(0, _sa2)} ảnh), tập sẽ nhiều nền trống")
         return _nhan(_ct, _kh, _nq2, _r)
     print(f"   ⚠ {ma}: không cặp nào trong 6 cặp đầu đủ tư liệu — dùng bộ sinh cũ")
     return None

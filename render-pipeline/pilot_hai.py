@@ -2455,6 +2455,39 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
             j2 += 1
         if j2 < len(cau):
             so_lieu[j2] = lop_cua[_i]
+    # ── KHÔNG ĐỂ NHỊP NÀO NỀN TRẮNG  (anh, 9/9/2026) ──────────────────────────────────
+    # Anh: *"gặn nhiều ảnh nền trắng trơn ko được phải là ảnh nền thực ko dùng nền trắng
+    # trơn"*. Trước đó anh cho phép nền trống khi không có ảnh — nay chốt lại là KHÔNG.
+    # Đo bộ 183: **10/13 nhịp trắng trơn**, vì chủ thể chỉ có 3 ảnh.
+    #
+    # Ba lối, và hai lối bị chính anh loại: sinh ảnh CF (*"ko ưu tiên dựng ảnh cf mới"*) và
+    # để trống (*"ko dùng nền trắng trơn"*). Còn lại: DÙNG LẠI ảnh đã có.
+    #
+    # Lặp là thứ anh đã chê, nên luật chặt: không bao giờ đặt cùng một ảnh ở HAI NHỊP LIỀN
+    # NHAU, và rải đều để mỗi ảnh cách lần xuất hiện trước càng xa càng tốt. Với 3 ảnh cho 13
+    # nhịp thì mỗi ảnh hiện ~4 lần, cách nhau 3 nhịp — mắt đọc ra một bộ tư liệu quay vòng,
+    # không đọc ra một khung đứng hình.
+    # Đây là ĐÁNH ĐỔI CÓ Ý THỨC, không phải giải pháp đẹp: lời giải thật vẫn là chọn chủ thể
+    # giàu ảnh, và nó nằm ở khâu mở hồ chứ không ở đây.
+    _co = [x for x in (anh_nens or []) if x]
+    if _co:
+        _j = 0
+        for _i in range(len(anh_nens)):
+            if anh_nens[_i]:
+                continue
+            _truoc = anh_nens[_i - 1] if _i > 0 else ""
+            for _ in range(len(_co)):
+                _ung_anh = _co[_j % len(_co)]
+                _j += 1
+                if _ung_anh != _truoc:
+                    anh_nens[_i] = _ung_anh
+                    break
+            else:
+                anh_nens[_i] = _co[0]        # chỉ có ĐÚNG một ảnh: đành lặp
+        _lap = sum(1 for _i in range(1, len(anh_nens)) if anh_nens[_i] == anh_nens[_i - 1])
+        print(f"   🖼 lấp nền: {len(anh_nens)}/{len(anh_nens)} nhịp có ảnh thật "
+              f"({len(_co)} ảnh gốc quay vòng · {_lap} cặp liền nhau trùng)")
+
     _bo_lech, _bo_lap = loc_the_so(so_lieu, cau)
 
     # ── CẮT HÌNH THEO ĐỒNG HỒ, KHÔNG THEO CÂU  (anh, 9/9/2026) ────────────────────────
