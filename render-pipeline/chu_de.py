@@ -107,11 +107,39 @@ def so_kem_don(cau: str) -> str:
     người xem bằng chính câu chuyện (§15.2 — "" và "0" phải là hai câu trả lời khác nhau).
     Năm bốn chữ số KHÔNG tính là lượng: "1948" không phải một đại lượng để hứa hẹn.
     """
-    for m in _SO_DON.finditer(str(cau or "")):
+    van = str(cau or "")
+    for m in _SO_DON.finditer(van):
         t = " ".join((m.group(0) or "").split())
         if re.fullmatch(r"(1[89]\d\d|20\d\d)", t.replace(",", "")):
             continue
         return t
+    # ── ĐƠN VỊ NGOÀI BẢNG: HỎI BẰNG QUY LUẬT, ĐỪNG LIỆT KÊ  (bộ 219, 9/9/2026) ─────────
+    # `_DV` là bảng đơn vị chép tay, và nó thiếu đúng những thứ hay gặp nhất trong văn kể:
+    # *"the **1400 page** congressional testimony"* · *"graduating **608 crews**"*. Thêm từng
+    # chữ vào bảng là bước đầu của một danh sách vô hạn (§13.9) — và bảng ấy còn được dùng để
+    # CHỌN CÂU (`_CAU`), nên nới nó là đổi cả tập câu được trích, một tác dụng phụ không ai
+    # xin.
+    # Quy luật thay cho danh sách: một con số theo sau bởi một DANH TỪ là một lượng; theo sau
+    # bởi một TỪ CHỨC NĂNG thì không ("Building 771 **and** caused…"). Danh sách từ chức năng
+    # là hữu hạn và đứng yên — đó là khác biệt giữa nó và một bảng đơn vị.
+    _CHUC_NANG = {
+        "and", "or", "the", "a", "an", "in", "of", "to", "was", "were", "is", "are", "for",
+        "by", "with", "at", "on", "from", "that", "which", "but", "as", "its", "it", "his",
+        "her", "their", "this", "these", "those", "had", "has", "have", "be", "been", "when",
+        "after", "before", "during", "while", "until", "then", "so", "than", "into", "over",
+        "under", "through", "about", "against", "between", "per",
+    }
+    # Cùng phép chặn KÝ HIỆU của `_SO` — bản đầu của khối này viết một biểu thức MỚI mà
+    # quên mang theo, và "B‑17 pilot training" lập tức ra thẻ «17 pilot». Thêm một bộ dò
+    # số thứ hai mà không mang theo hàng rào của bộ thứ nhất là §6 ở dạng thuần nhất.
+    for m in re.finditer(r"(?<![A-Za-z])(?<![A-Za-z][-\u2010\u2011\u2013])"
+                         r"\b(\d[\d,\.]*)\s+([a-z]{3,})\b", van):
+        so, tu = m.group(1), m.group(2)
+        if re.fullmatch(r"(1[89]\d\d|20\d\d)", so.replace(",", "")):
+            continue
+        if tu in _CHUC_NANG:
+            continue
+        return f"{so} {tu}"
     return ""
 
 

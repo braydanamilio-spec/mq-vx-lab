@@ -4145,6 +4145,8 @@ def main():
     check("khối số biết ĐÁY BONG BÓNG, không chỉ đỉnh đầu", t_khoi_so_biet_day_bong)
     check("chọn chủ thể ưu tiên nơi CÓ ảnh tư liệu, không CẮT", t_uu_tien_chu_the_co_anh)
     check("workflow render NẠP đủ mọi khối khoá mà mã ĐỌC", t_workflow_nap_du_ho_khoa)
+    check("thẻ số phải là một LƯỢNG hoặc một NĂM",
+          t_the_so_phai_la_mot_LUONG_hoac_mot_NAM)
     check("tốc độ đọc lệch quanh CHUẨN NHÀ, không quanh 0",
           t_toc_do_doc_lech_quanh_CHUAN_NHA)
     check("chữ số của một KÝ HIỆU (B-17) không thành thẻ số",
@@ -10452,6 +10454,63 @@ def t_logo_khong_lam_nen():
     # lọc sạch trơn thì GIỮ NGUYÊN nền cũ, không trả danh sách rỗng
     ra2 = PH._chen_anh_that(["cu.jpg"], ["_t_logo.png"])
     assert ra2 == ["cu.jpg"], "lọc hết logo rồi trả về rỗng — mất cả nền đang có"
+
+
+def t_the_so_phai_la_mot_LUONG_hoac_mot_NAM():
+    """Thẻ số chỉ được mang một LƯỢNG (số + đơn vị) hoặc một NĂM — không mang số của một TÊN.
+
+    ── VÌ SAO  (anh soi bộ 219, 9/9/2026) ────────────────────────────────────────────────
+    Bốn thẻ số của bộ ấy, cả bốn `don=""`:
+        771   <- "The accident contaminated **Building 771** and caused $818,600 damage"
+        11    <- "On **September 11**, 1957 a plutonium fire erupted"
+        1400  <- "the **1400 page** congressional testimony"   (lượng thật, mất đơn vị)
+        1974  <- "In **1974** operator error released…"          (đúng)
+    771 là số hiệu toà nhà; 11 là ngày — `_NGAY` bỏ được "9 October 1975" nhưng không bỏ
+    dạng tháng-đứng-trước. Cùng họ với thẻ "17" của **B‑17** và `so="SOUTH"` hôm qua: một
+    con số lọt vào chỗ dành cho một ĐẠI LƯỢNG.
+
+    `_so_dau` nay hỏi *"có một LƯỢNG không"* thay vì *"có chữ số không"*, dùng lại
+    `chu_de.so_kem_don` chứ không viết phép mới (§13.1), và trả về CẶP (số, đơn vị) để đơn
+    vị đi cùng con số suốt đường tới màn hình (§14.16).
+
+    Đơn vị ngoài bảng `_DV` nhận bằng QUY LUẬT chứ không bằng danh sách: số + danh từ là một
+    lượng, số + từ chức năng thì không. Danh sách từ chức năng hữu hạn và đứng yên; một bảng
+    đơn vị thì vô hạn (§13.9). Và bảng `_DV` còn dùng để CHỌN CÂU, nên nới nó là đổi cả tập
+    câu được trích — một tác dụng phụ không ai xin.
+    """
+    import khung_hoi as K
+
+    assert K._so_dau("The accident contaminated Building 771 and caused $818,600 damage.") \
+        == ("$818,600", ""), K._so_dau("The accident contaminated Building 771 and caused $818,600 damage.")
+    assert K._so_dau("On September 11, 1957 a plutonium fire erupted.")[0] == "1957", \
+        "ngày dạng tháng-đứng-trước vẫn thành thẻ số"
+    assert K._so_dau("Only after the 1400 page testimony did officials admit it.") \
+        == ("1400", "page"), "lượng ngoài bảng đơn vị bị vứt mất"
+    # ký hiệu: cùng phép chặn ở CẢ HAI bộ dò số — bản đầu của bộ thứ hai quên mang theo và
+    # "B‑17 pilot training" lập tức ra «17 pilot» (§6)
+    assert K._so_dau("The B‑17 training ended in April 1945, graduating 608 crews.") \
+        == ("608", "crews"), K._so_dau("The B‑17 training ended in April 1945, graduating 608 crews.")
+    assert K._so_dau("A MiG-21 flew twelve sorties.")[0] != "21", "ký hiệu vẫn thành thẻ số"
+    # năm vẫn giữ — mốc thời gian là xương sống của câu chuyện
+    assert K._so_dau("In 1974 operator error released plutonium.") == ("1974", "")
+    # không có lượng nào thì KHÔNG thẻ, chứ không bịa
+    assert K._so_dau("The task force recommended Rocky Flats be shut down.") == ("", "")
+
+    # và đơn vị phải CHẢY tới nhịp, không rơi ra dọc đường
+    import ast, os
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "khung_hoi.py"), encoding="utf-8").read())
+    ma = []
+    for n in ast.walk(cay):
+        if isinstance(n, ast.FunctionDef):
+            b = n.body
+            if b and isinstance(b[0], ast.Expr) and isinstance(b[0].value, ast.Constant):
+                b = b[1:]
+            ma.append("\n".join(ast.unparse(x) for x in b))
+    het = "\n".join(ma)
+    xau = [d.strip() for d in het.splitlines()
+           if "so_lieu" in d and "don=''" in d.replace('"', "'")]
+    assert not xau, f"đơn vị bị ghi đè thành rỗng khi dựng nhịp: {xau[0][:80]}"
 
 
 def t_toc_do_doc_lech_quanh_CHUAN_NHA():

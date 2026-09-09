@@ -109,19 +109,39 @@ _NGAY = _re.compile(r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|
                     r"September|October|November|December)\b")
 
 
-def _so_dau(c: str) -> str:
-    """Con số ĐÁNG hiện lên màn. Bỏ ngày-trong-tháng.
+def _so_dau(c: str):
+    """(số, đơn vị) ĐÁNG hiện lên màn. ("", "") khi câu không có LƯỢNG nào.
 
-    Bản đầu lấy chữ số đầu tiên, nên "On 9 October 1975" cho ra `9` và "entered service on
-    21 January 1976" cho ra `21`. Đó là NGÀY, không phải dữ kiện — thẻ số hiện "9" thì người
-    xem không hiểu 9 cái gì. Bỏ cụm ngày trước rồi mới tìm số.
+    Bản đầu lấy chữ số đầu tiên, nên "On 9 October 1975" cho ra `9`. Bỏ cụm ngày rồi mới
+    tìm số — đúng hướng, nhưng vẫn chỉ hỏi *"đây có phải chữ số không"*.
+
+    ── VÌ SAO PHẢI HỎI THÊM "CÓ PHẢI MỘT LƯỢNG KHÔNG"  (anh soi bộ 219, 9/9/2026) ───────
+    Bốn thẻ số của bộ ấy, cả bốn `don=""`:
+        771   <- "The accident contaminated **Building 771** and caused $818,600 damage"
+        11    <- "On **September 11**, 1957 a plutonium fire erupted"
+        1400  <- "the **1400 page** congressional testimony"
+        1974  <- "In **1974** operator error released…"
+    771 là số HIỆU TOÀ NHÀ. 11 là ngày — `_NGAY` bỏ được dạng "9 October 1975" nhưng không
+    bỏ dạng tháng-đứng-trước. 1400 là lượng THẬT mà đơn vị "page" bị vứt đi. Chỉ 1974 đúng.
+    Cùng họ với thẻ "17" của **B‑17** hôm nay và `so="SOUTH"` hôm qua: một con số lọt vào
+    chỗ dành cho một ĐẠI LƯỢNG.
+
+    Nên đổi câu hỏi: không hỏi *"có chữ số không"* mà hỏi *"có một LƯỢNG không"* — và
+    `_CD.so_kem_don` đã trả lời đúng câu ấy cho hook từ đầu giờ, dùng lại chứ không viết mới
+    (§13.1). NĂM vẫn được giữ: nó là mốc thời gian, thứ xương sống của mọi câu chuyện, và
+    thẻ năm đọc ra ngay là năm.
+
+    Trả về CẶP: đơn vị phải đi cùng con số suốt đường tới màn hình, nếu không nó lại rơi ra
+    ở đúng chỗ nó đã rơi (§14.16 — chỗ hở nằm ở phần mình không viết ra).
     """
-    c = _NGAY.sub(" ", c or "")
-    for m in _re.finditer(r"\b\d[\d,\.]*\b", c):
-        g = m.group()
-        if len(g.replace(",", "").replace(".", "")) > 1:      # bỏ số một chữ số lẻ loi
-            return g
-    return ""
+    import chu_de as _CD                 # `_CD` chỉ có trong `nhip_tu_khuon`, không ở module
+    c0 = _NGAY.sub(" ", c or "")
+    t = _CD.so_kem_don(c0)
+    if t:
+        pp = t.split(" ", 1)
+        return pp[0], (pp[1] if len(pp) > 1 else "")
+    m = _re.search(r"\b(1[89]\d\d|20[0-2]\d)\b", c0)      # năm: mốc thời gian, giữ
+    return (m.group(1), "") if m else ("", "")
 
 
 # ── THAM CHIẾU TREO: CÂU ĐÚNG TRONG BÀI, VÔ NGHĨA KHI TÁCH RA  (7/9/2026) ─────────────────
@@ -213,7 +233,8 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
             continue
         r = _lau_sach(r)
         if r:
-            sach.append({"cau": r, "so": _so_dau(r)})
+            _s, _d = _so_dau(r)
+            sach.append({"cau": r, "so": _s, "don": _d})
     if len(sach) < 8:
         return None
 
@@ -298,7 +319,8 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
         # `[KEEP]` — nhịp này là CÚ LẬT của tập, khâu nén lời thoại không được bỏ mệnh đề
         # của nó. Cổng ở `pilot_hai` đọc dấu này.
         _n("so_lieu" if dau["so"] else "canh", "[KEEP]" + dau["cau"], du=True,
-           **({"so": dau["so"], "don": "", "bt": "tien"} if dau["so"] else {}),
+           **({"so": dau["so"], "don": dau.get("don") or "", "bt": "tien"}
+              if dau["so"] else {}),
            dinh=True,
            ve=_ve("a simplified figure looking at a single object on a plain table",
                   "studying it closely", "curious",
@@ -306,7 +328,8 @@ def nhip_tu_khuon(khuon: str, chu_the: str, ho_so: dict, _n, _ve,
     ]
     for c in cau[1:]:
         if c["so"]:
-            nhip.append(_n("so_lieu", c["cau"], so=c["so"], don="", bt="tien", dinh=True))
+            nhip.append(_n("so_lieu", c["cau"], so=c["so"], don=c.get("don") or "",
+                               bt="tien", dinh=True))
         else:
             nhip.append(_n("canh", c["cau"],
                            ve=_ve("a simplified figure at a desk with one folder open",
