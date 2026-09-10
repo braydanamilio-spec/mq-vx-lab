@@ -112,7 +112,9 @@ export const SoPanel: React.FC<{
   const chung: React.CSSProperties = {
     position: "absolute", left: w * lech, right: -w * lech, top: DINH,
     display: "flex", flexDirection: "column", alignItems: "center",
-    opacity: vao, pointerEvents: "none",
+    // zIndex 6: TRÊN nhân vật (svg zIndex 3–4) nên chart/số không bị nhân vật che, DƯỚI
+    // bong bóng thoại (zIndex 9) nên lời nói vẫn đọc được. Anh: *"số liệu chart ko bị đè"*.
+    opacity: vao, pointerEvents: "none", zIndex: 6,
   };
 
   if (lop.k === "so") {

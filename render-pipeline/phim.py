@@ -362,7 +362,14 @@ def mot_tap(ma: str, idx: int, doc: bool = True, long: bool = False, so_chuong: 
             _moc = -_moc
     except Exception:
         _moc = 6                      # hỏng thì vẫn phải là mốc DƯƠNG, không rơi về 0
-    ga = (gr[0], f"{_moc - 4 + h % 9:+d}%", f"{-4 + h % 7}Hz")
+    # ── GIỌNG CHUYÊN GIA: NHANH RÕ, KHÔNG TRẦM  (anh soi demo howbig, 10/9/2026) ─────────
+    # Anh: *"giọng ồm ồm còn bị trễ như slomotion... đổi cho phù hợp vai chuyên gia phân
+    # tích"*. Hai chỉnh:
+    #   · RATE nhanh hơn hẳn: nền +8..+14% (analyst/explainer thường 1,1–1,2×), thay vì +2..+10%
+    #     cũ mà anh vẫn thấy chậm. Vẫn lệch theo kênh để mỗi kênh có nhịp riêng.
+    #   · PITCH KHÔNG BAO GIỜ ÂM: dải cũ [-4,+2]Hz kéo giọng trầm "ồm ồm"; nay [+1,+5]Hz —
+    #     sáng, rõ, đúng chất người dẫn phân tích, không kéo xuống ngực.
+    ga = (gr[0], f"{_moc + 2 + h % 7:+d}%", f"{1 + h % 5}Hz")
     loi = [n["loi"] for n in nhip0]
     rel_mp3 = f"{slug}.mp3"
     dur, tu, moc = doc_hai_giong([(t, 0, "trung_tinh") for t in loi], ga, ga,

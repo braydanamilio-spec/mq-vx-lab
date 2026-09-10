@@ -10788,17 +10788,27 @@ def t_toc_do_doc_lech_quanh_CHUAN_NHA():
     assert kh, "không tìm thấy chỗ gán `ga` — phép tìm hỏng, không phải mã hỏng"
     assert "_moc" in kh, f"tốc độ đọc không neo vào chuẩn nhà: {kh[:90]}"
 
-    # và CHẠY chính công thức ấy trên 18 mã kênh thật — đọc mã chỉ chứng minh có mã (§13.10)
-    import giai_thich as G
-    ma_kenh = [k for k in getattr(G, "GU_RIENG", {}) ] or ["therules", "howbig", "odds"]
+    # RÚT chính công thức rate từ phim.py và chạy trên 18 mã kênh (§13.10 — không chép tay
+    # công thức vào cổng; anh soi howbig 10/9 thấy giọng vẫn chậm, và cổng cũ xanh vì nó test
+    # công thức CŨ chứ không phải công thức trong code).
+    import ast, os, giai_thich as G
+    cay = ast.parse(io.open(os.path.join(goc, "phim.py"), encoding="utf-8").read())
+    bieu = None
+    for n in ast.walk(cay):
+        if (isinstance(n, ast.Assign) and any(getattr(t, "id", "") == "ga" for t in n.targets)
+                and isinstance(n.value, ast.Tuple) and len(n.value.elts) >= 2):
+            bieu = ast.unparse(n.value.elts[1])          # phần rate của tuple ga
+    assert bieu and "moc" in bieu and "h" in bieu, f"không rút được công thức rate: {bieu}"
+    ma_kenh = list(getattr(G, "GU_RIENG", {})) or ["therules", "howbig", "odds"]
     xau = []
     for ma in ma_kenh:
         h = sum(ord(c) for c in ma)
-        r = moc - 4 + h % 9
-        if not (0 < r <= moc + 4):
+        r = int(eval(bieu, {"_moc": moc, "moc": moc, "h": h}).strip().rstrip("%"))  # công thức THẬT dùng `_moc`
+        # analyst pace: nhanh hơn chuẩn nhà (≥ moc), không quá +16% (mất rõ)
+        if not (moc <= r <= moc + 10):
             xau.append(f"{ma} {r:+d}%")
-    assert not xau, ("kênh đọc chậm hơn bình thường hoặc lệch quá xa chuẩn nhà: "
-                     + ", ".join(xau[:6]))
+    assert not xau, ("kênh đọc chậm hơn chuẩn nhà hoặc quá nhanh (anh: giọng chuyên gia "
+                     "nhanh rõ, không slomotion): " + ", ".join(xau[:6]))
 
 
 def t_chu_so_cua_mot_KY_HIEU_khong_thanh_the_so():

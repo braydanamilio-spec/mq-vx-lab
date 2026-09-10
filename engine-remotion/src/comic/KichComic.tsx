@@ -749,7 +749,14 @@ const Panel: React.FC<{
                  tran={yChan - CAO_NGUOI * (doiNguoi ? caoMax : (noiA ? caoA : caoB)) * k}
                  /* Bong bóng ở bên nào thì số dạt sang bên kia. Chỉ ở khung NGANG — khung dọc
                     bong bóng nằm trên đầu, không tranh chỗ với số. */
-                 lech={canRong ? (_benBong === "trai" ? 0.16 : -0.16) : 0}
+                 /* ── SỐ DẠT NGƯỢC NHÂN VẬT, KHÔNG NGƯỢC BONG BÓNG  (anh soi howbig, 10/9) ─────
+                    Anh: *"nhân vật nhỏ góc trái, để số liệu chart ở góc phải trên, không đè
+                    che nhau"*. Bản cũ dạt số ngược BONG BÓNG — mà một người thì bong bóng
+                    cũng ở đối diện nhân vật, nên số dạt TRÚNG chỗ nhân vật. Nay một người thì
+                    số dạt ngược chính NHÂN VẬT (`guViTri`): người trái -> số phải, và ngược
+                    lại. Hai người mới theo bong bóng như cũ. */
+                 lech={motNguoi ? (guViTri === "trai" ? 0.16 : -0.16)
+                       : canRong ? (_benBong === "trai" ? 0.16 : -0.16) : 0}
                  /* Bong bóng ĐỨNG BÊN (`lech` khác 0) thì nó không tranh chiều dọc — để số
                     ở nguyên chỗ cao nhất. Bong bóng ĐỨNG TRÊN (`lech` = 0, khung dọc) thì
                     mép trên của khối phải là đáy bong bóng, không phải một phân số. Điều
