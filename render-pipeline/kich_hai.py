@@ -1365,13 +1365,15 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str, moc_dich: list
     # đúng từ ấy; ở đây lệnh dặn liệt kê một từ cổng không biết.
     # Cùng họ với hai tên cử chỉ chết (`chong_nanh`, `ngan_ngam`) — giá trị hợp lệ về kiểu,
     # có nhánh dự phòng, và triệu chứng duy nhất là "nghe đều đều".
+    # ── CẢM XÚC NHẸ ĐI CHO NHỊP ĐỀU  (anh: "dứt khoát lưu loát", 10/9/2026) ─────────────
+    # Biên độ cũ (±10..16) làm mỗi câu một tốc độ/cao độ khác hẳn -> nghe LÊN XUỐNG giật cục,
+    # sai chất chuyên gia phân tích (nói ĐỀU, chắc). Chia ~3 lần: còn đủ sắc thái mà nhịp mượt.
     _DIEU = {
-        "tuc":       (+10, +8), "buon":     (-12, -8), "bat_ngo": (+2, +16),
-        "nghi_ngo":  (-8,  -4), "tu_tin":   (-6,  -6), "vui":     (+8, +10),
-        "so":        (+12, +14), "trung_tinh": (0, 0),
-        # bí danh: mô hình viết theo lối tự nhiên của nó, đừng bắt nó nhớ từ vựng của mình
-        "ngac_nhien": (+2, +16), "ngoc_nhien": (+2, +16), "to_mo": (+2, +10),
-        "quan_tam":  (-2, +4),  "hoai_nghi": (-8, -4),
+        "tuc":       (+3, +2), "buon":     (-3, -2), "bat_ngo": (+1, +4),
+        "nghi_ngo":  (-2, -1), "tu_tin":   (-1, -1), "vui":     (+2, +3),
+        "so":        (+3, +4), "trung_tinh": (0, 0),
+        "ngac_nhien": (+1, +4), "ngoc_nhien": (+1, +4), "to_mo": (+1, +3),
+        "quan_tam":  (-1, +1),  "hoai_nghi": (-2, -1),
     }
 
     def _dieu(rate0: str, pitch0: str, cx: str, la_chot: bool, chu: str = "", truoc: int = 0) -> tuple:
@@ -1435,7 +1437,10 @@ def doc_hai_giong(cau: list, ga: tuple, gb: tuple, mp3_dest: str, moc_dich: list
             # 30/8 — Anh: *"đoạn cuối videos vẫn hơi bị kéo dài"*. Khoảng lặng trước cú chốt hạ
             # từ 0,55 xuống 0,34 giây: vẫn đủ tách câu chốt khỏi câu trước, mà không còn thành
             # một quãng trống nghe ra là phim bị treo.
-            _lang(0.34 if i == len(cau) - 1 else 0.16)
+            # Anh 10/9: *"đọc vẫn bị giật chậm, cần dứt khoát lưu loát"*. 0,16s giữa MỖI câu
+            # × ~13 câu = ~2s khoảng trống rời rạc — tai nghe ra "giật". Hạ xuống 0,05 (chỉ đủ
+            # tách câu, không thành quãng treo). Trước cú chốt giữ 0,18 để câu chốt vẫn nảy.
+            _lang(0.18 if i == len(cau) - 1 else 0.05)
         v, rate, pitch = ga if ai == 0 else gb
         rate, pitch = _dieu(rate, pitch, _cx, i == len(cau) - 1, chu, _dp_truoc)
         try:
