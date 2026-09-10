@@ -2330,8 +2330,16 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
             return g
         return (g[0], f"{min(r, 0):+d}%", f"{min(h, 0):+d}Hz")
 
-    gb = _tran_uy(_uy(gb, -9, -7))   # chuyên gia: chậm lại, hạ giọng, và không bao giờ vượt nền
-    ga = _uy(ga, +2, +2)             # người hỏi: nhỉnh hơn, để KHOẢNG CÁCH nghe ra được
+    # ── ĐẢO NGƯỢC: CHUYÊN GIA NÓI NHANH RÕ, KHÔNG "ỒM ỒM SLOMOTION"  (anh, 10/9/2026) ────
+    # Anh soi demo howbig HAI lần: *"giọng ồm ồm còn bị trễ như slomotion"*. Đo F0 audio
+    # render = **119Hz** (giọng nam trầm), trong khi Aria thật = 198Hz — tức bản 7/9 dưới
+    # đây đã HẠ giọng + CHẬM lại quá tay: `_uy(gb, -9, -7)` trừ 9% tốc độ + 7Hz, rồi
+    # `_tran_uy` cắt cả rate lẫn pitch xuống ≤0. "Uy quyền" hoá ra "ồm ồm + rề rà".
+    # Chuyên gia phân tích VIRAL kiểu Mỹ nói NHANH, RÕ, NĂNG LƯỢNG — không rề rà hạ giọng.
+    # Nay CỘNG vào nền: nhanh hơn +8%, sáng nhẹ +2Hz, và BỎ `_tran_uy` (đừng cắt xuống ≤0).
+    # `_uy` vẫn kẹp trần [-24,+20]% và [-26,+26]Hz nên không vọt quá.
+    gb = _uy(gb, +8, +2)             # chuyên gia: nhanh rõ, sáng — KHÔNG hạ giọng nữa
+    ga = _uy(ga, +5, +2)             # người hỏi (nếu có): cũng nhanh rõ
     # ── TIỀN TỐ `v11_`, KHÔNG PHẢI `pilot_`  (6/9/2026) ──────────────────────────────────
     # `day_kho.py --mau` mặc định quét `v3_* · v3L_* · v5_* · v5L_* · v9_*`. Tệp tên `pilot_*`
     # KHÔNG nằm trong danh sách ấy, nên bước đẩy sẽ quét, không thấy gì, in "0 video vào hàng
