@@ -139,9 +139,15 @@ def day_mot(mp4: str, thu_publish: str, biet: set, that: bool) -> bool:
     _dong = [d.strip() for d in _err.splitlines()
              if d.strip() and not d.strip().startswith(("Warning", "  ", "/"))
              and "Warning" not in d and "warnings.warn" not in d]
-    _ly = next((d for d in _dong if d.startswith(("❌", "⚠️", "Traceback", "Error"))), "")
+    # DÒNG "Traceback (most recent call last):" LÀ TIÊU ĐỀ, KHÔNG PHẢI LỖI (10/9/2026).
+    # Bản cũ khớp "Traceback" trước nên in đúng cái tiêu đề vô nghĩa, giấu mất loại lỗi thật
+    # (`ModuleNotFoundError: …`) nằm ở CUỐI traceback — và 18/18 push chết vì thiếu thư viện
+    # Google mà log chỉ nói "Traceback". Ưu tiên dòng ❌/⚠️ của enqueue; nếu không, lấy dòng
+    # `XxxError:`/`XxxException:` (loại lỗi thật); mới đến dòng đầu. §15.2: đừng ném bằng chứng.
+    _ly = next((d for d in _dong if d.startswith(("❌", "⚠️", "🆘"))), "")
     if not _ly:
-        _ly = _dong[0] if _dong else (r.stderr or out or "")[:160]
+        _exc = [d for d in _dong if _re.match(r"[A-Za-z_][\w.]*(Error|Exception|Exit):", d)]
+        _ly = _exc[-1] if _exc else (_dong[0] if _dong else (r.stderr or out or "")[:160])
     print(f"   {'✅' if ok else '❌'} {kenh:18s} {os.path.basename(mp4)}{_kho}{loi_them}"
           f"{'' if ok else ' — ' + _ly[:180]}")
     for d in out.splitlines():
