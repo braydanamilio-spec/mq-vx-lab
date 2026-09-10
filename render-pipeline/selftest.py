@@ -4198,6 +4198,8 @@ def main():
           t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh)
     check("bản dài KHÔNG bị gắn nhãn Short (#Shorts/loai)",
           t_ban_dai_khong_gan_nhan_short)
+    check("workflow render còn cron phải CÀI ffmpeg (TTS)",
+          t_workflow_render_phai_cai_ffmpeg)
     check("lịch 5 mẻ/ngày, mỗi mẻ 2 mốc, IDX không đè dải cũ",
           t_lich_5_me_va_idx_khong_dung_dai_cu)
     check("edge-tts qua constraints + còn token Sec-MS-GEC (403 câm)",
@@ -10244,6 +10246,40 @@ def t_ban_dai_khong_gan_nhan_short():
     assert src != "False", \
         f"giao_hang ghi cứng long=False -> bản dài gắn #Shorts. Phải theo `chuong`: {src}"
     assert "chuong" in src, f"long phải suy từ `chuong`: {src}"
+
+
+def t_workflow_render_phai_cai_ffmpeg():
+    """Mọi workflow render còn cron phải CÀI ffmpeg — khâu tiếng gọi ffmpeg hệ thống.
+
+    ── VÌ SAO  (16/16 lượt ĐỎ tới 9/9/2026) ──────────────────────────────────────────────
+    Sau khi vá edge-tts, render CHẠY nhưng ra 0 video. Đào log lượt 34416264217:
+    `doc_hai_giong` -> `subprocess.run(["ffmpeg", ...])` -> `FileNotFoundError: 'ffmpeg'`.
+    Runner GitHub không có ffmpeg sẵn, và `render_comic_18.yml` SÓT bước cài nó — trong khi
+    `render_giai_thich_18.yml` (cùng `doc_hai_giong`) có từ đầu. §13.2: một tệp chép tay
+    thiếu đúng mục quan trọng nhất, và nó im lặng vì Remotion mang ffmpeg RIÊNG cho khâu
+    DỰNG nên "có vẻ" đủ — nhưng khâu TIẾNG gọi ffmpeg HỆ THỐNG.
+
+    Cổng tự tìm phạm vi (§13.2 — không cầm danh sách chép tay): mọi workflow `render_*` còn
+    `cron` mà chạy `pilot_hai`/`phim`/`giai_thich` (tức có khâu tiếng) phải cài ffmpeg.
+    """
+    import os, re as _re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    wf = os.path.join(goc, "..", ".github", "workflows")
+    thieu = []
+    for t in sorted(os.listdir(wf)):
+        if not (t.startswith("render_") and t.endswith((".yml", ".yaml"))):
+            continue
+        ma = _re.sub(r"(?m)^\s*#.*$", "",
+                     io.open(os.path.join(wf, t), encoding="utf-8").read())   # §17.15
+        if "cron:" not in ma:
+            continue
+        # có khâu tiếng? (gọi một trong các pipeline dùng doc_hai_giong)
+        if not _re.search(r"\b(pilot_hai|phim\.py|giai_thich|kich_comic|datastory)", ma):
+            continue
+        if not _re.search(r"apt-get install[^\n]*\bffmpeg\b|apt install[^\n]*\bffmpeg\b", ma):
+            thieu.append(t)
+    assert not thieu, ("workflow render thiếu bước cài ffmpeg -> TTS chết, 0 video: "
+                       + ", ".join(thieu))
 
 
 def t_lich_5_me_va_idx_khong_dung_dai_cu():

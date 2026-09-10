@@ -115,6 +115,21 @@ jobs:
         with:
           python-version: "3.11"
 
+      # ── ffmpeg + thư viện hệ THỐNG  (16/16 lượt ĐỎ vì thiếu, 9/9/2026) ──────────────────
+      # `doc_hai_giong` gọi `subprocess.run(["ffmpeg", ...])` để ép WAV 24k trước khi đo mốc
+      # từ. Runner GitHub KHÔNG có ffmpeg sẵn -> `FileNotFoundError: 'ffmpeg'` -> mọi bộ chết
+      # ở khâu tiếng, 0 video. render_giai_thich_18.yml CÓ bước này từ đầu; workflow comic
+      # SÓT nó từ lúc tạo — cùng họ §13.2 (một tệp chép tay thiếu đúng mục quan trọng nhất).
+      # Remotion mang ffmpeg riêng cho khâu DỰNG, nhưng khâu TIẾNG gọi ffmpeg HỆ THỐNG.
+      # Thư viện chrome-headless-shell của Remotion cũng cần các lib X/nss ở dưới.
+      - name: Cài ffmpeg + thư viện hệ thống
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
+            libasound2t64 libpango-1.0-0 libcairo2 libatspi2.0-0 || sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -1        # kiểm SẢN PHẨM, không tin mã thoát apt (§15.3)
+
       - name: Thư viện — GHIM và kiểm bằng `import`
         run: |
           # §16.5 — hỏng ở bước CÀI là hỏng ở mắt xích đầu tiên: cả luồng mất trọn. Đo được

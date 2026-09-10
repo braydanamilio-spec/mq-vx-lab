@@ -2343,9 +2343,11 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     rel = f"{slug}.mp3"
     try:
         dur, tu, moc = doc_hai_giong(cau, ga, gb, os.path.join(PUB, rel))
-    except _DungChon:
-        pass
     except Exception as e:
+        # KHÔNG bắt `_DungChon` ở đây: nó là control-flow của khâu CHỌN NỀN ở dưới, khai
+        # tận dòng ~2460 nên tham chiếu nó ở đây ném `UnboundLocalError` CHE mất lỗi thật.
+        # Đo lượt 34416264217: ffmpeg thiếu -> `FileNotFoundError`, nhưng log chỉ hiện
+        # `UnboundLocalError: _DungChon` vì except sai bắt trước (§6 — copy nhầm từ khối dưới).
         print(f"   ❌ giọng đọc hỏng: {str(e)[:100]}"); return ""
     if not tu or len(moc) < len(cau):
         print("   ❌ thiếu mốc giọng đọc"); return ""
