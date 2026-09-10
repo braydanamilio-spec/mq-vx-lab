@@ -2028,6 +2028,41 @@ Return ONLY a JSON array: [{"i":0,"ai":"b","chu":"...","cx":"tu_tin"}]
 """
 
 
+def _bien_do(mp3: str, fps: int = 30, so_khung: int = 0) -> list:
+    """Envelope RMS của audio, MỘT giá trị 0..1 mỗi khung hình — để nhép miệng theo BIÊN ĐỘ
+    THẬT thay vì đoán khẩu hình từ chính tả (anh: *"nhép miệng chưa đúng và khớp"*, 10/9).
+
+    Cách chuẩn cho hoạt hình: miệng mở tỉ lệ độ TO của tiếng ở đúng khung ấy — to (nguyên âm)
+    thì mở, nhỏ/lặng (phụ âm/khoảng nghỉ) thì ngậm. Khớp CHÍNH XÁC vì lấy từ chính tiếng nói,
+    không phụ thuộc chính tả tiếng Anh (vốn ≠ phát âm).
+    """
+    import subprocess as _sp, struct as _st
+    try:
+        raw = _sp.run(["ffmpeg", "-v", "error", "-i", mp3, "-ac", "1", "-ar", "8000",
+                       "-f", "s16le", "-"], capture_output=True).stdout
+    except Exception:
+        return []
+    if not raw:
+        return []
+    n = len(raw) // 2
+    mau = _st.unpack("<%dh" % n, raw[:n * 2])
+    b_khung = max(1, 8000 // fps)                       # mẫu mỗi khung hình
+    tong = so_khung or (n // b_khung + 1)
+    ra = []
+    for k in range(tong):
+        a = k * b_khung; b = min(n, a + b_khung)
+        if b <= a:
+            ra.append(0.0); continue
+        seg = mau[a:b]
+        rms = (sum(x * x for x in seg) / len(seg)) ** 0.5
+        ra.append(rms)
+    if not ra:
+        return []
+    # chuẩn hoá theo phân vị 95 (tránh một đỉnh làm cả chuỗi bé lại), kẹp 0..1, cong nhẹ
+    _s = sorted(ra); dinh = _s[int(len(_s) * 0.95)] or max(_s) or 1.0
+    return [round(min(1.0, (v / dinh) ** 0.6), 3) for v in ra]
+
+
 def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     """`chuong > 0` -> BẢN DÀI 16:9 (`KichComicWide`), tên `v11L_`.
 
@@ -2757,8 +2792,11 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     if _bo_lech or _bo_lap:
         _ghi += f" (bỏ {_bo_lech} thẻ số KHÔNG được đọc lên · {_bo_lap} thẻ trùng số)"
     print(_ghi)
+    # nhép miệng theo BIÊN ĐỘ: 30fps, đủ khung cho cả video (dùng dur).
+    _bd = _bien_do(os.path.join(PUB, rel), 30, int(dur * 30) + 2)
     props = {
         "luot": luot, "tu": tu, "voMp3": rel, "nhac": KC.NHAC[de],
+        "bienDo": _bd,
         "kieuA": kieuA, "kieuB": kieuB, "kieuTuyA": tuyA, "kieuTuyB": tuyB,
         "tieuDe": g["ten"], "handle": "@" + ma, "kenh": slug,
         "mau": g["chinh"], "mauPhu": g["phu"],

@@ -98,6 +98,17 @@ const VISEME: Record<string, Viseme> = {
  */
 export const CAO_MIENG_MAX = Math.max(...Object.values(VISEME).map((v) => v.h));
 
+/**
+ * Độ MỞ miệng suy từ BIÊN ĐỘ tiếng nói thật (0..1) thay vì đoán khẩu hình từ chính tả.
+ * Anh (10/9): *"nhép miệng chưa đúng và khớp… tìm cách phù hợp hơn"*. Cách đoán-từ-chữ-viết
+ * (`chuoiHinh`) sai đúng ở chỗ khớp THỜI ĐIỂM: chữ câm, trọng âm, tốc độ đọc thật đều lệch
+ * khỏi chính tả. Biên độ thì lấy TỪ CHÍNH tiếng đang phát — to (nguyên âm) miệng mở, nhỏ/lặng
+ * (phụ âm/khoảng nghỉ) miệng ngậm — nên luôn khớp. Giữ nguyên BỀ NGANG và ĐỘ TRÒN của khẩu
+ * hình đoán được (đó là nét, không phải nhịp), chỉ thay CHIỀU CAO bằng biên độ.
+ */
+const caoTuBienDo = (bd: number): number =>
+  VISEME.im.h + kep(bd) * (CAO_MIENG_MAX - VISEME.im.h) * 0.92;
+
 /** Chuỗi khẩu hình của một từ, suy từ nguyên âm; phụ âm môi chèn hình khép vào giữa. */
 const chuoiHinh = (tu: string): string[] => {
   const t = (tu || "").toLowerCase().replace(/[^a-z]/g, "");
@@ -127,8 +138,11 @@ export type Tu = { t: number; d: number; w: string };
  * Khẩu hình tại giây `giay`. Trả về hình miệng đã TRỘN giữa hai hình liền kề — chuyển mượt chứ
  * không giật từng nấc, vì miệng thật không nhảy cóc giữa các tư thế.
  */
-export const visemeTai = (tu: Tu[], giay: number, haSan: number): Viseme => {
-  const im = { ...VISEME.im, h: VISEME.im.h + haSan * 0.5 };
+export const visemeTai = (tu: Tu[], giay: number, haSan: number, bienDo?: number): Viseme => {
+  // Khi có biên độ, khoảng lặng vẫn để miệng ngậm theo biên độ (≈0) — không dùng haSan.
+  const im = bienDo != null
+    ? { ...VISEME.im, h: caoTuBienDo(bienDo) }
+    : { ...VISEME.im, h: VISEME.im.h + haSan * 0.5 };
   if (!tu || !tu.length) return im;
   // từ đang phát: mốc t <= giay < t + d
   let k = -1;
@@ -145,7 +159,8 @@ export const visemeTai = (tu: Tu[], giay: number, haSan: number): Viseme => {
   const f = vt - i0;
   const A = VISEME[ds[i0]] || VISEME.e;
   const B = VISEME[ds[i1]] || VISEME.e;
-  return { w: trn(A.w, B.w, f), h: trn(A.h, B.h, f), tron: trn(A.tron, B.tron, f) };
+  const h = bienDo != null ? caoTuBienDo(bienDo) : trn(A.h, B.h, f);
+  return { w: trn(A.w, B.w, f), h, tron: trn(A.tron, B.tron, f) };
 };
 
 // ══════════════════════════════════════════════════════════════════════════════════════════

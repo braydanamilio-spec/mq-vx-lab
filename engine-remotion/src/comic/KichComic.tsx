@@ -262,7 +262,7 @@ const BongNguoi: React.FC<{ x: number; y: number; k: number; cao: number; huong:
 };
 
 const Panel: React.FC<{
-  L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; giay: number;
+  L: Luot; o: ONhoPanel; A: Kieu; B: Kieu; tu: Tu[]; bienDo?: number[]; giay: number;
   kenh: string; mau: string; mauPhu: string; hat: number; thuTu: number;
   dangNoi: boolean; hai?: boolean; motNguoi?: boolean; daoCuTap?: string; nenTron?: boolean; nenVe?: any;
   guViTri?: string; guKen?: string; guNen?: string; noi: Noi; anhNen?: string; soLieu?: LopComic | null;
@@ -271,7 +271,7 @@ const Panel: React.FC<{
   netMuc?: number; cham?: number; boGoc?: number; tiLe?: number; hook?: number;
   bongDuoi?: boolean; boKhung?: number; chuNo?: string;
   sang?: { huong: number; manh: number; mau?: string; sang?: number };
-}> = ({ L, o, A, B, tu, giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, nenTron = false, nenVe = null,
+}> = ({ L, o, A, B, tu, bienDo = [], giay, kenh, mau, mauPhu, hat, thuTu, dangNoi, hai, motNguoi, daoCuTap, nenTron = false, nenVe = null,
         guViTri = "giua", guKen = "vao", guNen = "moc", noi, anhNen, soLieu, logo,
         haiHuoc = true,
         netMuc = NET, cham = 9, boGoc = 26, tiLe = 0.60, hook = 0,
@@ -471,8 +471,10 @@ const Panel: React.FC<{
   // không đổi khung nào. Sửa vì để 0 là bỏ rơi một tham số mà chỗ khác đang dùng — và đúng chỗ
   // bỏ rơi ấy là nơi hằng lạc thang mọc ra.
   const haSan = CAM_XUC[(L.camXuc || "trung_tinh") as TenCamXuc].ha;
+  // Biên độ tiếng thật tại khung hiện tại (30fps) — nhép miệng theo tiếng, không theo chính tả.
+  const bd = bienDo.length ? bienDo[Math.min(bienDo.length - 1, Math.round(giay * 30))] : undefined;
   const imLang = visemeTai([], giay, haSan);
-  const viseme = dangNoi ? visemeTai(tu, giay, haSan) : imLang;
+  const viseme = dangNoi ? visemeTai(tu, giay, haSan, bd) : imLang;
 
   // Hướng sáng đọc từ chính ảnh nền đang dùng. Không có số đo thì đổ thẳng — mặc định an
   // toàn, và cũng đúng với 63/100 nền là phòng trong sáng đều.
@@ -955,6 +957,7 @@ const bienCanh = (kieu: KieuChuyen, p: number, cu: boolean, W: number, H: number
 
 export type PropsComic = {
   luot?: Luot[]; tu?: Tu[]; voMp3?: string; nhac?: string;
+  bienDo?: number[];  // envelope RMS 0..1 mỗi khung (30fps) — nhép miệng theo tiếng thật (§10/9)
   nhacVol?: number;   // hệ số riêng của tệp nhạc, do `can_nhac.py` tính
   kieuA?: string; kieuB?: string; kieuTuyA?: Partial<Kieu>; kieuTuyB?: Partial<Kieu>;
   // ── MỘT NGƯỜI TRONG KHUNG  (anh đề xuất, 7/9/2026) ────────────────────────────────────
@@ -1038,7 +1041,7 @@ export const calcComic = async ({ props }: { props: PropsComic }) => {
 };
 
 export const KichComic: React.FC<PropsComic> = ({
-  luot = [], tu = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
+  luot = [], tu = [], bienDo = [], voMp3 = "", nhac = "", kieuA = "hang_xom", kieuB = "bank",
   nhacVol = 0.16,
   kieuTuyA = {}, kieuTuyB = {}, motNguoi, daoCuTap = "", tieuDe = "", handle = "", mau = "#F0483C",
   guViTri = "giua", guKen = "vao", guNen = "moc",
@@ -1112,7 +1115,7 @@ export const KichComic: React.FC<PropsComic> = ({
   };
 
   const veCanh = (Lx: Luot, ix: number, dangNoi: boolean) => (
-    <Panel L={Lx} o={o} A={A} B={B} tu={tu} giay={dangNoi ? giay : Lx.e} kenh={kenh}
+    <Panel L={Lx} o={o} A={A} B={B} tu={tu} bienDo={bienDo} giay={dangNoi ? giay : Lx.e} kenh={kenh}
            motNguoi={motNguoi} daoCuTap={daoCuTap}
            guViTri={guViTri} guKen={guKen} guNen={guNen}
            mau={mau} mauPhu={mauPhu} hat={hat} thuTu={ix}
