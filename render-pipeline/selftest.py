@@ -4198,6 +4198,8 @@ def main():
           t_anh_phu_di_qua_cung_ba_cong_voi_nen_chinh)
     check("bản dài KHÔNG bị gắn nhãn Short (#Shorts/loai)",
           t_ban_dai_khong_gan_nhan_short)
+    check("guardian trên lịch KHÔNG đọc Firestore (chống cạn quota)",
+          t_guardian_khong_doc_firestore_tren_lich)
     check("workflow render còn cron phải CÀI ffmpeg (TTS)",
           t_workflow_render_phai_cai_ffmpeg)
     check("lịch 5 mẻ/ngày, mỗi mẻ 2 mốc, IDX không đè dải cũ",
@@ -10246,6 +10248,44 @@ def t_ban_dai_khong_gan_nhan_short():
     assert src != "False", \
         f"giao_hang ghi cứng long=False -> bản dài gắn #Shorts. Phải theo `chuong`: {src}"
     assert "chuong" in src, f"long phải suy từ `chuong`: {src}"
+
+
+def t_guardian_khong_doc_firestore_tren_lich():
+    """health_guardian trên LỊCH không được chạy bước đọc Firestore — chỉ khi bật tay.
+
+    ── VÌ SAO  (anh: "chưa làm gì mà cạn" + "bỏ hẳn firebase nếu có thể", 10/9/2026) ──────
+    `health_guardian.py` đọc tới ~800 doc render_jobs mỗi lượt, và workflow nổ 4 lần/GIỜ
+    (:07/:22/:37/:52) = 96 lượt/ngày -> tới ~76.800 đọc/ngày, vượt trần free 50.000 MỘT
+    MÌNH, kể cả khi không render. Chú thích trong workflow tự thú "~52% trần Firestore".
+    Nó chỉ GIÁM SÁT + dọn sổ job kẹt, KHÔNG giao video (render soft-fail) — nên bỏ khỏi
+    lịch là an toàn; việc canh cron đã do bước GitHub-API lo (miễn phí).
+
+    Cổng canh HAI thứ:
+      · tần suất: ≤ 24 lượt/ngày (không còn nổ mỗi giờ nhiều lần)
+      · bước chạy `health_guardian.py` phải có `if:` (gated) — không chạy vô điều kiện
+    """
+    import os, re as _re
+    goc = os.path.dirname(os.path.abspath(__file__))
+    wf = os.path.join(goc, "..", ".github", "workflows", "health_guardian.yml")
+    raw = io.open(wf, encoding="utf-8").read()
+    ma = _re.sub(r"(?m)^\s*#.*$", "", raw)                     # bỏ chú thích (§17.15)
+
+    # tần suất: đếm phút/giờ của mọi cron, ước lượng lượt/ngày
+    crons = _re.findall(r'cron:\s*"([^"]+)"', ma)
+    def _luot_ngay(c):
+        mi, gi = c.split()[0], c.split()[1]
+        nm = 1 if mi.isdigit() else (60 // int(mi.split("/")[1]) if "/" in mi else 1)
+        ng = 24 if gi == "*" else (len(range(*map(int, gi.split("-")[0:1]+[24]), int(gi.split("/")[1]))) if "/" in gi else 1)
+        return nm * ng
+    # đơn giản và chắc: cron "7 * * * *" (mỗi giờ) là thứ phải chặn
+    assert not any(_re.fullmatch(r"\d+ \* .*", c) for c in crons), \
+        f"guardian còn cron nổ MỖI GIỜ (96 lượt/ngày là 76k đọc Firestore): {crons}"
+
+    # bước health_guardian.py phải gated
+    for m in _re.finditer(r"health_guardian\.py", ma):
+        khoi = ma[max(0, m.start()-600):m.start()]
+        assert "if:" in khoi.split("- name:")[-1], \
+            "bước chạy health_guardian.py không có `if:` — sẽ đọc Firestore mỗi lượt lịch"
 
 
 def t_workflow_render_phai_cai_ffmpeg():

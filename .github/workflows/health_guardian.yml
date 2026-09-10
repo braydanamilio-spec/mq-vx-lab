@@ -21,13 +21,19 @@ on:
     # Bốn mốc lệch phút nhau: cùng tỉ lệ rớt thì số lần nổ thật tăng gấp bốn. Mỗi lượt ~30
     # giây runner, mà repo PUBLIC nên Actions miễn phí (§17.12) — đây là chỗ mua được độ tin
     # cậy gần như không mất gì. `concurrency` ở dưới đã chặn hai lượt guardian chồng nhau.
-    - cron: "7 * * * *"
-    - cron: "22 * * * *"
-    - cron: "37 * * * *"
-    - cron: "52 * * * *"
+    # ── 96 LẦN/NGÀY LÀ THỦ PHẠM "CẠN QUOTA KHI CHƯA LÀM GÌ"  (anh, 10/9/2026) ─────────────
+    # Bốn mốc :07/:22/:37/:52 nổ MỖI GIỜ = 96 lượt/ngày, và `health_guardian.py` đọc tới ~800
+    # doc render_jobs mỗi lượt (limit 200 + 400 + 200) -> tới ~76.800 đọc/ngày, vượt trần free
+    # 50.000 MỘT MÌNH, kể cả khi không render gì. Đúng thứ anh gọi "chưa làm gì mà cạn".
+    # Guardian là mốc DỰ PHÒNG cho cron render (§10.2). Nay render có 5 mẻ × 2 mốc/ngày, nên
+    # guardian không cần dày: 2 giờ một lần (12 lượt/ngày) vẫn bắt kịp một mẻ bị bỏ tick trong
+    # vòng 2 giờ, mà cắt đọc Firestore 8 lần. Phần "canh cron" dùng GitHub API (miễn phí) vẫn
+    # đủ nhạy ở nhịp này.
+    - cron: "7 1-23/2 * * *"
   workflow_dispatch:
     inputs:
       stale_hours: { description: "Ngưỡng coi job là treo (giờ) — để trống dùng mặc định 6", default: "" }
+      chay_firestore: { description: "yes = chạy health-check đọc Firestore (mặc định TẮT để không tốn quota)", default: "no" }
 
 concurrency: { group: mm0-health-guardian, cancel-in-progress: false }
 
@@ -144,13 +150,19 @@ jobs:
           done
           [ "$LOI" -eq 0 ] || exit 1
 
-      - name: Health check + tự chữa
+      # ── BỎ ĐỌC FIRESTORE  (anh: "bỏ hẳn firebase nếu có thể", 10/9/2026) ─────────────────
+      # `health_guardian.py` đọc tới ~800 doc render_jobs mỗi lượt, và chú thích ngay dưới đã
+      # tự thú: "100 lượt/ngày của nhóm này chính là ~52% trần Firestore". Nó chỉ GIÁM SÁT +
+      # dọn sổ job kẹt (`heal_stale_jobs` đánh dấu failed) — KHÔNG giao video nào (render là
+      # soft-fail, không cần sổ job). Nên bỏ nó là an toàn: video vẫn ra, publish vẫn chạy.
+      # Việc CANH cron render đã do bước "Canh cron render" ở trên lo bằng GitHub API (miễn
+      # phí). Giữ bước Firestore này lại sau một cờ TAY (`chay_firestore`) cho lúc cần soi tay,
+      # mặc định TẮT trên lịch — đó là cách "bỏ hẳn Firebase khỏi đường tốn quota mà ko lỗi".
+      - name: Health check + tự chữa (chỉ khi bật tay — mặc định TẮT để không tốn quota)
+        if: ${{ github.event.inputs.chay_firestore == 'yes' }}
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          # 26/8 — sổ đo lượt Firestore của publish/thumbnail/health-guardian xả về D1 qua
-          # HOT_KEY. Thiếu biến này thì sổ vẫn đếm nhưng không ai đọc được — mà 100 lượt
-          # chạy/ngày của nhóm này chính là ~52% trần Firestore chưa từng được nhìn.
           HOT_KEY: ${{ secrets.HOT_KEY }}
           HOT_MODE: on
           GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
@@ -166,6 +178,7 @@ jobs:
       # `|| true` được phép ở bước này vì nó chỉ BÁO CÁO, không giao hàng: hỏng thì mất một
       # dòng thông tin, không mất tệp nào (§13.3 — `|| true` chỉ cấm ở mắt xích cuối).
       - name: Kênh nào đã gắn, kênh nào chưa
+        if: ${{ github.event.inputs.chay_firestore == 'yes' }}
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
