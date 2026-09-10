@@ -23,20 +23,22 @@ on:
     # ── 5 MẺ/NGÀY, MỖI MẺ MỘT MỐC + MỘT MỐC THỬ LẠI  (anh, 9/9/2026) ──────────────────────
     # Anh muốn 5 mẻ mỗi ngày, mỗi mẻ 18 luồng song song. Trước đây 4 mốc 8–11h là MỘT mẻ với
     # ba mốc thử lại (§10.2). Nay 10 mốc = 5 mẻ × 2 mốc/mẻ, cách nhau 3 giờ.
-    # Giờ chọn theo mốc HỒI HẠN MỨC Firestore (00:00 Thái Bình Dương = 08:00 UTC, §13.6): mẻ
-    # đầu nổ NGAY SAU khi quota reset, nên nếu hôm trước có gì làm cạn thì mẻ đầu vẫn sạch.
-    # Hai mốc mỗi mẻ (cách 1h) hấp thụ chuyện cron GitHub hay bỏ tick (§10.2); mốc thứ hai
-    # dựng ĐÚNG cùng IDX nên nó là thử-lại idempotent, không sinh trùng.
-    - cron: "20 8 * * *"      # mẻ 0
-    - cron: "20 9 * * *"      #   thử lại mẻ 0
-    - cron: "20 11 * * *"     # mẻ 1
-    - cron: "20 12 * * *"     #   thử lại mẻ 1
-    - cron: "20 14 * * *"     # mẻ 2
-    - cron: "20 15 * * *"     #   thử lại mẻ 2
-    - cron: "20 17 * * *"     # mẻ 3
-    - cron: "20 18 * * *"     #   thử lại mẻ 3
-    - cron: "20 20 * * *"     # mẻ 4
-    - cron: "20 21 * * *"     #   thử lại mẻ 4
+    # Giờ chọn theo mốc HỒI HẠN MỨC Firestore: nửa đêm Thái Bình Dương = **07:00 UTC**
+    # (§13.6 — anh nhắc 10/9, và §13.6 đã ghi đúng thế; bản trước em ghi nhầm 08:00 UTC làm
+    # mẻ đầu trễ hơn một giờ sau reset, phí quota tươi). Mẻ 0 nổ 07:20 UTC = 14:20 giờ VN,
+    # ngay sau reset — nếu hôm trước có gì cạn thì mẻ đầu vẫn sạch. Hai mốc mỗi mẻ (cách 1h)
+    # hấp thụ chuyện cron GitHub hay bỏ tick (§10.2); mốc thứ hai dựng ĐÚNG cùng IDX nên nó
+    # là thử-lại idempotent. 5 mẻ cách 3 giờ: 7,10,13,16,19 UTC.
+    - cron: "20 7 * * *"      # mẻ 0 — ngay sau reset quota 07:00 UTC
+    - cron: "20 8 * * *"      #   thử lại mẻ 0
+    - cron: "20 10 * * *"     # mẻ 1
+    - cron: "20 11 * * *"     #   thử lại mẻ 1
+    - cron: "20 13 * * *"     # mẻ 2
+    - cron: "20 14 * * *"     #   thử lại mẻ 2
+    - cron: "20 16 * * *"     # mẻ 3
+    - cron: "20 17 * * *"     #   thử lại mẻ 3
+    - cron: "20 19 * * *"     # mẻ 4
+    - cron: "20 20 * * *"     #   thử lại mẻ 4
   workflow_dispatch:
     inputs:
       so_tap:
@@ -224,7 +226,8 @@ jobs:
           # ĐÚNG cùng IDX (idempotent). IDX = NGAY*(5*SO) + ME*SO + k: 5 mẻ × SO tập, không
           # dải nào trùng dải cũ (NGAY*SO), nên video đã dựng không bị dựng lại.
           GIO=$(( 10#$(date -u +%H) ))
-          ME=$(( (GIO - 8 + 1) / 3 )); [ $ME -lt 0 ] && ME=0; [ $ME -gt 4 ] && ME=4
+          # bucket 3 giờ quanh 5 mốc trung tâm 7,10,13,16,19 UTC (base = 07:00 = reset quota)
+          ME=$(( (GIO - 7) / 3 )); [ $ME -lt 0 ] && ME=0; [ $ME -gt 4 ] && ME=4
           echo "── MẺ $ME (giờ $GIO UTC)"
           for k in $(seq 0 $((SO-1))); do
             IDX=$(( NGAY * 5 * SO + ME * SO + k ))

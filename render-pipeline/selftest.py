@@ -10342,13 +10342,16 @@ def t_lich_5_me_va_idx_khong_dung_dai_cu():
     gio = [int(m.group(1)) for m in _re.finditer(r'cron:\s*"20\s+(\d+)\s', ma)]
     assert len(gio) == 10, f"phải có 10 mốc cron (5 mẻ × 2), có {len(gio)}"
 
-    def _me(g):                                                 # ĐÚNG công thức bash
-        return min(4, max(0, (g - 8 + 1) // 3))
+    def _me(g):                                                 # ĐÚNG công thức bash (base 7)
+        return min(4, max(0, (g - 7) // 3))
     nhom = {}
     for g in gio:
         nhom.setdefault(_me(g), []).append(g)
     assert len(nhom) == 5, f"phải đúng 5 mẻ, ra {sorted(nhom)}"
     assert all(len(v) == 2 for v in nhom.values()), f"mỗi mẻ phải 2 mốc: {nhom}"
+    # mẻ 0 phải nổ NGAY SAU reset quota 07:00 UTC (§13.6) — mốc sớm nhất là giờ 7, không 8
+    assert min(nhom[0]) == 7, ("mẻ đầu không nổ ngay sau reset quota 07:00 UTC — phí quota "
+                               f"tươi (§13.6): mốc sớm nhất giờ {min(nhom[0])}")
 
     # IDX phải theo scheme mới
     assert _re.search(r"IDX=\$\(\(\s*NGAY\s*\*\s*5\s*\*\s*SO", ma), \
