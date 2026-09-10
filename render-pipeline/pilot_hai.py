@@ -2659,8 +2659,14 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
     # khối này quay vòng đúng 2 tấm ấy cho 13 nhịp và bỏ phí 14 tấm còn lại.
     # Nay lấp từ `ANH_SACH` (hồ đã qua ba cổng), ưu tiên tấm CHƯA dùng: 16 ảnh cho 13 nhịp
     # thì mỗi nhịp một ảnh khác nhau, không một cặp nào lặp.
+    # ── KHÔNG LẶP FOOTAGE: ẢNH RIÊNG > NỀN VẼ > (cuối cùng) LẶP  (anh nhắc 2 lần, 10/9) ──
+    # Anh: *"tránh footage trùng dùng đi dùng lại"*. Trước đây beat hết ảnh riêng thì QUAY
+    # VÒNG lặp ảnh. Nay: beat hết ảnh riêng mà CÓ nền vẽ (trục năm / thẻ số — có nghĩa, không
+    # trắng trơn) thì ĐỂ TRỐNG cho engine vẽ code (`nenVe` chỉ vẽ khi ô ảnh trống). Chỉ lặp
+    # ảnh khi beat vừa hết ảnh riêng VỪA không có nền vẽ — trường hợp bất khả, tối thiểu hoá.
+    _ve_beat = _lop_ve(cau)                              # beat nào có nền vẽ được
     _da = [x for x in (anh_nens or []) if x]
-    _con = [a for a in (ANH_SACH or []) if a not in _da]     # chưa dùng -> ưu tiên
+    _con = [a for a in (ANH_SACH or []) if a not in _da]     # ảnh CHƯA dùng
     _co = list(dict.fromkeys(_da + _con))
     if _co:
         _j = 0
@@ -2668,8 +2674,12 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
             if anh_nens[_i]:
                 continue
             _truoc = anh_nens[_i - 1] if _i > 0 else ""
-            # Tấm chưa dùng lần nào đứng trước; hết mới quay vòng cả hồ.
-            _uu = [a for a in _co if a not in anh_nens] or _co
+            _uu = [a for a in _co if a not in anh_nens]      # CHỈ ảnh chưa dùng
+            if not _uu:
+                # hết ảnh riêng: có nền vẽ thì để trống cho code; không thì mới đành lặp
+                if _ve_beat[_i] if _i < len(_ve_beat) else None:
+                    continue
+                _uu = _co                                     # bất khả -> lặp (last resort)
             _chon = ""
             for _k in range(len(_uu)):
                 _x = _uu[(_j + _k) % len(_uu)]
