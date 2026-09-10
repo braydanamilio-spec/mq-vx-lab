@@ -68,8 +68,16 @@ KENH_HUA = {
     "whatif":     ("unsolved", ["Cancelled spacecraft",
                                 "Abandoned military projects of the United States",
                                 "Cancelled aircraft projects"]),
-    "survive":    ("unsolved", ["Maritime incidents", "Nuclear accidents and incidents",
-                                "Aviation accidents and incidents in the United States"]),
+    # ── ĐỔI GỐC ÍT THƯƠNG VONG  (rà 10/9/2026) ──────────────────────────────────────────
+    # Ba gốc cũ (Maritime/Nuclear/Aviation incidents) gần như TOÀN chủ thể có thương vong, nên
+    # cổng `hop_dinh_dang` (giọng nhẹ không kể thảm hoạ chết người) loại gần hết — đo được
+    # `vi_sao.sinh("survive")` bỏ qua hàng chục chủ thể liên tiếp, chọn mất >20 phút (các kênh
+    # khác ~2 phút). Ba gốc mới hợp lời hứa "unsolved" HƠN (bí ẩn, chưa ai trả lời) mà ít
+    # thương vong hàng loạt: người mất tích được tìm thấy · biến mất không giải thích · trò lừa.
+    # Bí ẩn/mất-tích cũng đầy án mạng ("Murder of Milly Dowler" trong "Formerly missing
+    # people"), vẫn vướng cổng thương vong. Nay ba gốc THẬT SỰ ít chết người mà vẫn "unsolved"
+    # (chưa ai trả lời): trò lừa · phát minh biến mất · sinh vật bí ẩn.
+    "survive":    ("unsolved", ["Hoaxes", "Lost inventions", "Cryptids"]),
     "speedof":    ("vanished", ["Defunct airlines of the United States",
                                 "Defunct railroads", "Cancelled aircraft projects"]),
     "howbig":     ("vanished", ["Demolished buildings and structures in the United States",
