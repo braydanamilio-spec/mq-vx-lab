@@ -2769,8 +2769,13 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         **({"daoCuTap": DAO_CU_TAP} if DAO_CU_TAP else {}),
         # Nét dựng riêng của kênh. Python QUYẾT rồi truyền KẾT QUẢ sang; engine chỉ đọc —
         # §15.3: nơi chọn và nơi biết bản sắc phải là một, đừng tính lại ở đầu kia.
-        **(lambda g: {"guViTri": g[0], "guKen": g[1], "guNen": g[2]})(
-            GU_DUNG.get(ma, ("giua", "vao", "moc"))),
+        # ── NGƯỜI DẪN LUÔN GÓC TRÁI  (anh soi howbig, 10/9/2026) ────────────────────────
+        # Anh: *"để nhân vật nhỏ góc trái, số liệu chart góc phải trên, không đè che nhau"*
+        # (nhắc lại từ 9/9: *"góc trái ko có chart nhiều"*). GU_DUNG cũ để vài kênh "phai"/
+        # "giua" như một trục đa dạng (§17.3), nhưng anh muốn NHẤT QUÁN trái để chart luôn
+        # được ở phải không bị che. Ép "trai" cho vị trí; guKen/guNen vẫn giữ đa dạng.
+        **(lambda g: {"guViTri": "trai", "guKen": g[1], "guNen": g[2]})(
+            GU_DUNG.get(ma, ("trai", "vao", "moc"))),
     }
     pj = os.path.join(GOC, "out", f"{slug}.json")
     os.makedirs(os.path.dirname(pj), exist_ok=True)
