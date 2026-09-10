@@ -4092,6 +4092,41 @@ def t_gan_gi_engine_phai_ve_duoc():
     assert r.returncode == 0, "có giá trị được gán mà engine không vẽ:\n" + r.stdout[-700:]
 
 
+def t_tu_chon_lai_chu_the_ngheo_anh():
+    """Chủ thể nghèo ảnh thật -> `mot_tap` báo `_NgheoAnh`, `bo_1_3` TỰ chọn chủ thể khác.
+
+    ── VÌ SAO  (anh soi 18 video, 10/9/2026) ────────────────────────────────────────────
+    survive «2024 UK riots», realcost «Accounting scandal», dayinlife «Benoxaprofen» ra
+    video LẶP MỘT ẢNH (log: "1 ảnh KHÁC NHAU · 11 cặp liền trùng") vì `so_anh_co` đếm ảnh
+    THÔ, còn ba cổng lọc (tên · tối · logo) bỏ gần hết -> ≤1 ảnh dùng được. Cổng chọn canh
+    sai đại lượng. Nay đo số ảnh KHÁC NHAU NGAY TRƯỚC render; ít quá thì chọn chủ thể khác.
+
+    Gỡ cổng này = mở lại đúng lỗi anh chê. Kiểm CẢ HAI phía: raise phải CÓ và phải BẮT.
+    """
+    import ast
+    goc = os.path.dirname(os.path.abspath(__file__))
+    cay = ast.parse(io.open(os.path.join(goc, "pilot_hai.py"), encoding="utf-8").read())
+    ten = {n.name for n in ast.walk(cay) if isinstance(n, ast.ClassDef)}
+    assert "_NgheoAnh" in ten, "thiếu lớp _NgheoAnh (cổng ảnh nghèo)"
+    src = io.open(os.path.join(goc, "pilot_hai.py"), encoding="utf-8").read()
+    ma = re.sub(r"(?m)^\s*#.*$", "", src)          # bỏ chú thích (§17.15)
+    # 1) mot_tap RAISE _NgheoAnh, có canh _CHON_LAI + ngưỡng _NGUONG_ANH
+    mt = next(n for n in ast.walk(cay) if isinstance(n, ast.FunctionDef) and n.name == "mot_tap")
+    mt_src = ast.unparse(mt)
+    assert "_NgheoAnh(" in mt_src and "_CHON_LAI" in mt_src and "_NGUONG_ANH" in mt_src, \
+        "mot_tap phải raise _NgheoAnh khi _CHON_LAI và _rieng < _NGUONG_ANH"
+    # 2) bo_1_3 BẮT _NgheoAnh và chọn lại (xoá DA_CHON) — bắt được thì mới tự động
+    bo = next(n for n in ast.walk(cay) if isinstance(n, ast.FunctionDef) and n.name == "bo_1_3")
+    bo_src = ast.unparse(bo)
+    assert "except" in bo_src and "_NgheoAnh" in bo_src, "bo_1_3 phải BẮT _NgheoAnh"
+    assert "DA_CHON.pop" in bo_src, "bắt _NgheoAnh xong phải xoá DA_CHON để `sinh` chọn lại"
+    assert "_CHON_LAI[0] = True" in bo_src, "bo_1_3 phải BẬT _CHON_LAI quanh bản dài"
+    # 3) THỬ NGƯỢC: short/chạy lẻ (không bật _CHON_LAI) thì KHÔNG được raise — nếu không nó
+    #    tự chặn chính mình. Bằng chứng cấu trúc: raise nằm sau điều kiện `_CHON_LAI[0] and`.
+    assert re.search(r"_CHON_LAI\[0\]\s+and\s+_rieng\w*\s*<\s*_NGUONG_ANH", ma), \
+        "raise phải bị chặn bởi `_CHON_LAI[0] and` — không thì short cũng bị chặn"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     # ── CƯỠNG CHẾ "0 MẠNG"  (9/9/2026) ────────────────────────────────────────────────
@@ -4434,6 +4469,7 @@ def main():
     check("55 kênh cũ phải có bản chụp tên", t_ten_kenh_cu_phai_co_ban_chup)
     check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
     check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)
+    check("chủ thể nghèo ảnh -> tự chọn chủ thể khác (không lặp 1 ảnh)", t_tu_chon_lai_chu_the_ngheo_anh)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

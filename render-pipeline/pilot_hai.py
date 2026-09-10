@@ -1044,6 +1044,22 @@ DA_GHIM = False          # `bo_1_3` đã chọn chủ thể cho cả bộ — `m
 NEN_SAN: list = []       # nền do BẢN DÀI để lại, short dùng lại — xem `bo_1_3`
 LOI_SAN: list = []       # LỜI của bản dài, cùng thứ tự với `NEN_SAN` — xem `_nen_theo_loi`
 
+# ── TỰ CHỌN LẠI CHỦ THỂ NGHÈO ẢNH  (anh: "ảnh thật đa dạng, ko lặp 1 ảnh", 10/9/2026) ─────
+# survive «2024 UK riots», realcost «Accounting scandal», dayinlife «Benoxaprofen» bốc chủ thể
+# trừu tượng → sau ba cổng lọc (tên khớp · quá tối · logo) còn ≤1 ảnh DÙNG ĐƯỢC → nền lặp một
+# tấm hoặc rơi về nền vẽ. Gốc: cổng chọn đếm ảnh THÔ (`so_anh_co`), không đếm ảnh DÙNG ĐƯỢC.
+# Sửa TỰ ĐỘNG: đo số ảnh thật KHÁC NHAU NGAY TRƯỚC render (chưa tốn quota dựng); ít quá thì
+# `mot_tap` báo `_NgheoAnh`, `bo_1_3` tự chọn chủ thể khác — không cần người can thiệp.
+_NGUONG_ANH = 4          # tối thiểu ảnh thật KHÁC NHAU cho một bản dài
+_CHON_LAI = [False]      # bo_1_3 bật khi đang dựng bản dài (được phép chọn lại chủ thể)
+
+
+class _NgheoAnh(Exception):
+    def __init__(self, n: int, chu_the: str = ""):
+        self.n = n
+        self.chu_the = chu_the
+        super().__init__(f"chỉ {n} ảnh thật khác nhau (<{_NGUONG_ANH})")
+
 
 def _nen_theo_loi(cau_short: list) -> list:
     """Gắn nền của bản dài vào short THEO CÂU, không theo vị trí.
@@ -2752,6 +2768,15 @@ def mot_tap(ma: str, idx: int, ve_nen_moi: bool = True, chuong: int = 0) -> str:
         print(f"   🖼 lấp nền: {sum(1 for x in anh_nens if x)}/{len(anh_nens)} nhịp có ảnh "
               f"thật · {_rieng} ảnh KHÁC NHAU · {_lap} cặp liền nhau trùng")
 
+    # ── CỔNG ẢNH NGHÈO — TRƯỚC RENDER, để `bo_1_3` tự chọn chủ thể khác  (10/9/2026) ────────
+    # Đo LẠI `_rieng` ở đây (không dùng biến trong khối `if _co` phía trên): chủ thể 0 ảnh
+    # dùng được (dayinlife «Benoxaprofen») không vào khối ấy, nên phải đếm độc lập ra 0.
+    # Chỉ báo khi `bo_1_3` cho phép chọn lại (bản dài); short (dùng nền bản dài) và chạy lẻ
+    # thì bỏ qua cổng này để không tự chặn mình.
+    _rieng_that = len(set(x for x in anh_nens if x))
+    if _CHON_LAI[0] and _rieng_that < _NGUONG_ANH:
+        raise _NgheoAnh(_rieng_that, str(CHU_THE_TAP))
+
     _bo_lech, _bo_lap = loc_the_so(so_lieu, cau)
 
     # ── CẮT HÌNH THEO ĐỒNG HỒ, KHÔNG THEO CÂU  (anh, 9/9/2026) ────────────────────────
@@ -3583,12 +3608,6 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         print(f"   ⚠ không nạp được vi_sao ({str(e)[:40]})")
         _VS = None
 
-    _r = _VS.sinh(ma, idx) if (_VS and _VS.co_vi_sao(ma)) else None
-    if not _r:
-        # Không có chuyện thì KHÔNG dựng bộ. Dựng bằng bộ sinh cũ vẫn ra bốn clip, nhưng đó
-        # là bốn clip của đường mình đang thay — nhân bản đúng thứ cần bỏ (§16.7).
-        print(f"   ⏭ {ma} tập {idx}: chưa có chủ thể đủ chuyện — BỎ bộ này, không dựng bừa")
-        return 0
     _ma_sinh = k_ma_sinh(ma)
     _job = _mo_so(ma, idx)
 
@@ -3596,39 +3615,62 @@ def bo_1_3(ma: str, idx: int, chuong: int = CHUONG_KHONG_LAP) -> int:
         _G1.BO_SINH[_ma_sinh] = lambda _i, _x=bo_nhip: _x
 
     global DA_GHIM, MOT_GIONG, CHU_THE_TAP, DAO_CU_TAP, ANH_THAT
-    _ch = _VS.DA_CHON.get((ma, idx), {})
-    MOT_GIONG = True
-    CHU_THE_TAP = _ch.get("chu_the", "")
-    DAO_CU_TAP = _ch.get("hinh_mau", "")
-    ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=32) if CHU_THE_TAP else []
-    # ── LOGO/TRỤ SỞ TRA THẲNG TỪ WIKIDATA  (anh, 8/9/2026) ──────────────────────────
-    # Khác `nap_anh_that` (tìm theo tên rồi lọc), `logo_wd` tra THUỘC TÍNH của thực thể —
-    # `P154` là logo, `P18` là ảnh chính — nên ra ĐÚNG một tệp của đúng công ty ấy, không
-    # phải một danh sách phải đoán. Vẫn chỉ nhận PD/CC0, và có cổng chống nhận nhầm thực
-    # thể (`Concorde` từng ra ga tàu điện ngầm Paris vì `wbsearchentities` khớp tên).
-    globals()["LOGO_TAP"] = ""
-    try:
-        import logo_wd as _LW
-        _tt = thuc_the(CHU_THE_TAP) or CHU_THE_TAP
-        _ds = _LW.logo_va_anh(_tt)
-        if _ds:
-            globals()["LOGO_TAP"] = _ds[0]
-            # 8/9 — GHI SỔ Ở CẢ HAI NHÁNH SINH `anh_pd/`, không chỉ nhánh Wikimedia.
-            # Bản vá đầu chỉ cắm `_ghi_so_anh()` vào `nap_anh_that`; lượt dựng 151 tải ảnh qua
-            # ĐƯỜNG NÀY (Wikidata P154/P18) nên sổ ra **0 mục** dù log in rõ tên tệp. Đúng §6:
-            # *vá một nhánh, để nguyên nhánh song song* — và nó im lặng, vì sổ rỗng đọc y hệt
-            # "lượt này không dùng ảnh thật nào" (§15.2).
-            for _d in _ds:
-                TEN_ANH[_d] = _tt
-            _ghi_so_anh()
-            print(f"   🏷 ảnh thật của «{_tt}»: {_ds[0]}")
-    except Exception as e:
-        print(f"   ⚠ không lấy được logo ({str(e)[:40]}) — vẫn dựng bình thường")
-    print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · 🖼 ảnh thật: {len(ANH_THAT)}")
-    DA_GHIM = True
     n = 0
-    _ghim(_r)
-    if mot_tap(ma, idx, False, chuong):
+    _ok_long = None
+    # ── VÒNG TỰ CHỌN LẠI CHỦ THỂ NGHÈO ẢNH  (anh 10/9: "tự làm tự động a-z") ────────────────
+    # Chủ thể mà ba cổng lọc còn <4 ảnh thật KHÁC NHAU thì `mot_tap` báo `_NgheoAnh` NGAY TRƯỚC
+    # render (chưa tốn quota dựng); ở đây THỬ chủ thể khác, tối đa 4 lần. `sinh` đã `H.ghi` chủ
+    # thể vừa chọn nên lần sau nó tránh; ta chỉ xoá `DA_CHON` để nó chọn lại. Hết 4 lần vẫn
+    # nghèo thì BỎ bộ — thà không có video còn hơn ship video lặp một ảnh (anh chê nhiều lần).
+    for _lan in range(4):
+        _r = _VS.sinh(ma, idx) if (_VS and _VS.co_vi_sao(ma)) else None
+        if not _r:
+            # Không có chuyện thì KHÔNG dựng bộ (§16.7): bộ sinh cũ ra bốn clip của đường đang thay.
+            print(f"   ⏭ {ma} tập {idx}: chưa có chủ thể đủ chuyện — BỎ bộ này, không dựng bừa")
+            _chot_so(_job, "failed", error="không có chủ thể")
+            return 0
+        _ch = _VS.DA_CHON.get((ma, idx), {})
+        MOT_GIONG = True
+        CHU_THE_TAP = _ch.get("chu_the", "")
+        DAO_CU_TAP = _ch.get("hinh_mau", "")
+        ANH_THAT = nap_anh_that(CHU_THE_TAP, toi_da=32) if CHU_THE_TAP else []
+        # ── LOGO/TRỤ SỞ TRA THẲNG TỪ WIKIDATA  (anh, 8/9/2026) ──────────────────────────
+        # `logo_wd` tra THUỘC TÍNH thực thể (`P154` logo, `P18` ảnh chính) nên ra ĐÚNG tệp
+        # của đúng công ty, có cổng chống nhận nhầm thực thể.
+        globals()["LOGO_TAP"] = ""
+        try:
+            import logo_wd as _LW
+            _tt = thuc_the(CHU_THE_TAP) or CHU_THE_TAP
+            _ds = _LW.logo_va_anh(_tt)
+            if _ds:
+                globals()["LOGO_TAP"] = _ds[0]
+                for _d in _ds:
+                    TEN_ANH[_d] = _tt
+                _ghi_so_anh()
+                print(f"   🏷 ảnh thật của «{_tt}»: {_ds[0]}")
+        except Exception as e:
+            print(f"   ⚠ không lấy được logo ({str(e)[:40]}) — vẫn dựng bình thường")
+        print(f"   🎨 hình mẫu: {DAO_CU_TAP or '(không nhận ra)'} · 🖼 ảnh thật: {len(ANH_THAT)}")
+        DA_GHIM = True
+        _ghim(_r)
+        _CHON_LAI[0] = True
+        try:
+            _ok_long = mot_tap(ma, idx, False, chuong)
+            break
+        except _NgheoAnh as _na:
+            print(f"   ⏭ «{_na.chu_the}» chỉ {_na.n} ảnh thật khác nhau (<{_NGUONG_ANH}) — "
+                  f"chọn chủ thể khác (lần {_lan + 1}/4)")
+            _VS.DA_CHON.pop((ma, idx), None)     # buộc `sinh` chọn ứng viên kế
+            continue
+        finally:
+            _CHON_LAI[0] = False
+    else:
+        print(f"   ⚠ {ma} tập {idx}: thử 4 chủ thể đều nghèo ảnh thật — BỎ bộ "
+              f"(không ship video lặp một ảnh)")
+        _chot_so(_job, "failed", error="nghèo ảnh")
+        return 0
+
+    if _ok_long:
         n += 1
     else:
         print(f"   ⚠ {ma} tập {idx}: bản dài hỏng — bỏ cả bộ, không dựng short lẻ")
