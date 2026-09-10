@@ -300,10 +300,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: comic-${{ matrix.kenh }}
+          # `v11*` chứ KHÔNG `v11_*`: bản LONG là `v11L_*`, mà `v11_*` đòi dấu gạch NGAY sau
+          # `v11` nên nó bỏ sót mọi bản dài. Long vẫn được ĐẨY lên Drive (glob push là `v11*`),
+          # chỉ artifact là thiếu — nên khi anh muốn soi bản long thì tải về không có. (10/9)
           path: |
-            render-pipeline/out/v11_*.mp4
-            render-pipeline/out/v11_*.jpg
-            render-pipeline/out/v11_*.tai.json
+            render-pipeline/out/v11*.mp4
+            render-pipeline/out/v11*.jpg
+            render-pipeline/out/v11*.tai.json
           if-no-files-found: warn
           retention-days: 7
 
