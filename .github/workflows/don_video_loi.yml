@@ -1,0 +1,65 @@
+# DỌN VIDEO LỖI TRÊN DRIVE — theo MỐC THỜI GIAN, bỏ THÙNG RÁC (cứu 30 ngày)  (10/9/2026)
+#
+# Anh: *"dọn hết videos lỗi trên driver cho a nha"*. Máy anh KHÔNG có khoá dịch vụ Drive
+# (chỉ runner có), nên việc dọn phải chạy ở đây. Đây là workflow RIÊNG, rõ ràng, KHÔNG phải
+# `lam_lai.yml` (xoá sạch, cần gõ chữ xác nhận) — nó chỉ bỏ thùng rác những video tạo TRƯỚC
+# một mốc, giữ lại video mới dựng bằng engine đã vá.
+#
+# HAI BƯỚC AN TOÀN:
+#   1. Bấm Run với `that=no` (mặc định) -> CHỈ ĐẾM, không đụng tệp nào. Đọc log xem số đúng.
+#   2. Bấm Run lần hai với `that=yes` -> bỏ thùng rác thật (Drive giữ 30 ngày, còn kéo lại).
+#
+# `don_video_cu.py` từ chối nếu không đọc được danh sách kho (không coi "không thấy" là
+# "không có"), gom xoá thành lô (tránh timeout), và KHÔNG đụng tệp nào không biết giờ tạo.
+
+name: Dọn video lỗi trên Drive (theo mốc, thùng rác)
+
+on:
+  workflow_dispatch:
+    inputs:
+      truoc:
+        description: "Bỏ thùng rác video tạo TRƯỚC mốc ISO này (mặc định: trước 10/9 — engine cũ)"
+        default: "2026-09-10T00:00:00Z"
+      that:
+        description: "yes = bỏ thùng rác THẬT · no = chỉ đếm thử (mặc định)"
+        default: "no"
+
+concurrency: { group: mm0-don-video-loi, cancel-in-progress: false }
+
+jobs:
+  don:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout repo đăng bài
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Cài đặt
+        run: |
+          pip install --quiet 'google-api-python-client>=2.120,<3' 'google-auth>=2.29,<3' \
+            'google-cloud-firestore>=2.27,<2.29' 'google-api-core>=2.30,<2.35' 'PyYAML>=6.0,<7'
+      - name: Khoá dịch vụ
+        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa.json
+
+      - name: Dọn (đếm thử nếu that=no, bỏ thùng rác nếu that=yes)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          OWNER_UID: ${{ secrets.OWNER_UID }}
+          HOT_KEY: ${{ secrets.HOT_KEY }}
+        run: |
+          cd _autopublisher
+          TRUOC="${{ github.event.inputs.truoc }}"
+          if [ "${{ github.event.inputs.that }}" = "yes" ]; then
+            echo "→ BỎ THÙNG RÁC THẬT: video tạo trước $TRUOC (Drive giữ 30 ngày)"
+            python src/don_video_cu.py --truoc "$TRUOC" --that
+          else
+            echo "→ CHỈ ĐẾM THỬ (that=no): video tạo trước $TRUOC — chưa đụng tệp nào"
+            python src/don_video_cu.py --truoc "$TRUOC"
+          fi
