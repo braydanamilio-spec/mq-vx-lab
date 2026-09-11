@@ -4127,6 +4127,35 @@ def t_tu_chon_lai_chu_the_ngheo_anh():
         "raise phải bị chặn bởi `_CHON_LAI[0] and` — không thì short cũng bị chặn"
 
 
+def t_short_khong_lap_anh():
+    """`_nen_theo_loi` (short cắt từ long) không được LẶP một ảnh ở nhiều nhịp.
+
+    ── VÌ SAO  (anh soi clip «teamwork beats going solo», 11/9/2026) ─────────────────────
+    Cổng `_NgheoAnh` chỉ canh bản DÀI. Short 4-5 nhịp mà vài câu cùng khớp một nhịp bản dài
+    -> ảnh ấy lặp ở nhiều nhịp (không liền kề, nên phép tránh-liền-kề cũ không thấy). Bản dài
+    đã có ≥10 ảnh KHÁC NHAU nên short thừa ảnh — mỗi nhịp phải một tấm khác nhau.
+    """
+    import importlib
+    P = importlib.import_module("pilot_hai")
+    _ns, _ls = P.NEN_SAN, P.LOI_SAN
+    try:
+        P.NEN_SAN = ["i0", "i1", "i2", "i3", "i4", "i5"]
+        P.LOI_SAN = ["teamwork beats solo churn", "bank collapsed 1929 panic",
+                     "workers churned butter farm", "founder sold shares market",
+                     "factory closed doors gone", "customers lost savings deposits"]
+        cau = [{"nar": "teamwork beats solo always"},
+               {"nar": "teamwork churn butter farm together"},   # cũng khớp nhịp churn
+               {"nar": "bank collapsed panic 1929"},
+               {"nar": "founder sold shares market"},
+               {"nar": "customers lost savings gone"}]
+        ra = P._nen_theo_loi(cau)
+        co = [x for x in ra if x]
+        assert len(set(co)) == len(co), f"short LẶP ảnh: {ra}"
+        assert all(ra[i] != ra[i - 1] for i in range(1, len(ra)) if ra[i]), f"liền kề trùng: {ra}"
+    finally:
+        P.NEN_SAN, P.LOI_SAN = _ns, _ls
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     # ── CƯỠNG CHẾ "0 MẠNG"  (9/9/2026) ────────────────────────────────────────────────
@@ -4470,6 +4499,7 @@ def main():
     check("workflow quản trị trỏ đúng project (SHARD_META)", t_cong_cu_quan_tri_phai_tro_dung_project)
     check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)
     check("chủ thể nghèo ảnh -> tự chọn chủ thể khác (không lặp 1 ảnh)", t_tu_chon_lai_chu_the_ngheo_anh)
+    check("short không lặp một ảnh ở nhiều nhịp", t_short_khong_lap_anh)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

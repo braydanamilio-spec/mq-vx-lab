@@ -1097,28 +1097,33 @@ def _nen_theo_loi(cau_short: list) -> list:
     ra, da = [], set()
     for i, c in enumerate(cau_short):
         a = _tu(c)
-        tot, diem = -1, 0.0
-        for j, b in enumerate(_dai):
-            if not a or not b:
-                continue
-            # Jaccard: đo NỘI DUNG chứ không đo khuôn câu (§13.5)
-            d = len(a & b) / len(a | b)
-            if d > diem and (j not in da or d > 0.75):
-                tot, diem = j, d
-        # HAI NHỊP LIỀN NHAU KHÔNG ĐƯỢC CÙNG MỘT NỀN. Short 1640 có hai câu đầu đều mở bằng
-        # «You own it, sort of…» nên cả hai khớp cùng một nhịp bản dài và nhận cùng một tấm —
-        # màn hình đứng yên suốt hai nhịp, đúng chỗ người xem lướt đi (§15.6).
-        _chon = NEN_SAN[tot % len(NEN_SAN)] if tot >= 0 and diem >= 0.34 else None
-        if _chon is not None and ra and _chon == ra[-1]:
-            _khac = [j for j in range(len(_dai)) if j != tot and j not in da]
-            if _khac:
-                tot = max(_khac, key=lambda j: len(a & _dai[j]) / max(1, len(a | _dai[j])))
-                _chon = NEN_SAN[tot % len(NEN_SAN)]
-        if _chon is not None:
-            da.add(tot)
-            ra.append(_chon)
-        else:
-            ra.append(NEN_SAN[i % len(NEN_SAN)])
+        # ── SHORT CŨNG KHÔNG ĐƯỢC LẶP ẢNH  (anh soi clip «teamwork beats going solo», 11/9) ──
+        # Bản trước chỉ tránh trùng LIỀN KỀ (`ra[-1]`) và cho tái dùng một ảnh khi khớp >0,75,
+        # nên short 4-5 nhịp mà vài câu cùng khớp một nhịp bản dài -> ẢNH ẤY LẶP Ở NHIỀU NHỊP
+        # (không liền kề). Bản dài đã có ≥10 ảnh KHÁC NHAU (NEN_SAN), nên short thừa ảnh để mỗi
+        # nhịp một tấm: xếp mọi nhịp long theo độ khớp NGHĨA, chọn ảnh khớp nhất mà CHƯA DÙNG
+        # trong short; không còn ảnh khớp chưa dùng thì lấy ảnh NEN_SAN chưa dùng bất kỳ (đa dạng
+        # hơn là lặp). Chỉ lặp khi NEN_SAN cạn — short dài hơn số ảnh, hiếm.
+        _hang = sorted(range(len(_dai)),
+                       key=lambda j: -(len(a & _dai[j]) / len(a | _dai[j]))
+                       if (a and _dai[j]) else 0.0)
+        _chon = None
+        for j in _hang:
+            d = (len(a & _dai[j]) / len(a | _dai[j])) if (a and _dai[j]) else 0.0
+            if d < 0.34:
+                break                                        # hết nhịp khớp đủ nghĩa
+            img = NEN_SAN[j % len(NEN_SAN)]
+            if img in da or (ra and img == ra[-1]):
+                continue                                     # đã dùng trong short / liền kề
+            _chon = img
+            break
+        if _chon is None:
+            # không có ảnh KHỚP chưa dùng -> ảnh NEN_SAN chưa dùng bất kỳ (đừng lặp một tấm)
+            _con = [x for x in NEN_SAN if x not in da and (not ra or x != ra[-1])]
+            _chon = _con[0] if _con else (NEN_SAN[i % len(NEN_SAN)] if NEN_SAN else "")
+        if _chon:
+            da.add(_chon)
+        ra.append(_chon)
     return ra
 TEN_ANH: dict = {}       # đường ảnh -> tiêu đề nguồn, để ghép ảnh với câu theo NGHĨA
 # ── HẠNG MỤC WIKIMEDIA: LẤY VỀ RỒI VỨT ĐI  (bộ 213, 9/9/2026) ───────────────────────
