@@ -77,7 +77,18 @@ KENH_HUA = {
     # Bí ẩn/mất-tích cũng đầy án mạng ("Murder of Milly Dowler" trong "Formerly missing
     # people"), vẫn vướng cổng thương vong. Nay ba gốc THẬT SỰ ít chết người mà vẫn "unsolved"
     # (chưa ai trả lời): trò lừa · phát minh biến mất · sinh vật bí ẩn.
-    "survive":    ("unsolved", ["Hoaxes", "Lost inventions", "Cryptids"]),
+    #
+    # ── LẠI ĐỔI: Hoaxes/Cryptids/Lost inventions NGHÈO ẢNH THẬT  (anh soi 18 video, 10/9) ──
+    # Ba gốc "ít thương vong" ở trên hoá ra gần như KHÔNG có ảnh tư liệu (trò lừa/sinh vật bí
+    # ẩn/phát minh mất tích chỉ có tranh vẽ, bị cổng lọc bỏ) → cổng `_NgheoAnh` (10/9) bỏ hết
+    # → survive ra 0 tập, job đỏ (17 kênh kia vẫn giao hàng). survive kẹt giữa HAI cổng: thảm
+    # hoạ thì vướng thương vong, bí ẩn thì nghèo ảnh. Giao điểm ĐÚNG: NƠI CHỐN BỊ BỎ HOANG —
+    # thị trấn ma · công viên giải trí đóng cửa · công trình bị phá. Ảnh RẤT nhiều (dân chụp
+    # ảnh mê chốn hoang), ÍT chết người, vẫn "unsolved" (chuyện gì đã xảy ra ở đây). "Demolished
+    # buildings" là gốc howbig đang dùng tốt (giàu ảnh) — mượn một gốc đã chứng minh.
+    "survive":    ("unsolved", ["Ghost towns in the United States",
+                                "Defunct amusement parks in the United States",
+                                "Demolished buildings and structures in the United States"]),
     "speedof":    ("vanished", ["Defunct airlines of the United States",
                                 "Defunct railroads", "Cancelled aircraft projects"]),
     "howbig":     ("vanished", ["Demolished buildings and structures in the United States",
