@@ -963,6 +963,27 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         except Exception:
             pass
 
+    # ── ĐỌC D1 TRƯỚC, FIRESTORE SAU  (anh: "fix triệt để firebase", 11/9/2026) ──────────────
+    # Gốc cạn: read_keys đọc Firestore Project A (cùng project dashboard) mỗi tiến trình. `hot_db.
+    # keys_doc(owner, maxage)` trả ẢNH CHỤP key trên D1 nếu nó TRẺ hơn maxage — D1 free cho
+    # 5 TRIỆU đọc/ngày (100× Firestore). Dùng D1 làm ĐƯỜNG CHÍNH: ảnh chụp < 20' thì render dùng
+    # thẳng (0 lượt đọc Firestore); cũ hơn mới rơi xuống `_do()` đọc Firestore MỘT lần rồi
+    # `_chup_keys_sang_d1` làm mới ảnh. Nhân 18 kênh × 3 tập × nhiều runner: cả cụm chỉ chạm
+    # Firestore ~1 lần/20' cho mỗi owner thay vì mỗi tiến trình — cắt gần hết lượt đọc key.
+    # Key thêm/xoá trên dashboard xuất hiện trong 20' (đủ nhanh). Tắt được bằng KEYS_D1_TRUOC=0.
+    # `include_cooling` (cần danh sách ĐẦY ĐỦ cả key đang nghỉ) thì bỏ qua, đọc Firestore như cũ.
+    if not include_cooling and (_os.environ.get("KEYS_D1_TRUOC") or "1") == "1" \
+            and _t.time() >= _RQ_DEAD["until"]:
+        try:
+            import hot_db as _H1
+            _d1 = _H1.keys_doc(owner, 1200)               # ảnh chụp D1 < 20 phút
+            if _d1:
+                _KEYS_CACHE[ck] = (_t.time(), _d1)
+                _luu_dem_file(_d1)
+                return _d1
+        except Exception:
+            pass                                          # D1 lỗi -> đọc Firestore như thường
+
     def _do():
         # TỐI ƯU GỐC 22/8 (thủ phạm số 1 làm B cạn 50K ĐỌC/ngày): trước đây MỖI lượt gọi là quét
         # cả bảng ~74 doc; nhân số lần làm tươi × 18 luồng × ~15 phiên là 30-40K đọc/ngày chỉ cho
