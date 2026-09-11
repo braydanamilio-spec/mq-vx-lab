@@ -935,6 +935,34 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
     if hit and _t.time() < _RQ_DEAD["until"]:
         return hit[1]     # quota ĐỌC đang chết -> bản đệm cũ (dù quá TTL) còn hơn crash luồng
 
+    # ── ĐỆM FILE CROSS-PROCESS  (anh: "firebase mượt triệt để", 11/9/2026) ──────────────────
+    # `_KEYS_CACHE` chỉ sống TRONG một tiến trình. Nhưng workflow render chạy 3 TẬP mỗi kênh
+    # bằng 3 lệnh `python` RIÊNG (3 tiến trình), nên mỗi tập đọc lại hồ key từ Firestore Project
+    # A — nhân 18 kênh × 3 tập × nhiều lượt làm tươi = hàng nghìn lượt đọc/ngày CHỈ cho key, góp
+    # phần cạn 50K/ngày của A (cùng project dashboard). Đệm KẾT QUẢ ra /tmp: tiến trình sau trên
+    # CÙNG runner dùng lại trong TTL, KHÔNG đụng Firestore. Ghi nguyên tử (temp+rename) tránh đua.
+    import json as _json, os as _os, tempfile as _tf
+    _fp = _os.path.join(_tf.gettempdir(), f"mm0_keys_{owner}_{int(include_cooling)}.json")
+    try:
+        if _os.path.exists(_fp) and (_t.time() - _os.path.getmtime(_fp)) < KEYS_TTL:
+            _d = _json.load(open(_fp, encoding="utf-8"))
+            if isinstance(_d, list) and _d:
+                _KEYS_CACHE[ck] = (_t.time(), _d)         # nạp luôn vào đệm tiến trình
+                return _d
+    except Exception:
+        pass                                              # đệm file hỏng -> đọc Firestore như thường
+
+    def _luu_dem_file(_res):
+        try:
+            if not _res:
+                return
+            _tmp = _fp + f".{_os.getpid()}"
+            with open(_tmp, "w", encoding="utf-8") as _f:
+                _json.dump(_res, _f)
+            _os.replace(_tmp, _fp)                         # nguyên tử
+        except Exception:
+            pass
+
     def _do():
         # TỐI ƯU GỐC 22/8 (thủ phạm số 1 làm B cạn 50K ĐỌC/ngày): trước đây MỖI lượt gọi là quét
         # cả bảng ~74 doc; nhân số lần làm tươi × 18 luồng × ~15 phiên là 30-40K đọc/ngày chỉ cho
@@ -1032,6 +1060,7 @@ def read_keys(owner: str, include_cooling: bool = False) -> list[dict]:
         raise
     _KEYS_CACHE[ck] = (__import__('time').time(), res)
     _chup_keys_sang_d1(owner, res)
+    _luu_dem_file(res)                                     # chia cho tiến trình/tập sau trên CÙNG runner
     return res
 
 
