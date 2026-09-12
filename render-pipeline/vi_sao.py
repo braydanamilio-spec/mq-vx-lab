@@ -95,8 +95,9 @@ KENH_HUA = {
                                 "Megaprojects", "Defunct companies of the United States"]),
     "wheregoes":  ("unsolved", ["Superfund sites", "Waste management",
                                 "Environmental disasters"]),
-    "dayinlife":  ("unsolved", ["Medical controversies", "Withdrawn drugs",
-                                "Health disasters"]),
+    "dayinlife":  ("unsolved", ["Defunct hotels in the United States",
+                                "World's fairs in the United States",
+                                "Roadside attractions in the United States"]),
     "odds":       ("unsolved", ["Nuclear accidents and incidents", "Fires in the United States",
                                 "Maritime incidents"]),
     "hiddenfee":  ("downfall", ["Corporate scandals",
@@ -115,8 +116,9 @@ KENH_HUA = {
     "smallest":   ("boom", ["Defunct computer companies of the United States",
                                 "Defunct telecommunications companies of the United States"]),
     "howlong":    ("unsolved", ["Shipwrecks", "Defunct railroads", "Maritime incidents"]),
-    "howmuch":    ("vanished", ["Defunct banks of the United States", "Hyperinflation",
-                                "Defunct department stores of the United States"]),
+    "howmuch":    ("vanished", ["Defunct banks of the United States",
+                                "Defunct department stores of the United States",
+                                "Defunct retail companies of the United States"]),
 }
 
 # `(mã, số tập)` -> {chu_the, khuon, hinh_mau}. `pilot_hai` đọc bảng này.
