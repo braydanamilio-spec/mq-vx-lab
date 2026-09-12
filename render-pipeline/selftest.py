@@ -4156,6 +4156,54 @@ def t_short_khong_lap_anh():
         P.NEN_SAN, P.LOI_SAN = _ns, _ls
 
 
+def t_trend_kho():
+    """trend_kho: 4 adapter đủ, doc_id sạch, YouTube parse đúng schema (mock, 0 mạng), thiếu key -> []."""
+    import importlib
+    TK = importlib.import_module("trend_kho")
+    # 1) đủ adapter cho mọi nền tảng đã khai
+    for p in TK.PLATFORMS:
+        assert p in TK._ADAPTER, f"thiếu adapter cho {p}"
+    # 2) doc_id: có tiền tố nền tảng + loại ký tự lạ (không cho '/' phá path Firestore)
+    assert TK.doc_id("yt", "abc/../x?y") == "yt_abcxy", "doc_id không làm sạch ký tự lạ"
+    # 3) ISO8601 -> giây
+    assert TK._iso_giay("PT1H2M3S") == 3723 and TK._iso_giay("PT45S") == 45, "parse duration sai"
+    # 4) thiếu key -> [] (không nổ, không giả vờ 0 — §15.2 đã in mẫu số)
+    _k = os.environ.pop("YT_DATA_KEY", None); _k2 = os.environ.pop("YOUTUBE_API_KEY", None)
+    try:
+        assert TK.yt_trending(5) == [], "thiếu key phải trả [] êm"
+    finally:
+        if _k: os.environ["YT_DATA_KEY"] = _k
+        if _k2: os.environ["YOUTUBE_API_KEY"] = _k2
+    # 5) có key + mock urlopen -> parse đủ schema, KHÔNG gọi mạng thật
+    import urllib.request as _u
+    mau = json.dumps({"items": [{
+        "id": "V1", "snippet": {"title": "T", "channelTitle": "C", "publishedAt": "2026-01-01T00:00:00Z",
+        "thumbnails": {"high": {"url": "http://x/t.jpg"}}},
+        "statistics": {"viewCount": "1234", "likeCount": "56"},
+        "contentDetails": {"duration": "PT2M10S"}}]}).encode()
+
+    class _R:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return mau
+    _old = _u.urlopen
+    os.environ["YT_DATA_KEY"] = "TEST"
+    try:
+        _u.urlopen = lambda *a, **k: _R()
+        rows = TK.yt_trending(5)
+    finally:
+        _u.urlopen = _old
+        if not _k: os.environ.pop("YT_DATA_KEY", None)
+    assert len(rows) == 1, "mock 1 item phải ra 1 row"
+    r = rows[0]
+    for k in ("platform", "video_id", "url", "title", "channel", "thumb", "views", "duration_s", "downloaded"):
+        assert k in r, f"row thiếu trường {k}"
+    assert r["views"] == 1234 and r["duration_s"] == 130 and r["downloaded"] is False, "parse giá trị sai"
+    # 6) TikTok/FB/IG (pilot) trả [] — khung chạy, không giả vờ có dữ liệu
+    assert TK.tiktok_trending() == [] and TK.fb_trending() == [] and TK.ig_trending() == [], \
+        "adapter chưa làm phải trả [] rõ ràng"
+
+
 def main():
     print("🧪 SELFTEST (0 mạng · 0 quota) — chặn bản deploy hỏng trước khi spawn 18 luồng:")
     # ── CƯỠNG CHẾ "0 MẠNG"  (9/9/2026) ────────────────────────────────────────────────
@@ -4500,6 +4548,7 @@ def main():
     check("workflow chạy selftest phải đủ thư viện", t_workflow_chay_selftest_phai_du_thu_vien)
     check("chủ thể nghèo ảnh -> tự chọn chủ thể khác (không lặp 1 ảnh)", t_tu_chon_lai_chu_the_ngheo_anh)
     check("short không lặp một ảnh ở nhiều nhịp", t_short_khong_lap_anh)
+    check("kho trending: 4 adapter + parse YouTube đúng schema (mock)", t_trend_kho)
     if FAILS:
         print(f"\n🚨 SELFTEST FAIL ({len(FAILS)}) — CHẶN PHIÊN để không đốt 18 luồng vào bản hỏng:")
         for f in FAILS:

@@ -1,0 +1,71 @@
+name: MM0 Trend Kho (gom video trending USA về kho tư liệu nghiên cứu)
+
+# ============================================================================
+#  KHO TƯ LIỆU trending 4 nền tảng (YouTube · TikTok · Facebook · Instagram, USA).
+#  Hai việc mỗi lượt:
+#    · --collect        : gom METADATA + thumbnail URL của video trending -> Firestore (nhẹ,
+#                         KHÔNG tốn Drive). YouTube qua Data API v3 (secret YT_DATA_KEY).
+#    · --serve-requests : thực thi yêu cầu TẢI TAY anh tích trên dashboard (trending_req) ->
+#                         yt-dlp -> Drive kho -> đánh dấu done. (auto tải TOP-N làm trong collect.)
+#
+#  PILOT: YouTube chạy thật (cần YT_DATA_KEY). TikTok/FB/IG adapter đang để trống -> collect trả 0,
+#  KHÔNG lỗi; nhân ra bằng cách điền `*_trending()` trong trend_kho.py, workflow này giữ nguyên.
+#
+#  Repo PUBLIC -> Actions free vô hạn. Không tải video nào nếu chưa có Drive pool (chỉ gom metadata).
+#  §10.2 cron repo hay hụt -> để nhiều mốc trong ngày (mỗi 3h) cho dư.
+# ============================================================================
+
+on:
+  schedule:
+    - cron: "20 */3 * * *"   # mỗi 3 giờ: yêu cầu tải chậm nhất ~3h được xử; trending refresh đều
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "1 = chỉ xem (không ghi Firestore, không tải)"
+        default: "0"
+
+concurrency: { group: mm0-trend-kho, cancel-in-progress: false }
+
+jobs:
+  kho:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.AUTOPUBLISHER_REPO }}
+          token: ${{ secrets.AUTOPUBLISHER_TOKEN }}
+          path: _autopublisher
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: ffmpeg (yt-dlp cần để ghép hình+tiếng)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Python deps
+        # 2 lệnh riêng — gộp làm pip dễ nổ "resolution-too-deep" (sự cố 20/8).
+        run: |
+          pip install --quiet -c render-pipeline/constraints.txt \
+            google-cloud-firestore google-api-python-client google-auth google-auth-oauthlib \
+            requests pyyaml
+          pip install --quiet yt-dlp
+      - name: Service account keys
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}'   > /tmp/sa.json
+          echo '${{ secrets.GCP_SA_KEY_B }}' > /tmp/sa_b.json
+      - name: Gom trending + xử yêu cầu tải
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS:   /tmp/sa.json
+          FIREBASE_PROJECT_ID:              ${{ secrets.FIREBASE_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_B: /tmp/sa_b.json
+          FIREBASE_PROJECT_ID_B:            ${{ secrets.FIREBASE_PROJECT_ID_B }}
+          SHARD_META:        ${{ vars.SHARD_META }}   # =1 -> meta ở B, CÙNG nơi dashboard đọc
+          HOT_KEY:           ${{ secrets.HOT_KEY }}
+          OWNER_UID:         ${{ secrets.OWNER_UID }}
+          YT_DATA_KEY:       ${{ secrets.YT_DATA_KEY }}   # YouTube Data API v3 (free) — anh tự tạo
+          AUTOPUBLISHER_SRC: ${{ github.workspace }}/_autopublisher/src
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "1" ]; then
+            python render-pipeline/trend_kho.py --collect --serve-requests --dry-run
+          else
+            python render-pipeline/trend_kho.py --collect --serve-requests
+          fi
