@@ -26,6 +26,9 @@ on:
 
 concurrency: { group: mm0-trend-kho, cancel-in-progress: false }
 
+permissions:
+  contents: write   # để commit render-pipeline/trending_data.json (kho metadata) lên repo
+
 jobs:
   kho:
     runs-on: ubuntu-latest
@@ -68,4 +71,18 @@ jobs:
             python render-pipeline/trend_kho.py --collect --serve-requests --dry-run
           else
             python render-pipeline/trend_kho.py --collect --serve-requests
+          fi
+      - name: Commit kho JSON (metadata) -> repo PUBLIC (dashboard fetch, 0 Firebase)
+        if: github.event.inputs.dry_run != '1'
+        run: |
+          git config user.name  "mm0-trend-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add render-pipeline/trending_data.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "· không có thay đổi trending_data.json"
+          else
+            git commit -m "trending data $(date -u +%FT%TZ) [skip ci]" -q
+            # rebase-then-push để tránh đè commit khác vừa vào main
+            git pull --rebase --autostash origin main -q || true
+            git push origin HEAD:main -q && echo "✓ đã đẩy trending_data.json"
           fi

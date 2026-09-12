@@ -44,6 +44,9 @@ import firestore_bridge as FB
 
 OWNER = os.environ.get("OWNER_UID") or ""
 REGION = "US"
+# Vùng nói tiếng Anh — trending mở rộng ngoài USA sang EU/Anh + Canada/Úc (anh yêu cầu 12/9).
+# YouTube Data API nhận regionCode ISO-3166; các vùng này đều dùng English.
+REGIONS_YT = [r.strip().upper() for r in (os.environ.get("TREND_REGIONS") or "US,GB,CA,AU").split(",") if r.strip()]
 PLATFORMS = ["yt", "tiktok", "fb", "ig"]
 TEN_NEN = {"yt": "YouTube", "tiktok": "TikTok", "fb": "Facebook", "ig": "Instagram"}
 
@@ -55,6 +58,46 @@ COL_CFG = "trending_config"    # 1 doc / owner: bật-tắt + auto top-N từng 
 DL_FORMAT = "bv*[height<=720]+ba/b[height<=720]/b"
 DL_MAX = "500M"
 CFG_MAC_DINH = {p: {"on": (p == "yt"), "auto_dl_top_n": 0, "max_keep": 60} for p in PLATFORMS}
+
+# ─── KHO METADATA = FILE JSON commit lên repo PUBLIC (KHÔNG Firestore) ───
+# Anh (12/9) dặn: 100% free, KHÔNG đụng quota Firebase kẻo ảnh hưởng render/hiển thị. Metadata
+# trending là phần ĐỌC NẶNG (mỗi lần mở tab tải cả trăm bản ghi) -> để ở Firestore sẽ ăn hạn mức
+# đọc/ghi của Project A dùng chung với render. Nên metadata ghi ra 1 file JSON, commit lên repo
+# render PUBLIC; dashboard fetch thẳng qua raw.githubusercontent (CORS OK, CDN ~5 phút, 0 Firebase).
+# Firestore chỉ còn giữ CONFIG (1 doc) + REQUEST tải tay (vài doc) — cực nhỏ, không đáng kể.
+_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trending_data.json")
+_CAP_MOI_NEN = 400   # giữ tối đa mỗi nền tảng cho file gọn
+_IDX = None          # map doc_id -> row (nạp 1 lần/lượt chạy)
+
+
+def _load_idx() -> dict:
+    global _IDX
+    if _IDX is None:
+        try:
+            with open(_JSON, encoding="utf-8") as f:
+                _IDX = {r["id"]: r for r in json.load(f).get("items", []) if r.get("id")}
+        except Exception:
+            _IDX = {}
+    return _IDX
+
+
+def _flush(dry: bool) -> int:
+    """Ghi kho JSON (nguyên tử), cắt gọn theo nền tảng. Trả về số bản ghi đã ghi."""
+    idx = _load_idx()
+    items = sorted(idx.values(), key=lambda r: -(r.get("collected_at") or 0))
+    dem, out = {}, []
+    for r in items:
+        p = r.get("platform", "?")
+        dem[p] = dem.get(p, 0) + 1
+        if dem[p] <= _CAP_MOI_NEN:
+            out.append(r)
+    if dry:
+        return len(out)
+    tmp = _JSON + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"updated": int(time.time()), "owner": OWNER, "items": out}, f, ensure_ascii=False)
+    os.replace(tmp, _JSON)
+    return len(out)
 
 
 # ─────────────────────────── Firestore (shard B qua FB._db_meta) ───────────────────────────
@@ -88,9 +131,8 @@ def nap_config() -> dict:
 
 
 def upsert_meta(rows: list[dict], dry: bool) -> int:
-    """Ghi metadata (merge) — GIỮ nguyên trạng thái tải (downloaded/drive_id) nếu doc đã có.
-
-    §15.2: trả về SỐ ĐẾM thật để câu log luôn có mẫu số, không có 0 vô nghĩa."""
+    """Trộn metadata vào kho JSON — GIỮ trạng thái tải (downloaded/drive_id/size_mb) và first_seen
+    của bản ghi cũ; cập nhật view/like/regions/collected_at mới nhất. §15.2: trả về SỐ ĐẾM thật."""
     if not rows:
         return 0
     if dry:
@@ -99,21 +141,19 @@ def upsert_meta(rows: list[dict], dry: bool) -> int:
         if len(rows) > 5:
             print(f"      · … +{len(rows)-5} video nữa")
         return len(rows)
-    db = _db()
-    n = 0
+    idx = _load_idx()
+    now = int(time.time())
     for r in rows:
-        # §13.7 ngân sách dùng chung: dừng ghi metadata (việc phụ) ở 70% trần, chừa cho render.
-        if not FB.con_ngan_sach("ghi"):
-            print(f"      ⚠️ hạn mức GHI đã tới ngưỡng phụ (70%) — dừng ở {n}/{len(rows)}")
-            break
         rid = doc_id(r["platform"], r["video_id"])
-        r2 = dict(r, owner=OWNER, collected_at=int(time.time()))
-        try:
-            db.collection(COL_KHO).document(rid).set(r2, merge=True)
-            n += 1
-        except Exception as e:
-            print(f"      ⚠️ ghi {rid} lỗi: {str(e)[:100]}")
-    return n
+        cu = idx.get(rid, {})
+        r2 = dict(r, id=rid, owner=OWNER, collected_at=now,
+                  first_seen=cu.get("first_seen", now))
+        # giữ trạng thái tải đã có
+        for k in ("downloaded", "drive_id", "size_mb", "downloaded_at"):
+            if cu.get(k) and not r2.get(k):
+                r2[k] = cu[k]
+        idx[rid] = r2
+    return len(rows)
 
 
 # ─────────────────────────── Adapter từng nền tảng ───────────────────────────
@@ -126,8 +166,8 @@ def _iso_giay(s: str) -> int:
     return h * 3600 + mi * 60 + se
 
 
-def yt_trending(n: int = 50) -> list[dict]:
-    """YouTube USA — API CHÍNH THỨC `videos.list?chart=mostPopular`. Cần YT_DATA_KEY (free).
+def yt_trending(n: int = 50, region: str = REGION) -> list[dict]:
+    """YouTube trending 1 VÙNG — API CHÍNH THỨC `videos.list?chart=mostPopular`. Cần YT_DATA_KEY (free).
 
     Thiếu key thì NÓI RÕ và trả [] (không giả vờ 0 — §15.2), không rơi về đường scrape kém tin."""
     key = os.environ.get("YT_DATA_KEY") or os.environ.get("YOUTUBE_API_KEY") or ""
@@ -137,7 +177,7 @@ def yt_trending(n: int = 50) -> list[dict]:
         return []
     url = ("https://www.googleapis.com/youtube/v3/videos"
            "?part=snippet,statistics,contentDetails&chart=mostPopular"
-           f"&regionCode={REGION}&maxResults={min(n,50)}&key={key}")
+           f"&regionCode={region}&maxResults={min(n,50)}&key={key}")
     try:
         with urllib.request.urlopen(url, timeout=25) as r:
             raw = r.read()
@@ -163,10 +203,32 @@ def yt_trending(n: int = 50) -> list[dict]:
             "title": sn.get("title", ""), "channel": sn.get("channelTitle", ""),
             "thumb": thumb, "published_at": sn.get("publishedAt", ""),
             "views": int(st.get("viewCount", 0) or 0), "likes": int(st.get("likeCount", 0) or 0),
-            "duration_s": _iso_giay(cd.get("duration", "")), "region": REGION,
+            "duration_s": _iso_giay(cd.get("duration", "")), "region": region, "regions": [region],
             "downloaded": False,
         })
     return out
+
+
+def yt_trending_multi(n: int = 50) -> list[dict]:
+    """Gom trending NHIỀU vùng nói tiếng Anh (REGIONS_YT) rồi HỢP theo video_id — một video hot ở
+    nhiều nước gộp làm một, gộp danh sách `regions`, giữ view/like cao nhất. Dedup ở Python để
+    KHÔNG đọc lại Firestore từng doc (§13.7 tiết kiệm hạn mức)."""
+    gop: dict[str, dict] = {}
+    for reg in REGIONS_YT:
+        rows = yt_trending(n, reg)
+        if not rows:
+            continue
+        print(f"      · {reg}: {len(rows)} video")
+        for r in rows:
+            g = gop.get(r["video_id"])
+            if not g:
+                gop[r["video_id"]] = r
+            else:
+                if r["video_id"] and reg not in g["regions"]:
+                    g["regions"].append(reg)
+                g["views"] = max(g["views"], r["views"])
+                g["likes"] = max(g["likes"], r["likes"])
+    return list(gop.values())
 
 
 def tiktok_trending(n: int = 50) -> list[dict]:
@@ -187,7 +249,7 @@ def ig_trending(n: int = 50) -> list[dict]:
     return []
 
 
-_ADAPTER = {"yt": yt_trending, "tiktok": tiktok_trending, "fb": fb_trending, "ig": ig_trending}
+_ADAPTER = {"yt": yt_trending_multi, "tiktok": tiktok_trending, "fb": fb_trending, "ig": ig_trending}
 
 
 # ─────────────────────────── Tải file (yt-dlp -> Drive kho) ───────────────────────────
@@ -274,8 +336,8 @@ def tai_mot(row: dict) -> dict | None:
 
 
 def _danh_dau_tai(rows: list[dict], dry: bool) -> int:
-    """Tải + cập nhật doc (downloaded/drive_id/size_mb). Bỏ qua doc đã tải rồi."""
-    db = _db()
+    """Tải + cập nhật bản ghi trong kho JSON (downloaded/drive_id/size_mb). Bỏ qua bản đã tải."""
+    idx = _load_idx()
     n = 0
     for r in rows:
         if r.get("downloaded") and r.get("drive_id"):
@@ -286,11 +348,10 @@ def _danh_dau_tai(rows: list[dict], dry: bool) -> int:
         res = tai_mot(r)
         if not res:
             continue
-        try:
-            db.collection(COL_KHO).document(doc_id(r["platform"], r["video_id"])).set(
-                {"downloaded": True, **res, "downloaded_at": int(time.time())}, merge=True)
-        except Exception as e:
-            print(f"      ⚠️ ghi trạng thái tải lỗi: {str(e)[:100]}")
+        rid = r.get("id") or doc_id(r["platform"], r["video_id"])
+        cu = idx.get(rid, dict(r, id=rid))
+        cu.update({"downloaded": True, **res, "downloaded_at": int(time.time())})
+        idx[rid] = cu
         print(f"      ⬇️  {r['platform']}:{r['video_id']} — {res['size_mb']}MB — {r['title'][:50]}")
         n += 1
     return n
@@ -299,27 +360,31 @@ def _danh_dau_tai(rows: list[dict], dry: bool) -> int:
 # ─────────────────────────── Việc chính ───────────────────────────
 def collect(dry: bool) -> None:
     cfg = nap_config()
+    _load_idx()
     for plat in PLATFORMS:
         pc = cfg[plat]
         if not pc.get("on"):
             print(f"⏸  {TEN_NEN[plat]}: tắt trong config — bỏ qua.")
             continue
-        print(f"🔎 {TEN_NEN[plat]} (USA) …")
+        print(f"🔎 {TEN_NEN[plat]} ({'+'.join(REGIONS_YT) if plat=='yt' else 'USA'}) …")
         rows = _ADAPTER[plat](50)
         if not rows:
             print(f"   · 0 video (adapter chưa làm hoặc không lấy được).")
             continue
         n = upsert_meta(rows, dry)
-        print(f"   ✅ {n}/{len(rows)} video vào kho (metadata).")
+        print(f"   ✅ {n} video vào kho (metadata).")
         top = int(pc.get("auto_dl_top_n", 0) or 0)
         if top > 0:
             print(f"   ⬇️  auto tải TOP {top} …")
             got = _danh_dau_tai(sorted(rows, key=lambda x: -x.get("views", 0))[:top], dry)
             print(f"   ✅ tải {got} file.")
+    tong = _flush(dry)
+    print(f"💾 kho JSON: {tong} bản ghi ({_JSON}).")
 
 
 def serve_requests(dry: bool) -> None:
-    """Đọc yêu cầu tải TAY từ dashboard (trending_req pending) -> tải -> đánh dấu done."""
+    """Đọc yêu cầu tải TAY từ dashboard (trending_req pending, Firestore) -> tải từ kho JSON ->
+    đánh dấu done. Request là dữ liệu NHỎ (vài doc) nên Firestore không đáng kể hạn mức."""
     if not OWNER:
         print("⚠️ thiếu OWNER_UID — bỏ qua serve-requests."); return
     db = _db()
@@ -331,20 +396,18 @@ def serve_requests(dry: bool) -> None:
         print(f"⚠️ đọc trending_req lỗi: {str(e)[:140]}"); return
     if not reqs:
         print("· không có yêu cầu tải nào đang chờ."); return
+    idx = _load_idx()
     print(f"📥 {len(reqs)} yêu cầu tải …")
     for rq in reqs:
         rd = rq.to_dict() or {}
         ids = rd.get("video_ids") or []
-        rows = []
-        for full in ids:                       # full id = "<plat>_<vid>"
-            d = db.collection(COL_KHO).document(full).get(timeout=15)
-            if d.exists:
-                rows.append(d.to_dict())
+        rows = [idx[full] for full in ids if full in idx]   # full id = "<plat>_<vid>"
         got = _danh_dau_tai(rows, dry)
         if not dry:
             db.collection(COL_REQ).document(rq.id).set(
                 {"status": "done", "done_at": int(time.time()), "tai_duoc": got}, merge=True)
         print(f"   ✅ yêu cầu {rq.id}: tải {got}/{len(ids)}.")
+    _flush(dry)
 
 
 def main():
