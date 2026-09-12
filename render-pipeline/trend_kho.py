@@ -59,8 +59,11 @@ CFG_MAC_DINH = {p: {"on": (p == "yt"), "auto_dl_top_n": 0, "max_keep": 60} for p
 
 # ─────────────────────────── Firestore (shard B qua FB._db_meta) ───────────────────────────
 def _db():
-    """Meta store (shard B khi SHARD_META=1) — CÙNG nơi dashboard đọc (META_B)."""
-    return FB._db_meta()
+    """Project A (mm0-auto-publisher) — nơi dashboard client ĐÃ ĐĂNG NHẬP đọc + ghi được.
+    KHÔNG dùng shard B: user chỉ auth trên Project A (getAuth(appFb)), không auth trên shard B,
+    nên client KHÔNG ghi được trending_config/trending_req lên B (Missing permissions). Trending là
+    dữ liệu nhỏ, để ở A cùng chỗ tasks/social_queue là đúng — collector ghi qua Admin (bỏ qua rules)."""
+    return FB._db()
 
 
 def doc_id(plat: str, vid: str) -> str:
