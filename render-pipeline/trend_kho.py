@@ -93,6 +93,17 @@ def _flush(dry: bool) -> int:
             out.append(r)
     if dry:
         return len(out)
+    # Chỉ ghi khi ITEMS thực sự đổi — tránh 8 commit/ngày chỉ vì timestamp (main dùng chung
+    # cửa sổ khác -> mỗi push thừa là một cơ hội rebase-conflict, §15.18).
+    moi = json.dumps(out, ensure_ascii=False, sort_keys=True)
+    try:
+        with open(_JSON, encoding="utf-8") as f:
+            cu = json.dumps(json.load(f).get("items", []), ensure_ascii=False, sort_keys=True)
+        if cu == moi:
+            print("   · kho JSON không đổi — bỏ ghi (khỏi commit thừa).")
+            return len(out)
+    except Exception:
+        pass
     tmp = _JSON + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump({"updated": int(time.time()), "owner": OWNER, "items": out}, f, ensure_ascii=False)
