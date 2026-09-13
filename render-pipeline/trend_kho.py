@@ -168,6 +168,20 @@ def upsert_meta(rows: list[dict], dry: bool) -> int:
 
 
 # ─────────────────────────── Adapter từng nền tảng ───────────────────────────
+def _la_english(text: str) -> bool:
+    """Tiêu đề có phải English/Latin không? Cờ region của tikwm KHÔNG tin được (tag video VN/Ả Rập
+    thành US), nên lọc theo NGÔN NGỮ: loại chữ Ả Rập·Thái·CJK·Hàn·Nhật·Devanagari·Do Thái·Kirin,
+    và loại TIẾNG VIỆT (khối Latin Extended Additional U+1EA0–1EFF + đ/ă/ơ/ư). Emoji vẫn cho qua."""
+    for ch in (text or ""):
+        o = ord(ch)
+        if (0x0600 <= o <= 0x06FF or 0x0E00 <= o <= 0x0E7F or 0x0400 <= o <= 0x04FF or
+                0x4E00 <= o <= 0x9FFF or 0xAC00 <= o <= 0xD7A3 or 0x3040 <= o <= 0x30FF or
+                0x0900 <= o <= 0x097F or 0x0590 <= o <= 0x05FF or 0x1EA0 <= o <= 0x1EFF or
+                ch in "đĐăĂơƠưƯ"):
+            return False
+    return True
+
+
 def _iso_giay(s: str) -> int:
     """ISO8601 PT#H#M#S -> giây (YouTube contentDetails.duration)."""
     m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", s or "")
@@ -206,6 +220,9 @@ def yt_trending(n: int = 50, region: str = REGION) -> list[dict]:
     out = []
     for it in data.get("items", []):
         sn, st, cd = it.get("snippet", {}), it.get("statistics", {}), it.get("contentDetails", {})
+        # chỉ giữ tiêu đề English/Latin — bỏ nội dung Ấn/Ả Rập/… lọt vào trending vùng
+        if not _la_english((sn.get("title") or "") + " " + (sn.get("channelTitle") or "")):
+            continue
         th = sn.get("thumbnails", {})
         thumb = (th.get("high") or th.get("medium") or th.get("default") or {}).get("url", "")
         out.append({
@@ -271,12 +288,13 @@ def tiktok_trending(n: int = 50) -> list[dict]:
         for v in (d.get("data") or []):
             vid = str(v.get("video_id") or "")
             reg = (v.get("region") or "").upper()
-            if not vid or reg not in _EN_REGIONS:   # bỏ VN/TH/ID/… — chỉ giữ English
-                continue
-            if vid in gop:
+            if not vid or reg not in _EN_REGIONS or vid in gop:   # bỏ TH/ID/… + trùng
                 continue
             au = v.get("author") or {}
             uid = au.get("unique_id") or ""
+            # cờ region tikwm KHÔNG tin được (tag video VN/Ả Rập thành US) -> lọc theo NGÔN NGỮ
+            if not _la_english((v.get("title") or "") + " " + (au.get("nickname") or "")):
+                continue
             ct = v.get("create_time")
             pub = ""
             try:
@@ -433,17 +451,23 @@ def collect(dry: bool) -> None:
             continue
         n = upsert_meta(rows, dry)
         print(f"   ✅ {n} video vào kho (metadata).")
-        # TikTok: cờ vùng của tikwm KHÔNG tin được ở bản cũ (tag cứng US) -> DỌN item không còn
-        # trong fetch English mới (giữ bản ĐÃ TẢI). Bảo đảm kho chỉ còn US/English, hết VN/generic.
-        if plat == "tiktok" and not dry:
+        # DỌN kho: bỏ item KHÔNG English (Ả Rập/Thái/CJK/VN lọt vào từ bản cũ tag nhầm) + item
+        # TikTok cũ không còn trong fetch mới. LUÔN giữ bản ĐÃ TẢI. Bảo đảm kho chỉ US/English.
+        if not dry:
             idx = _load_idx()
             tuoi = {doc_id(r["platform"], r["video_id"]) for r in rows}
-            bo = [k for k, v in idx.items() if v.get("platform") == "tiktok"
-                  and k not in tuoi and not (v.get("downloaded") and v.get("drive_id"))]
+
+            def _can_bo(v, k):
+                if v.get("downloaded") and v.get("drive_id"):
+                    return False
+                if not _la_english((v.get("title") or "") + " " + (v.get("channel") or "")):
+                    return True
+                return plat == "tiktok" and k not in tuoi
+            bo = [k for k, v in idx.items() if v.get("platform") == plat and _can_bo(v, k)]
             for k in bo:
                 del idx[k]
             if bo:
-                print(f"   🧹 dọn {len(bo)} video TikTok cũ/không thuộc English.")
+                print(f"   🧹 dọn {len(bo)} video {plat} cũ/không-English.")
         top = int(pc.get("auto_dl_top_n", 0) or 0)
         if top > 0:
             print(f"   ⬇️  auto tải TOP {top} …")
