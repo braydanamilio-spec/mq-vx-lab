@@ -4202,10 +4202,12 @@ def t_trend_kho():
     # 6) FB/IG chưa có nguồn free -> trả [] rõ ràng (không giả vờ có dữ liệu)
     assert TK.fb_trending() == [] and TK.ig_trending() == [], "adapter FB/IG chưa làm phải trả []"
     # 7) TikTok đã có nguồn (tikwm) — KHÔNG gọi mạng trong selftest; mock urlopen, kiểm parse schema
-    tik = json.dumps({"code": 0, "msg": "success", "data": [{
-        "video_id": "T9", "title": "viral clip", "cover": "http://x/c.jpg", "duration": 12,
-        "play_count": "500000", "digg_count": "9000", "create_time": 1788800000,
-        "author": {"unique_id": "abc", "nickname": "ABC"}}]}).encode()
+    tik = json.dumps({"code": 0, "msg": "success", "data": [
+        {"video_id": "T9", "title": "viral clip", "cover": "http://x/c.jpg", "duration": 12,
+         "play_count": "500000", "digg_count": "9000", "create_time": 1788800000, "region": "US",
+         "author": {"unique_id": "abc", "nickname": "ABC"}},
+        {"video_id": "T_VN", "title": "clip VN", "region": "VN", "play_count": "999999",
+         "author": {"unique_id": "vn", "nickname": "VN"}}]}).encode()
 
     class _RT:
         def __enter__(self): return self

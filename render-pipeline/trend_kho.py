@@ -242,47 +242,60 @@ def yt_trending_multi(n: int = 50) -> list[dict]:
     return list(gop.values())
 
 
+_EN_REGIONS = {"US", "GB", "CA", "AU", "IE", "NZ"}   # chỉ giữ vùng nói tiếng Anh
+
+
 def tiktok_trending(n: int = 50) -> list[dict]:
-    """TikTok trending (US) qua tikwm.com — API CÔNG KHAI FREE, KHÔNG cần key, chạy được server-side.
-    Trả cùng SCHEMA như yt_trending. Tải file: yt-dlp hỗ trợ URL TikTok nên `tai_mot` dùng lại được."""
+    """TikTok trending qua tikwm.com — API CÔNG KHAI FREE, KHÔNG cần key, chạy server-side.
+
+    QUAN TRỌNG: tham số region=US của tikwm KHÔNG lọc thật (feed trả lẫn TH/ID/VN…). Nên phải LỌC
+    bằng trường `region` của TỪNG video, chỉ giữ vùng English (US/GB/CA/AU…) — bỏ VN/Thái/Indo/chung
+    chung theo đúng yêu cầu. Gắn cờ vùng THẬT. Tải file: yt-dlp hỗ trợ URL TikTok."""
     from datetime import datetime as _dt, timezone as _tz
-    try:
-        req = urllib.request.Request(
-            f"https://www.tikwm.com/api/feed/list?region=US&count={min(n,30)}",
-            headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=25) as r:
-            raw = r.read()
-        if raw[:1] != b"{":
-            print(f"   ❌ TikTok (tikwm) trả không phải JSON (bị chặn?): {raw[:100]!r}"); return []
-        d = json.loads(raw)
-    except Exception as e:
-        print(f"   ❌ TikTok (tikwm) lỗi: {str(e)[:150]}"); return []
-    if d.get("code") != 0:
-        print(f"   ❌ TikTok (tikwm): {str(d.get('msg'))[:120]}"); return []
-    out = []
-    for v in (d.get("data") or []):
-        vid = str(v.get("video_id") or "")
-        if not vid:
-            continue
-        au = v.get("author") or {}
-        uid = au.get("unique_id") or ""
-        ct = v.get("create_time")
-        pub = ""
+    gop: dict[str, dict] = {}
+    # gọi vài lần cho đủ mẫu US/English (mỗi lần feed đổi + phần lớn bị lọc bỏ)
+    for _lan in range(3):
         try:
-            if ct:
-                pub = _dt.fromtimestamp(int(ct), _tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        except Exception:
-            pass
-        out.append({
-            "platform": "tiktok", "video_id": vid,
-            "url": f"https://www.tiktok.com/@{uid}/video/{vid}" if uid else f"https://www.tiktok.com/video/{vid}",
-            "title": (v.get("title") or "").strip(), "channel": au.get("nickname") or uid,
-            "thumb": v.get("cover") or v.get("origin_cover") or "", "published_at": pub,
-            "views": int(v.get("play_count") or 0), "likes": int(v.get("digg_count") or 0),
-            "duration_s": int(v.get("duration") or 0), "region": "US", "regions": ["US"],
-            "downloaded": False,
-        })
-    return out
+            req = urllib.request.Request(
+                "https://www.tikwm.com/api/feed/list?region=US&count=30",
+                headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=25) as r:
+                raw = r.read()
+            if raw[:1] != b"{":
+                print(f"   ❌ TikTok (tikwm) trả không phải JSON (bị chặn?): {raw[:100]!r}"); break
+            d = json.loads(raw)
+        except Exception as e:
+            print(f"   ❌ TikTok (tikwm) lỗi: {str(e)[:150]}"); break
+        if d.get("code") != 0:
+            print(f"   ❌ TikTok (tikwm): {str(d.get('msg'))[:120]}"); break
+        for v in (d.get("data") or []):
+            vid = str(v.get("video_id") or "")
+            reg = (v.get("region") or "").upper()
+            if not vid or reg not in _EN_REGIONS:   # bỏ VN/TH/ID/… — chỉ giữ English
+                continue
+            if vid in gop:
+                continue
+            au = v.get("author") or {}
+            uid = au.get("unique_id") or ""
+            ct = v.get("create_time")
+            pub = ""
+            try:
+                if ct:
+                    pub = _dt.fromtimestamp(int(ct), _tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            except Exception:
+                pass
+            gop[vid] = {
+                "platform": "tiktok", "video_id": vid,
+                "url": f"https://www.tiktok.com/@{uid}/video/{vid}" if uid else f"https://www.tiktok.com/video/{vid}",
+                "title": (v.get("title") or "").strip(), "channel": au.get("nickname") or uid,
+                "thumb": v.get("cover") or v.get("origin_cover") or "", "published_at": pub,
+                "views": int(v.get("play_count") or 0), "likes": int(v.get("digg_count") or 0),
+                "duration_s": int(v.get("duration") or 0), "region": reg, "regions": [reg],
+                "downloaded": False,
+            }
+        if len(gop) >= n:
+            break
+    return list(gop.values())
 
 
 def fb_trending(n: int = 50) -> list[dict]:
@@ -420,6 +433,17 @@ def collect(dry: bool) -> None:
             continue
         n = upsert_meta(rows, dry)
         print(f"   ✅ {n} video vào kho (metadata).")
+        # TikTok: cờ vùng của tikwm KHÔNG tin được ở bản cũ (tag cứng US) -> DỌN item không còn
+        # trong fetch English mới (giữ bản ĐÃ TẢI). Bảo đảm kho chỉ còn US/English, hết VN/generic.
+        if plat == "tiktok" and not dry:
+            idx = _load_idx()
+            tuoi = {doc_id(r["platform"], r["video_id"]) for r in rows}
+            bo = [k for k, v in idx.items() if v.get("platform") == "tiktok"
+                  and k not in tuoi and not (v.get("downloaded") and v.get("drive_id"))]
+            for k in bo:
+                del idx[k]
+            if bo:
+                print(f"   🧹 dọn {len(bo)} video TikTok cũ/không thuộc English.")
         top = int(pc.get("auto_dl_top_n", 0) or 0)
         if top > 0:
             print(f"   ⬇️  auto tải TOP {top} …")
