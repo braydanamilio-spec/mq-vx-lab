@@ -57,7 +57,7 @@ COL_CFG = "trending_config"    # 1 doc / owner: bật-tắt + auto top-N từng 
 # yt-dlp: research kho -> 720p đủ, chặn file khổng lồ (bản scan/gốc) làm ngập Drive.
 DL_FORMAT = "bv*[height<=720]+ba/b[height<=720]/b"
 DL_MAX = "500M"
-CFG_MAC_DINH = {p: {"on": (p == "yt"), "auto_dl_top_n": 0, "max_keep": 60} for p in PLATFORMS}
+CFG_MAC_DINH = {p: {"on": (p in ("yt", "tiktok")), "auto_dl_top_n": 0, "max_keep": 60} for p in PLATFORMS}
 
 # ─── KHO METADATA = FILE JSON commit lên repo PUBLIC (KHÔNG Firestore) ───
 # Anh (12/9) dặn: 100% free, KHÔNG đụng quota Firebase kẻo ảnh hưởng render/hiển thị. Metadata
@@ -243,10 +243,46 @@ def yt_trending_multi(n: int = 50) -> list[dict]:
 
 
 def tiktok_trending(n: int = 50) -> list[dict]:
-    """TikTok USA — CHƯA làm (pilot). Nhân ra: điền hàm này trả về list cùng SCHEMA như yt_trending.
-    Không có API trending chính thức cho bên thứ ba; hướng khả thi: TikTok Research API (cần duyệt)
-    hoặc endpoint không chính thức. Trả [] để khung vẫn chạy, KHÔNG giả vờ có dữ liệu."""
-    return []
+    """TikTok trending (US) qua tikwm.com — API CÔNG KHAI FREE, KHÔNG cần key, chạy được server-side.
+    Trả cùng SCHEMA như yt_trending. Tải file: yt-dlp hỗ trợ URL TikTok nên `tai_mot` dùng lại được."""
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        req = urllib.request.Request(
+            f"https://www.tikwm.com/api/feed/list?region=US&count={min(n,30)}",
+            headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=25) as r:
+            raw = r.read()
+        if raw[:1] != b"{":
+            print(f"   ❌ TikTok (tikwm) trả không phải JSON (bị chặn?): {raw[:100]!r}"); return []
+        d = json.loads(raw)
+    except Exception as e:
+        print(f"   ❌ TikTok (tikwm) lỗi: {str(e)[:150]}"); return []
+    if d.get("code") != 0:
+        print(f"   ❌ TikTok (tikwm): {str(d.get('msg'))[:120]}"); return []
+    out = []
+    for v in (d.get("data") or []):
+        vid = str(v.get("video_id") or "")
+        if not vid:
+            continue
+        au = v.get("author") or {}
+        uid = au.get("unique_id") or ""
+        ct = v.get("create_time")
+        pub = ""
+        try:
+            if ct:
+                pub = _dt.fromtimestamp(int(ct), _tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        except Exception:
+            pass
+        out.append({
+            "platform": "tiktok", "video_id": vid,
+            "url": f"https://www.tiktok.com/@{uid}/video/{vid}" if uid else f"https://www.tiktok.com/video/{vid}",
+            "title": (v.get("title") or "").strip(), "channel": au.get("nickname") or uid,
+            "thumb": v.get("cover") or v.get("origin_cover") or "", "published_at": pub,
+            "views": int(v.get("play_count") or 0), "likes": int(v.get("digg_count") or 0),
+            "duration_s": int(v.get("duration") or 0), "region": "US", "regions": ["US"],
+            "downloaded": False,
+        })
+    return out
 
 
 def fb_trending(n: int = 50) -> list[dict]:

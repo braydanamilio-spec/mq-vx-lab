@@ -4199,9 +4199,26 @@ def t_trend_kho():
     for k in ("platform", "video_id", "url", "title", "channel", "thumb", "views", "duration_s", "downloaded"):
         assert k in r, f"row thiếu trường {k}"
     assert r["views"] == 1234 and r["duration_s"] == 130 and r["downloaded"] is False, "parse giá trị sai"
-    # 6) TikTok/FB/IG (pilot) trả [] — khung chạy, không giả vờ có dữ liệu
-    assert TK.tiktok_trending() == [] and TK.fb_trending() == [] and TK.ig_trending() == [], \
-        "adapter chưa làm phải trả [] rõ ràng"
+    # 6) FB/IG chưa có nguồn free -> trả [] rõ ràng (không giả vờ có dữ liệu)
+    assert TK.fb_trending() == [] and TK.ig_trending() == [], "adapter FB/IG chưa làm phải trả []"
+    # 7) TikTok đã có nguồn (tikwm) — KHÔNG gọi mạng trong selftest; mock urlopen, kiểm parse schema
+    tik = json.dumps({"code": 0, "msg": "success", "data": [{
+        "video_id": "T9", "title": "viral clip", "cover": "http://x/c.jpg", "duration": 12,
+        "play_count": "500000", "digg_count": "9000", "create_time": 1788800000,
+        "author": {"unique_id": "abc", "nickname": "ABC"}}]}).encode()
+
+    class _RT:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return tik
+    _o2 = _u.urlopen
+    try:
+        _u.urlopen = lambda *a, **k: _RT()
+        tr = TK.tiktok_trending(5)
+    finally:
+        _u.urlopen = _o2
+    assert len(tr) == 1 and tr[0]["platform"] == "tiktok" and tr[0]["video_id"] == "T9", "TikTok parse sai"
+    assert tr[0]["views"] == 500000 and tr[0]["url"].endswith("/video/T9"), "TikTok map giá trị sai"
 
 
 def main():
